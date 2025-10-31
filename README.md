@@ -4,3 +4,5 @@
 - Third, please run "pip install python-dotenv".
 - Fourth, please create a .env file in the same foler of SearchAgent.py. And inside the .env file, please add your models' API KEY. e.g. DEEPSEEK_API_KEY=sk-c98b52609b2e4ef092435718f6076e9d
 - Here is the langchain's reference: https://docs.langchain.com/oss/python/releases/langchain-v1
+
+- This is feature/abstractScreening branch
