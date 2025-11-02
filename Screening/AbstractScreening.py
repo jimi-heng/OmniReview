@@ -15,10 +15,42 @@ os.environ["DEEPSEEK_API_KEY"]=os.getenv("DEEPSEEK_API_KEY")
 os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
 key=os.getenv("DMX_API_KEY")
 
+DATA=[]
+KEYWORDS=""
+
+def abstract_screening(save_dir, model1=None, model2=None, model3=None):
+    global KEYWORDS
+
+    choice = 0
+    while True:
+        print("Download files: 1, Upload files: 2, Start abstract screening: 3")
+        choice = int(input("Please choose: "))
+        if (choice == 1):
+            download_to_csv()
+        elif choice == 2:
+            upload_to_csv()
+        elif choice == 3:
+            break
+        else:
+            print("invalid number")
+            continue
+
+    df = pd.DataFrame(DATA)
+    filename = os.path.join(save_dir, f"CSVList.csv")
+    use_agent_all(df, KEYWORDS, model1, model2, model3)
+    df=df.to_csv(filename, index=False, encoding='utf-8-sig')
+    print(f"保存到: {filename}")
+
 #Download RIS files from PubMed
-def search_to_csv(query, save_dir, max_results=100, model1=None, model2=None, model3=None):
+def download_to_csv():
+    global DATA, KEYWORDS
+
+    query = input("enter key words: ").strip()
+    KEYWORDS = query + " " + KEYWORDS
+    max_number = input("enter number: ").strip()
+
     #Search
-    handle = Entrez.esearch(db="pubmed", term=query, retmax=max_results)
+    handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
     record = Entrez.read(handle)
     handle.close()
     
@@ -31,33 +63,30 @@ def search_to_csv(query, save_dir, max_results=100, model1=None, model2=None, mo
     handle = Entrez.efetch(db="pubmed", id=pmids, rettype="medline", retmode="text")
     records = list(Medline.parse(handle))
     handle.close()
-    
+
+    num=len(DATA)
     #Transform
-    data = []
     for idx, record in enumerate(records, start=1):
         row = {
-        'ID': str(idx),
-        'Title': record.get('TI', ''),
-        'Abstract': record.get('AB', ''),
-        'Authors': '; '.join(record.get('AU', [])),
-        'Journal': record.get('JT', ''),
-        'Publication_Date': record.get('DP', ''),
-        'DOI': record.get('LID', record.get('AID', '')),
-        'Keywords': '; '.join(record.get('OT', record.get('MH', []))),
-        'Flag1': '',
-        'Flag2': '',
-        'Flag3': '',
-        'Reason': ''
-    }
-        data.append(row)
+            'ID': str(num+idx),
+            'Title': record.get('TI', ''),
+            'Abstract': record.get('AB', ''),
+            'Authors': '; '.join(record.get('AU', [])),
+            'Journal': record.get('JT', ''),
+            'Publication_Date': record.get('DP', ''),
+            'DOI': record.get('LID', record.get('AID', '')),
+            'Keywords': '; '.join(record.get('OT', record.get('MH', []))),
+            'Flag1': '',
+            'Flag2': '',
+            'Flag3': '',
+            'Reason': ''
+        }
+        DATA.append(row)
+
+def upload_to_csv():
+    global DATA, KEYWORDS
+    file_dir = input("enter RIS file: ").strip()
     
-    df = pd.DataFrame(data)
-    filename = os.path.join(save_dir, f"CSVList.csv")
-    use_agent_all(df, query, model1, model2, model3)
-    df=df.to_csv(filename, index=False, encoding='utf-8-sig')
-    print(f"保存到: {filename}")
-    
-    return df
 
 #Combine all the agents
 def use_agent_all(csv_list, query, model1, model2, model3):
@@ -68,7 +97,6 @@ def use_agent_all(csv_list, query, model1, model2, model3):
         if (str(row["Flag1"]).strip().upper()) == (str(row["Flag2"]).strip().upper()):
             generate_reason(csv_list, row.to_dict(), query, model1)
         else:
-            print("start")
             use_agent3(csv_list, row.to_dict(), query, model3)
             
 #Judge by agent1
@@ -108,7 +136,7 @@ def use_agent1(csv_list, query, model):
         }]
     })
     data=json.loads(response["messages"][-1].content)
-    print(data)
+    #print(data)
     CollectAIResponse(csv_list, data, 1)
 
 #Judge by agent2
@@ -143,7 +171,7 @@ def use_agent2(csv_list, query, model):
     ])
     content = raw.content
     data = json.loads(content)
-    print(data)
+    #print(data)
     CollectAIResponse(csv_list, data, 2)
 
 #Judge by agent3
@@ -184,7 +212,7 @@ def use_agent3(csv_list, row, query, model):
         }]
     })
     data=json.loads(response["messages"][-1].content)
-    print(data)
+    #print(data)
     CollectAIResponse(csv_list, data, 3)
 
 #Generate reason 
@@ -226,7 +254,7 @@ def generate_reason(csv_list, row, query, model):
     })
     #print(response["messages"][-1].content)
     data=json.loads(response["messages"][-1].content)
-    print(data)
+    #print(data)
     CollectReason(csv_list, data)
 
 #Transform the AIResponse
@@ -247,8 +275,6 @@ def CollectReason(csv_list, response):
         csv_list.loc[csv_list["ID"] == id, "Reason"] = reason
 
 if __name__ == "__main__":
-    query = input("enter key words: ").strip()
-    max_number = input("enter number: ").strip()
     save_dir = input("enter address: ").strip()
 
     model1 = init_chat_model(
@@ -266,10 +292,8 @@ if __name__ == "__main__":
         api_key=key
     )
 
-    csv_list=search_to_csv(
-        query,
+    abstract_screening(
         save_dir,
-        max_number,
         model1,
         model2,
         model3
