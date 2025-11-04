@@ -9,6 +9,8 @@ dependencies = [
     "json5>=0.12.1",
     "langchain==1.0",
     "langchain-anthropic>=1.0.1",
+    "langchain-community>=0.4.1",
+    "langchain-core>=1.0.2",
     "langchain-deepseek>=0.1.4",
     "langchain-google-genai>=3.0.0",
     "langchain-openai>=0.3.35",

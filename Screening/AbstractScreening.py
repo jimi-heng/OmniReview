@@ -4,7 +4,6 @@ import pandas as pd
 import os
 import re
 import json5
-from langchain.agents.structured_output import ToolStrategy
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
@@ -65,9 +64,9 @@ def download_to_csv():
 
     num=len(DATA)
     #Transform
-    for idx, record in enumerate(records, start=1):
+    for idx, record in enumerate(records, start=0):
         row = {
-            'ID': str(num+idx),
+            'ID': num+idx,
             'Title': record.get('TI', ''),
             'Abstract': record.get('AB', ''),
             'Authors': '; '.join(record.get('AU', [])),
@@ -81,6 +80,7 @@ def download_to_csv():
             'Reason': ''
         }
         DATA.append(row)
+
 
 def upload_to_csv():
     global DATA, KEYWORDS
@@ -107,12 +107,17 @@ def use_agent_all(csv_list, query, model1, model2, model3):
     use_agent_first(csv_list, query, model1, 1)
     use_agent_first(csv_list, query, model2, 2)
 
+    ListAgent3 = []
     for _, row in csv_list.iterrows():
         if (str(row["Flag1"]).strip().upper()) == (str(row["Flag2"]).strip().upper()):
             generate_reason(csv_list, row.to_dict(), query, model1)
+            csv_list.loc[:, "Flag3"]=csv_list["Flag1"]
         else:
-            use_agent_after(csv_list, row.to_dict(), query, model3)
-         
+            ListAgent3.append(row.to_dict())
+
+    if ListAgent3!=[]:
+        use_agent_after(csv_list, ListAgent3, query, model3)   
+
 #Judge by agent1 and agent2
 def use_agent_first(csv_list, query, model, num):
     prompt_template = """
@@ -128,11 +133,11 @@ def use_agent_first(csv_list, query, model, num):
         返回一个 JSON 数组（不是字符串、不是自然语言解释），每个元素包括以下字段：
         - 读取每篇文献中的ID
         - 不要使用 Markdown 格式（例如不要输出 ```json, 也不要输出```)
-        - Flag: 如果适合该主题，则为 "TRUE"，否则为 "FALSE"
+        - Flag: 如果适合该主题，则为 1.0, 否则为 0.0, 不确定为 0.5
 
         例如：
         [
-        {{ "ID": "1", "Flag": "TRUE" }},
+        {{ "ID": 1, "Flag": 1 }},
         ]
 
         【文献信息】
@@ -154,13 +159,14 @@ def use_agent_first(csv_list, query, model, num):
     response=response["messages"][-1].content
     response=re.sub(r'"\s+"(\d+)"', r'"\1"', response)
     data=json5.loads(response)
-    print(data)
+    print("First agent done")
     CollectAIResponse(csv_list, data, num)
 
 #Judge by agent3
-def use_agent_after(csv_list, row, query, model):
+def use_agent_after(csv_list, ListAgent3, query, model):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
+        已有两位科研助手对这些文献是否合适的判断不一致, 请更严谨的判断
 
         【任务要求】
         1. 阅读下方提供的文献信息列表。
@@ -171,13 +177,13 @@ def use_agent_after(csv_list, row, query, model):
         【输出格式要求】
         返回一个 JSON 数组（不是字符串、不是自然语言解释），每个元素包括以下字段：
         - 读取每篇文献中的ID
-        - Flag: 如果适合该主题，则为 "TRUE"，否则为 "FALSE"
+        - Flag: 如果适合该主题，则为 1.0,否则为 0.0, 不确定为 0.5
         - 不要使用 Markdown 格式（例如不要输出 ```json, 也不要输出```)
         - Reason: 给出50字左右的理由
 
         例如：
         [
-        {{ "ID": "1", "Flag": "TRUE" , "Reason": "..."}},
+        {{ "ID": 1, "Flag": 1.0 , "Reason": "..."}},
         ]
 
         【文献信息】
@@ -192,13 +198,13 @@ def use_agent_after(csv_list, row, query, model):
     response = agent.invoke({
         "messages": [{
             "role": "user",
-            "content": prompt_template.format(query=query, csv_list=row)
+            "content": prompt_template.format(query=query, csv_list=ListAgent3)
         }]
     })
     response=response["messages"][-1].content
     response=re.sub(r'"\s+"(\d+)"', r'"\1"', response)
     data=json5.loads(response)
-    print(data)
+    print("Last agent done")
     CollectAIResponse(csv_list, data, 3)
 
 #Generate reason 
@@ -220,7 +226,7 @@ def generate_reason(csv_list, row, query, model):
 
         例如：
         [
-        {{ "ID": "1", "Reason": "..." }},
+        {{ "ID": 1, "Reason": "..." }},
         ]
 
         【文献信息】
@@ -264,6 +270,7 @@ def CollectReason(csv_list, response):
 if __name__ == "__main__":
     #save_dir = input("enter address: ").strip()
     save_dir = r"C:\Users\erzhu\Desktop\GRP-MultiAgent\Screening"
+
     model1_name="claude-haiku-4-5-20251001"
     model2_name="gemini-2.5-flash"
     model3_name="gpt-5-mini"
