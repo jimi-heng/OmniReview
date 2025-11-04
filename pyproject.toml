@@ -16,4 +16,5 @@ dependencies = [
     "langchain-openai>=0.3.35",
     "pydantic>=2.12.3",
     "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
 ]

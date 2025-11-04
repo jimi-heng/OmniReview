@@ -7,6 +7,7 @@ import json5
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
+from threading import Thread
 load_dotenv(override=True)
 
 Entrez.email = "erzhuzi2023@outlook.com"
@@ -104,8 +105,14 @@ def extract_doi(record):
 
 #Combine all the agents
 def use_agent_all(csv_list, query, model1, model2, model3):
-    use_agent_first(csv_list, query, model1, 1)
-    use_agent_first(csv_list, query, model2, 2)
+    t1 = Thread(target=use_agent_first, args=(csv_list, query, model1, 1))
+    t2 = Thread(target=use_agent_first, args=(csv_list, query, model2, 2))
+
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
 
     ListAgent3 = []
     for _, row in csv_list.iterrows():
@@ -137,7 +144,7 @@ def use_agent_first(csv_list, query, model, num):
 
         例如：
         [
-        {{ "ID": 1, "Flag": 1 }},
+        {{ "ID": 1, "Flag": 1.0 }},
         ]
 
         【文献信息】
@@ -183,7 +190,7 @@ def use_agent_after(csv_list, ListAgent3, query, model):
 
         例如：
         [
-        {{ "ID": 1, "Flag": 1.0 , "Reason": "..."}},
+        {{ "ID": 1, "Flag": 1,0 , "Reason": "..."}},
         ]
 
         【文献信息】
@@ -217,12 +224,13 @@ def generate_reason(csv_list, row, query, model):
         2. 对每篇文献判断是否与主题密切相关。
         3. 仅根据文献标题和摘要内容进行判断。
         4. 输出结果时，必须严格按照指定 JSON 格式返回。
+        5. 你之前的判断存储在Flag1(1.0为确认适合, 0.0为不适合, 0.5为不确定), 在这个基础上给出理由
 
         【输出格式要求】
         返回一个 JSON 数组（不是字符串、不是自然语言解释），每个元素包括以下字段：
         - 读取每篇文献中的ID
         - 不要使用 Markdown 格式（例如不要输出 ```json, 也不要输出```)
-        - Reason: 给出50字左右的理由
+        - Reason: 对给出50字左右的理由
 
         例如：
         [
