@@ -1,6 +1,7 @@
 import AbstractScreening
 import pandas as pd
 import os
+import time
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
@@ -9,9 +10,9 @@ load_dotenv(override=True)
 
 key=os.getenv("DMX_API_KEY")
 
-model1_name="claude-haiku-4-5-20251001"
-model2_name="gemini-2.5-flash"
-model3_name="gpt-5-mini"
+model1_name="gpt-4.1-mini"
+model2_name="gpt-4.1-mini"
+model3_name="gpt-4.1"
 
 model1 = ChatOpenAI(
     model=model1_name, 
@@ -29,8 +30,6 @@ model3 = ChatOpenAI(
     api_key=key
 )
 
-path = r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_val_set.csv"
-
 TP_In=0  #True Positive   Judge include, it actually include
 FP_In=0  #False Positive  Judge include, but it do not include(exclude + maybe)
 TN_In=0  #True Negative   Judge do not include, it actually do not include
@@ -46,61 +45,51 @@ FP_May=0
 TN_May=0
 FN_May=0
 
-df = pd.read_csv(path, usecols=["Abstract_clean", "label"])
-keywords=pd.read_csv(path, usecols=["Objective"]).iloc[0,0]
+start_time = time.time()
 
-df["ID"]=range(len(df))
-df["Flag1"]=""
-df["Flag2"]=""
-df["Flag3"]=""
-df["Reason"]=""
+num=25
+all_df = []
 
-num=20
+path = [
+    r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_val_set.csv",
+    r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_random_test_set.csv",
+    r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_HIV_test_set.csv",
+    r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_heart_test_set.csv"
+]
 
-AbstractScreening.use_agent_all(df[:num], keywords, model1, model2, model3)
+for j in range(4):
+    df = pd.read_csv(path[j], usecols=["Abstract_clean", "label"])[:num]
+    df_meta = pd.read_csv(path[j], usecols=["Objective", "Selection_criteria"])
+    keywords = df_meta.loc[0, "Objective"] + " " +df_meta.loc[0, "Selection_criteria"]
 
-label_map = {0.0: 0, 0.5: 2, 1.0: 1}
-df["label"] = df["label"].map(label_map)
-df["Flag3"] = df["Flag3"].map(label_map)
+    df["ID"]=range(len(df))
+    df["Flag1"]=""
+    df["Flag2"]=""
+    df["Flag3"]=""
+    df["Reason"]=""
 
-for i in range(num):
-    #In
-    if (df.loc[i, "Flag3"]==1):
-        if (df.loc[i, "label"]==1):
-            TP_In+=1
-        else:
-            FP_In+=1
-    else:
-        if (df.loc[i, "label"]==1):
-            FN_In+=1
-        else:
-            TN_In+=1
+    AbstractScreening.use_agent_all(df, keywords, model1, model2, model3)
 
-    #Ex
-    if (df.loc[i, "Flag3"]==0):
-        if (df.loc[i, "label"]==0):
-            TP_Ex+=1
-        else:
-            FP_Ex+=1
-    else:
-        if (df.loc[i, "label"]==0):
-            FN_Ex+=1
-        else:
-            TN_Ex+=1
+    label_map = {0.0: 0, 0.5: 2, 1.0: 1}
+    df["label"] = df["label"].map(label_map)
+    df["Flag3"] = df["Flag3"].map(label_map)
 
-    #May
-    if (df.loc[i, "Flag3"]==2):
-        if (df.loc[i, "label"]==2):
-            TP_May+=1
-        else:
-            FP_May+=1
-    else:
-        if (df.loc[i, "label"]==2):
-            FN_May+=1
-        else:
-            TN_May+=1
+    TP_In += ((df["Flag3"] == 1) & (df["label"] == 1)).sum()
+    FP_In += ((df["Flag3"] == 1) & (df["label"] != 1)).sum()
+    TN_In += ((df["Flag3"] != 1) & (df["label"] != 1)).sum()
+    FN_In += ((df["Flag3"] != 1) & (df["label"] == 1)).sum()
 
-#print(df[:num])
+    TP_Ex += ((df["Flag3"] == 0) & (df["label"] == 0)).sum()
+    FP_Ex += ((df["Flag3"] == 0) & (df["label"] != 0)).sum()
+    TN_Ex += ((df["Flag3"] != 0) & (df["label"] != 0)).sum()
+    FN_Ex += ((df["Flag3"] != 0) & (df["label"] == 0)).sum()
+
+    TP_May += ((df["Flag3"] == 2) & (df["label"] == 2)).sum()
+    FP_May += ((df["Flag3"] == 2) & (df["label"] != 2)).sum()
+    TN_May += ((df["Flag3"] != 2) & (df["label"] != 2)).sum()
+    FN_May += ((df["Flag3"] != 2) & (df["label"] == 2)).sum()
+
+    all_df.append(df)
 
 print("\n=== Include ===")
 print("TP:", TP_In, "FP:", FP_In, "TN:", TN_In, "FN:", FN_In)
@@ -151,10 +140,15 @@ def calc_macro_weighted(df, label_col="label", pred_col="Flag3"):
     print(f"Macro-average: Precision={precision_macro:.2f}, Recall={recall_macro:.2f}, F1={f1_macro:.2f}")
     print(f"Weighted-average: Precision={precision_weighted:.2f}, Recall={recall_weighted:.2f}, F1={f1_weighted:.2f}")
 
+merged_df = pd.concat(all_df, ignore_index=True)
 
 # === 输出三类结果 ===
 calc_metrics(TP_In, FP_In, TN_In, FN_In, "Include")
 calc_metrics(TP_Ex, FP_Ex, TN_Ex, FN_Ex, "Exclude")
 calc_metrics(TP_May, FP_May, TN_May, FN_May, "Maybe")
 
-calc_macro_weighted(df[:num], label_col="label", pred_col="Flag3")
+calc_macro_weighted(merged_df, label_col="label", pred_col="Flag3")
+
+end_time = time.time()
+elapsed = end_time - start_time
+print(f"\n总耗时: {elapsed:.2f} 秒")
