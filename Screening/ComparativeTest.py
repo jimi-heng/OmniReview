@@ -10,7 +10,7 @@ load_dotenv(override=True)
 
 key=os.getenv("DMX_API_KEY")
 
-model1_name="gpt-4.1-mini"
+model1_name="gpt-4.1-nano"
 model2_name="gpt-4.1-mini"
 model3_name="gpt-4.1"
 
