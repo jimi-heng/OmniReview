@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import re
 import json5
+import asyncio
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
@@ -11,12 +12,13 @@ load_dotenv(override=True)
 
 Entrez.email = "erzhuzi2023@outlook.com"
 
-key=os.getenv("DMX_API_KEY")
+key1=os.getenv("DMX_API_KEY_1")
+key2=os.getenv("DMX_API_KEY_2")
 
 DATA=[]
 KEYWORDS=""
 
-def abstract_screening(save_dir, model1=None, model2=None, model3=None):
+async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     global KEYWORDS
 
     choice = 0
@@ -35,7 +37,7 @@ def abstract_screening(save_dir, model1=None, model2=None, model3=None):
 
     df = pd.DataFrame(DATA)
     filename = os.path.join(save_dir, f"CSVList.csv")
-    use_agent_all(df, KEYWORDS, model1, model2, model3)
+    await use_agent_all(df, KEYWORDS, model1, model2, model3)
     df=df.to_csv(filename, index=False, encoding='utf-8-sig')
     print(f"保存到: {filename}")
 
@@ -103,23 +105,27 @@ def extract_doi(record):
     return ""
 
 #Combine all the agents
-def use_agent_all(csv_list, query, model1, model2, model3):
-    use_agent_first1(csv_list, query, model1, 1)
-    use_agent_first2(csv_list, query, model2, 2)
+async def use_agent_all(csv_list, query, model1, model2, model3):
+    await asyncio.gather(
+        use_agent_first1(csv_list, query, model1, 1),
+        use_agent_first2(csv_list, query, model2, 2)
+    )
+       
+    #Check whether Flag1 is eaqual to Flag2
+    same_mask = csv_list["Flag1"].astype(str).str.strip().str.upper() == csv_list["Flag2"].astype(str).str.strip().str.upper()
 
-    ListAgent3 = []
-    for _, row in csv_list.iterrows():
-        if (str(row["Flag1"]).strip().upper()) == (str(row["Flag2"]).strip().upper()):
-            csv_list.loc[:, "Flag3"]=csv_list["Flag1"]
-        else:
-            ListAgent3.append(row.to_dict())
+    #If equal, copy the values in Flag1 to Flag3
+    csv_list.loc[same_mask, "Flag3"] = csv_list.loc[same_mask, "Flag1"]
+    
+    #Get the different values
+    ListAgent3 = csv_list.loc[~same_mask].to_dict("records")
 
-    if ListAgent3!=[]:
+    if ListAgent3:
         print(len(ListAgent3))
-        use_agent_after(csv_list, ListAgent3, query, model3)   
+        await use_agent_after(csv_list, ListAgent3, query, model3) 
 
 #Judge by agent1
-def use_agent_first1(csv_list, query, model, num):
+async def use_agent_first1(csv_list, query, model, num):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
         已有两位科研助手对这些文献是否合适的判断不一致, 请更严谨的判断
@@ -151,7 +157,7 @@ def use_agent_first1(csv_list, query, model, num):
     agent = create_agent(
         model = model,
     )
-    response = agent.invoke({
+    response = await agent.ainvoke({
         "messages": [{
             "role": "user",
             "content": prompt_template.format(query=query, csv_list=csv_list)
@@ -165,7 +171,7 @@ def use_agent_first1(csv_list, query, model, num):
     CollectAIResponse(csv_list, data, num)
 
 #Judge by agent2
-def use_agent_first2(csv_list, query, model, num):
+async def use_agent_first2(csv_list, query, model, num):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
 
@@ -195,7 +201,7 @@ def use_agent_first2(csv_list, query, model, num):
     agent = create_agent(
         model = model,
     )
-    response = agent.invoke({
+    response = await agent.ainvoke({
         "messages": [{
             "role": "user",
             "content": prompt_template.format(query=query, csv_list=csv_list)
@@ -205,11 +211,11 @@ def use_agent_first2(csv_list, query, model, num):
     response=response["messages"][-1].content
     response=re.sub(r'"\s+"(\d+)"', r'"\1"', response)
     data=json5.loads(response)
-    print("First agent done")
+    print("Second agent done")
     CollectAIResponse(csv_list, data, num)
 
 #Judge by agent3
-def use_agent_after(csv_list, ListAgent3, query, model):
+async def use_agent_after(csv_list, ListAgent3, query, model):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
         已有两位科研助手对这些文献是否合适的判断不一致, 请更严谨的判断
@@ -241,7 +247,7 @@ def use_agent_after(csv_list, ListAgent3, query, model):
     agent = create_agent(
         model = model,
     )
-    response = agent.invoke({
+    response = await agent.ainvoke({
         "messages": [{
             "role": "user",
             "content": prompt_template.format(query=query, csv_list=ListAgent3)
@@ -253,50 +259,6 @@ def use_agent_after(csv_list, ListAgent3, query, model):
     print("Last agent done")
     CollectAIResponse(csv_list, data, 3)
 
-#Generate reason 
-def generate_reason(csv_list, row, query, model):
-    prompt_template = """
-        你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
-
-        【任务要求】
-        1. 阅读下方提供的文献信息列表。
-        2. 对每篇文献判断是否与主题密切相关。
-        3. 仅根据文献标题和摘要内容进行判断。
-        4. 输出结果时，必须严格按照指定 JSON 格式返回。
-        5. 你之前的判断存储在Flag1(1.0为确认适合, 0.0为不适合, 0.5为不确定), 在这个基础上给出理由
-
-        【输出格式要求】
-        返回一个 JSON 数组（不是字符串、不是自然语言解释），每个元素包括以下字段：
-        - 读取每篇文献中的ID
-        - 不要使用 Markdown 格式（例如不要输出 ```json, 也不要输出```)
-        - Reason: 对给出50字左右的理由
-
-        例如：
-        [
-        {{ "ID": 1, "Reason": "..." }},
-        ]
-
-        【文献信息】
-        {csv_list}
-
-        请直接输出 JSON 数组，不要添加任何多余说明或文字。
-    """
-    agent = create_agent(
-        model = model,
-    )
-
-    content = prompt_template.format(query=query, csv_list=row)
-    response = agent.invoke({
-        "messages": [{
-            "role": "user",
-            "content": prompt_template.format(query=query, csv_list=content)
-        }]
-    })
-    response=response["messages"][-1].content
-    response=re.sub(r'"\s+"(\d+)"', r'"\1"', response)
-    data=json5.loads(response)
-    CollectReason(csv_list, data)
-
 #Transform the AIResponse
 def CollectAIResponse(csv_list, response, num):
     for e in response:
@@ -307,40 +269,36 @@ def CollectAIResponse(csv_list, response, num):
             reason = e["Reason"]
             csv_list.loc[csv_list["ID"] == id, "Reason"] = reason
 
-#Add reason
-def CollectReason(csv_list, response):
-    for e in response:
-        id = e["ID"]
-        reason = e["Reason"]
-        csv_list.loc[csv_list["ID"] == id, "Reason"] = reason
-
-if __name__ == "__main__":
+async def main():
     #save_dir = input("enter address: ").strip()
     save_dir = r"C:\Users\erzhu\Desktop\GRP-MultiAgent\Screening"
 
-    model1_name="gpt-4.1-mini"
-    model2_name="gpt-4.1-mini"
-    model3_name="gpt-4.1-mini"
+    model1_name="gpt-4.1-nano"
+    model2_name="gpt-4.1-nano"
+    model3_name="gpt-4.1"
 
     model1 = ChatOpenAI(
         model=model1_name, 
         base_url="https://www.dmxapi.cn/v1",
-        api_key=key
+        api_key=key1
     )
     model2 = ChatOpenAI(
         model=model2_name,
         base_url="https://www.dmxapi.cn/v1",
-        api_key=key
+        api_key=key2
     )
     model3 = ChatOpenAI(
         model=model3_name,
         base_url="https://www.dmxapi.cn/v1",
-        api_key=key
+        api_key=key1
     )
 
-    abstract_screening(
+    await abstract_screening(
         save_dir,
         model1,
         model2,
         model3
     )
+
+if __name__ == "__main__":
+    asyncio.run(main())
