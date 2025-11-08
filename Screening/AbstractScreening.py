@@ -17,11 +17,85 @@ Entrez.email = "erzhuzi2023@outlook.com"
 key1=os.getenv("DMX_API_KEY_1")
 key2=os.getenv("DMX_API_KEY_2")
 
-DATA=[]
-KEYWORDS=""
+whole_paper_list=[]
+topic_keywords=""
+query = {}
+paper_list = {}
+
+systemPromptReason = """
+    Role: 
+        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
+    Goal:
+        Given a PICO (Population, Intervention, Comparison, Outcome) description and a Topic, 
+        your task is to determine whether a provided research paper is relevant (i.e., suitable for inclusion) 
+        or not relevant based on how well the paper aligns with the PICO and Topic.
+    Instructions:
+        1. Carefullly read the Topic and PICO information.
+        2. Review the paper's title and abstract.
+        3. Decide if the paper's content meaningfully fits the PICO question and Topic.
+        4. Evaluate relevance using the following rules:
+            1. The paper must clearly match at least two PICO components (Population, Intervention, Comparison, or Outcome).
+        5. Your response must include:
+            1. ID: the id of this paper.
+            2. Flag: return 1 if include, 0 if exclude.
+            3. Reason: a brief explanation of which PICO componets are contained and why this essay was include or exclude.
+    PICO description:
+        1. Population (P): The study targets the same or a similar group of patients/subjects.
+        2. Intervention (I): The main intervention matches or closely relates to that in the PICO.
+        3. Comparison (C): The study includes a relevant control or comparison group (if applicable).
+        4. Outcome (O): The study measures or reports on the same or relevant outcomes.
+"""
+
+systemPromptNoReason = """
+    Role: 
+        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
+    Goal:
+        Given a PICO (Population, Intervention, Comparison, Outcome) description and a Topic, 
+        your task is to determine whether a provided research paper is relevant (i.e., suitable for inclusion) 
+        or not relevant based on how well the paper aligns with the PICO and Topic.
+    Instructions:
+        1. Carefullly read the Topic and PICO information.
+        2. Review the paper's title and abstract.
+        3. Decide if the paper's content meaningfully fits the PICO question and Topic.
+        4. Evaluate relevance using the following rules:
+            1. The paper must clearly match at least two PICO components (Population, Intervention, Comparison, or Outcome).
+        5. Your response must include:
+            1. ID: the id of this paper.
+            2. Flag: return 1 if include, 0 if exclude.
+    PICO description:
+        1. Population: The study targets the same or a similar group of patients/subjects.
+        2. Intervention: The main intervention matches or closely relates to that in the PICO.
+        3. Comparison: The study includes a relevant control or comparison group (if applicable).
+        4. Outcome: The study measures or reports on the same or relevant outcomes.
+"""
+
+userPromptReason = f"""
+    PICO_Topic dictionary: 
+        {query}
+    Papers: 
+        {paper_list}
+    Task:
+        1. Evaluate each paper independently.
+        2. A paper is suitable (Flag=1) if it matches at least two PICO components (Population, Intervention, Comparison, Outcome).
+        3. If fewer than two components match, Flag=0.
+        4. Provide a short reasoning for each paper explaining which PICO components were matched.
+"""
+
+userPromptNoReason = f"""
+    PICO_Topic dictionary: 
+        {query}
+    Papers: 
+        {paper_list}
+    Task:
+        1. Evaluate each paper independently.
+        2. A paper is suitable (Flag=1) if it matches at least two PICO components (Population, Intervention, Comparison, Outcome).
+        3. If fewer than two components match, Flag=0.
+"""
+
+
 
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
-    global KEYWORDS
+    global topic_keywords
 
     choice = 0
     while True:
@@ -37,18 +111,31 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
             print("invalid number")
             continue
 
-    df = pd.DataFrame(DATA)
+    Population = input("Enter Population: ").strip()
+    Intervention = input("Enter Intervention: ").strip()
+    Comparision = input("Enter Comparision: ").strip()
+    Outcome = input("Enter Outcome: ").strip()
+
+    query = {
+        "Topic" : topic_keywords,
+        "Population" : Population,
+        "Intervention" : Intervention,
+        "Comparision" : Comparision,
+        "Outcome" : Outcome
+    }
+
+    paper_list = pd.DataFrame(whole_paper_list)
     filename = os.path.join(save_dir, f"CSVList.csv")
-    await use_agent_all(df, KEYWORDS, model1, model2, model3)
-    df=df.to_csv(filename, index=False, encoding='utf-8-sig')
+    await use_agent_all(paper_list, query, model1, model2, model3)
+    paper_list=paper_list.to_csv(filename, index=False, encoding='utf-8-sig')
     print(f"保存到: {filename}")
 
 #Download RIS files from PubMed
 def download_to_csv():
-    global DATA, KEYWORDS
+    global whole_paper_list, topic_keywords
 
     query = input("enter key words: ").strip()
-    KEYWORDS = query + " " + KEYWORDS
+    topic_keywords = query + " " + topic_keywords
     max_number = input("enter number: ").strip()
 
     #Search
@@ -66,7 +153,7 @@ def download_to_csv():
     records = list(Medline.parse(handle))
     handle.close()
 
-    num=len(DATA)
+    num=len(whole_paper_list)
     #Transform
     for idx, record in enumerate(records, start=0):
         row = {
@@ -77,17 +164,17 @@ def download_to_csv():
             'Journal': record.get('JT', ''),
             'Publication_Date': record.get('DP', ''),
             'DOI': extract_doi(record),
-            'Keywords': '; '.join(record.get('OT', record.get('MH', []))),
+            'topic_keywords': '; '.join(record.get('OT', record.get('MH', []))),
             'Flag1': '',
             'Flag2': '',
             'Flag3': '',
             'Reason': ''
         }
-        DATA.append(row)
+        whole_paper_list.append(row)
 
 #Upload files
 def upload_to_csv():
-    global DATA, KEYWORDS
+    global whole_paper_list, topic_keywords
     file_dir = input("enter RIS file: ").strip()
 
 #Get DOI 
@@ -107,24 +194,24 @@ def extract_doi(record):
     return ""
 
 #Combine all the agents
-async def use_agent_all(csv_list, query, model1, model2, model3):
+async def use_agent_all(paper_list, query, model1, model2, model3):
     await asyncio.gather(
-        use_agent_first1(csv_list, query, model1),
-        use_agent_first2(csv_list, query, model2)
+        use_agent_first(paper_list, query, model1, 1, userPromptReason, systemPromptReason),
+        use_agent_first(paper_list, query, model2, 2, userPromptNoReason, systemPromptNoReason)
     )
        
     #Check whether Flag1 is eaqual to Flag2
-    same_mask = csv_list["Flag1"].astype(str).str.strip().str.upper() == csv_list["Flag2"].astype(str).str.strip().str.upper()
+    same_mask = paper_list["Flag1"].astype(str).str.strip().str.upper() == paper_list["Flag2"].astype(str).str.strip().str.upper()
 
     #If equal, copy the values in Flag1 to Flag3
-    csv_list.loc[same_mask, "Flag3"] = csv_list.loc[same_mask, "Flag1"]
+    paper_list.loc[same_mask, "Flag3"] = paper_list.loc[same_mask, "Flag1"]
     
     #Get the different values
-    ListAgent3 = csv_list.loc[~same_mask].to_dict("records")
+    ListAgent3 = paper_list.loc[~same_mask].to_dict("records")
 
     if ListAgent3:
         print(len(ListAgent3))
-        await use_agent_after(csv_list, ListAgent3, query, model3) 
+        await use_agent_after(paper_list, ListAgent3, query, model3) 
 
 #The type of single value in the list
 class Judge_Base(BaseModel):
@@ -138,8 +225,8 @@ class Judge_List(BaseModel):
     """List of every essay's judge"""
     judge_list: List[Judge_Base] = Field(..., description="the list of each essay's judge")
 
-#Judge by agent1
-async def use_agent_first1(csv_list, query, model):
+#Judge by agent1 and agent2
+async def use_agent_first(paper_list, query, model, num, userPrompt, systemPrompt):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
         已有两位科研助手对这些文献是否合适的判断不一致, 请更严谨的判断
@@ -163,73 +250,30 @@ async def use_agent_first1(csv_list, query, model):
         ]
 
         【文献信息】
-        {csv_list}
+        {paper_list}
 
         请严格输出 JSON 数组，不要添加任何多余说明或文字。
     """
 
     agent = create_agent(
         model = model,
-        response_format=ToolStrategy(Judge_List)
+        response_format=ToolStrategy(Judge_List),
+        system_prompt=systemPrompt
     )
     response = await agent.ainvoke({
         "messages": [{
             "role": "user",
-            "content": prompt_template.format(query=query, csv_list=csv_list)
+            "content": userPrompt.format(query=query, paper_list=paper_list)
         }]
     })
     result=response["structured_response"]
     response_list=[w.model_dump(exclude_none=True) for w in result.judge_list]
     #print(response_list)
-    CollectAIResponse(csv_list, response_list, 1)
-    print("First agent done")
-
-#Judge by agent2
-async def use_agent_first2(csv_list, query, model):
-    prompt_template = """
-        你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
-
-        【任务要求】
-        1. 阅读下方提供的文献信息列表。
-        2. 对每篇文献判断是否与主题密切相关。
-        3. 仅根据文献标题和摘要内容进行判断。
-        4. 输出结果时，必须严格按照指定 JSON 格式返回。
-
-        【输出格式要求】
-        返回一个 JSON 数组（不是字符串、不是自然语言解释），每个元素包括以下字段：
-        - 读取每篇文献中的ID
-        - 不要使用 Markdown 格式（例如不要输出 ```json, 也不要输出```)
-        - Flag: 如果适合该主题，则为 1.0, 否则为 0.0
-
-        例如：
-        [
-        {{ "ID": 1, "Flag": 1.0 }},
-        ]
-
-        【文献信息】
-        {csv_list}
-
-        请严格输出 JSON 数组，不要添加任何多余说明或文字。
-    """
-
-    agent = create_agent(
-        model = model,
-        response_format=ToolStrategy(Judge_List)
-    )
-    response = await agent.ainvoke({
-        "messages": [{
-            "role": "user",
-            "content": prompt_template.format(query=query, csv_list=csv_list)
-        }]
-    })
-    result=response["structured_response"]
-    response_list=[w.model_dump(exclude_none=True) for w in result.judge_list]
-    #print(response_list)
-    CollectAIResponse(csv_list, response_list, 2)
-    print("Second agent done")
+    CollectAIResponse(paper_list, response_list, num)
+    print(f"Aagent{num} done")
 
 #Judge by agent3
-async def use_agent_after(csv_list, ListAgent3, query, model):
+async def use_agent_after(paper_list, ListAgent3, query, model):
     prompt_template = """
         你是一名科研助手，请评估以下文献是否适合用于撰写主题为“{query}”的学术论文。
         已有两位科研助手对这些文献是否合适的判断不一致, 请更严谨的判断
@@ -253,36 +297,37 @@ async def use_agent_after(csv_list, ListAgent3, query, model):
         ]
 
         【文献信息】
-        {csv_list}
+        {paper_list}
 
         请严格输出 JSON 数组，不要添加任何多余说明或文字。
     """
 
     agent = create_agent(
         model = model,
-        response_format=ToolStrategy(Judge_List)
+        response_format=ToolStrategy(Judge_List),
+        system_prompt=systemPromptReason
     )
     response = await agent.ainvoke({
         "messages": [{
             "role": "user",
-            "content": prompt_template.format(query=query, csv_list=ListAgent3)
+            "content": userPromptReason.format(query=query, paper_list=ListAgent3)
         }]
     })
     result=response["structured_response"]
     response_list=[w.model_dump(exclude_none=True) for w in result.judge_list]
     #print(response_list)
-    CollectAIResponse(csv_list, response_list, 3)
+    CollectAIResponse(paper_list, response_list, 3)
     print("Last agent done")
 
 #Transform the AIResponse
-def CollectAIResponse(csv_list, response, num):
+def CollectAIResponse(paper_list, response, num):
     for e in response:
         id = e['ID']
         flag = e['Flag']
-        csv_list.loc[csv_list['ID'] == id, f"Flag{num}"] = flag
+        paper_list.loc[paper_list['ID'] == id, f"Flag{num}"] = flag
         if (num == 3 or num == 1):
             reason = e['Reason']
-            csv_list.loc[csv_list['ID'] == id, 'Reason'] = reason
+            paper_list.loc[paper_list['ID'] == id, 'Reason'] = reason
 
 async def main():
     #save_dir = input("enter address: ").strip()
