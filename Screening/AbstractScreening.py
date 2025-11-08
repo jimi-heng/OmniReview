@@ -92,28 +92,16 @@ userPromptNoReason = """
 """
 
 #The type of single value in the list
-class Judge_Base_Reason(BaseModel):
+class Judge_Base(BaseModel):
     """Judge whether the essay is suitable"""
     ID: int = Field(..., description = "The ID of the eaasy")
     Flag: Literal[1, 0] = Field(..., description = "the judge of whether the value is suitbale")
-    Reason: Optional[str] = Field(..., description="the reason of the judge")
+    Reason: Optional[str] = Field(None, description="the reason of the judge")
 
 #The whole list
-class Judge_List_Reason(BaseModel):
+class Judge_List(BaseModel):
     """List of every essay's judge"""
     judge_list: List[Judge_Base_Reason] = Field(..., description="the list of each essay's judge")
-
-#The type of single value in the list
-class Judge_Base_NoReason(BaseModel):
-    """Judge whether the essay is suitable"""
-    ID: int = Field(..., description = "The ID of the eaasy")
-    Flag: Literal[1, 0] = Field(..., description = "the judge of whether the value is suitbale")
-
-#The whole list
-class Judge_List_NoReason(BaseModel):
-    """List of every essay's judge"""
-    judge_list: List[Judge_Base_NoReason] = Field(..., description="the list of each essay's judge")
-
 
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     global topic_keywords
@@ -225,12 +213,12 @@ def extract_doi(record):
 #Combine all the agents
 async def use_agent_all(paper_list, query, model1, model2, model3):
     await asyncio.gather(
-        use_agent_first(paper_list, query, model1, 1, userPromptReason, systemPromptReason, Judge_List_Reason),
-        use_agent_first(paper_list, query, model2, 2, userPromptNoReason, systemPromptNoReason, Judge_List_NoReason)
+        use_agent_first(paper_list, query, model1, 1, userPromptReason, systemPromptReason, Judge_List),
+        use_agent_first(paper_list, query, model2, 2, userPromptNoReason, systemPromptNoReason, Judge_List)
     )
        
-    # await use_agent_first(paper_list, query, model2, 2, userPromptNoReason, systemPromptNoReason, Judge_List_NoReason),
-    # await use_agent_first(paper_list, query, model1, 1, userPromptReason, systemPromptReason, Judge_List_Reason),
+    # await use_agent_first(paper_list, query, model2, 2, userPromptNoReason, systemPromptNoReason, Judge_List_Reason),
+    # await use_agent_first(paper_list, query, model1, 1, userPromptReason, systemPromptReason, Judge_List_NoReason),
 
     #Check whether Flag1 is eaqual to Flag2
     same_mask = paper_list["Flag1"].astype(str).str.strip().str.upper() == paper_list["Flag2"].astype(str).str.strip().str.upper()
@@ -269,7 +257,7 @@ async def use_agent_first(paper_list, query, model, num, userPrompt, systemPromp
 async def use_agent_after(paper_list, ListAgent3, query, model):
     agent = create_agent(
         model = model,
-        response_format=ToolStrategy(Judge_List_Reason),
+        response_format=ToolStrategy(Judge_List),
         system_prompt=systemPromptReason
     )
     response = await agent.ainvoke({
@@ -299,7 +287,7 @@ async def main():
     save_dir = r"C:\Users\erzhu\Desktop\GRP-MultiAgent\Screening"
 
     model1_name="gpt-4.1-mini"
-    model2_name="gpt-4.1-nano"
+    model2_name="gpt-4.1-mini"
     model3_name="gpt-4.1"
 
     model1 = ChatOpenAI(
