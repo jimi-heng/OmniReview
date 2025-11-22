@@ -5,159 +5,161 @@ import time
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import asyncio
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 
 load_dotenv(override=True)
 
-key1=os.getenv("DMX_API_KEY_1")
-key2=os.getenv("DMX_API_KEY_2")
+key1 = os.getenv("DMX_API_KEY_1")
+key2 = os.getenv("DMX_API_KEY_2")
 
 async def main():
-    model1_name="gpt-4.1-nano"
-    model2_name="gpt-4.1-nano"
-    model3_name="gpt-4.1"
+    # === 模型设定 ===
+    model1_name = "claude-haiku-4-5-20251001"
+    model2_name = "claude-haiku-4-5-20251001"
+    model3_name = "glm-4.6"
 
     model1 = ChatOpenAI(
         model=model1_name, 
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key1,
+        base_url="https://www.dmxapi.cn/v1", 
+        api_key=key1, 
         temperature=0
     )
     model2 = ChatOpenAI(
-        model=model2_name,
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key2,
+        model=model2_name, 
+        base_url="https://www.dmxapi.cn/v1", 
+        api_key=key2, 
         temperature=0
     )
     model3 = ChatOpenAI(
-        model=model3_name,
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key1,
+        model=model3_name, 
+        base_url="https://www.dmxapi.cn/v1", 
+        api_key=key1, 
         temperature=0
     )
 
-    TP_In=0  #True Positive   Judge include, it actually include
-    FP_In=0  #False Positive  Judge include, but it do not include(exclude + maybe)
-    TN_In=0  #True Negative   Judge do not include, it actually do not include
-    FN_In=0  #False Negative  Judge do not include, but it include
-
-    TP_Ex=0
-    FP_Ex=0
-    TN_Ex=0
-    FN_Ex=0
-
-    TP_May=0
-    FP_May=0
-    TN_May=0
-    FN_May=0
+    # === 指标统计初始化 ===
+    Tp = Fp = Tn = Fn = 0
 
     start_time = time.time()
 
-    num=25
-    all_df = []
+    # path = [
+    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_001.csv",
+    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_002.csv",
+    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_003.csv",
+    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_004.csv"
+    # ]
+    # keywords = [
+    #     """
+    #     PICO: 
+    #     Population (P): Aged 80 and over 80+ years, Adult 19-44 years, Diseases and disorders, Middle Aged 45-64 years, Young Adult 19-24 years, Aged 65-79 years, Healthy, Adolescent 13-18 years 
+    #     Intervention (I): Beta Carotene Level, Selenium, Vitamin IV Solution Additives 
+    #     Comparison (C): Placebo 
+    #     Outcome (O): All Cause Mortality
+    #     """,
 
-    path = [
-        r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_val_set.csv",
-        r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_random_test_set.csv",
-        r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_HIV_test_set.csv",
-        r"C:\Users\erzhu\Desktop\GRP_dataset\20240827_Systematic_Review_Data\20240827_heart_test_set.csv"
+    #     """
+    #     PICO: 
+    #     Population (P): Aged 80 and over 80+ years, Adult 19-44 years, Middle Aged 45-64 years, Surgery, Young Adult 19-24 years, General Anesthesia, Aged 65-79 years 
+    #     Intervention (I): Surgical Department, Antiemetics And Antinauseants 
+    #     Comparison (C): None 
+    #     Outcome (O): Headache, Prolonged QT Interval, Cardiac Arrhythmia, Extrapyramidal Sign, Vomiting, Sedation, Constipation, Adverse Event, Wound Infection
+    #     """,
+
+    #     """
+    #     PICO: 
+    #     Population (P): Aged 80 and over 80+ years, Adult 19-44 years, Middle Aged 45-64 years, Type 2 Diabetes Mellitus, Young Adult 19-24 years, Type 1 Diabetes Mellitus, Aged 65-79 years 
+    #     Intervention (I): Clinical education, Audits and feedback, Reminders, Case Management, Continuous quality improvement, Financial incentive, Patient Education, Electronic health records 
+    #     Comparison (C): None 
+    #     Outcome (O): Aspirin, Retinopathy, Hypoglycemia, Low Density Lipoprotein Cholesterol Measurement, Diabetic Foot Examination, Smoking cessation, Hyperglycemia, HbA1c level, Blood Pressure, Complication, Renal Care, Statins, Antihypertensive agents
+    #     """,
+
+    #     """
+    #     PICO: 
+    #     Population (P):Vascular Dementia, Not reported 
+    #     Intervention (I): Galantamine, Rivastigmine, Donepezil 
+    #     Comparison (C): Galantamine, Rivastigmine, Donepezil, Placebo 
+    #     Outcome (O): Cognitive function, Clinical Finding, Alzheimer'a Disease Assessment Scale, Clinical Global Impression, Adverse Event, Activities Of Daily Living Assessment
+    #     """
+    # ]
+
+
+    path = [r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\merged_output.csv"]
+    keywords = [
+        """
+        PICO: 
+        Population (P): 铁缺乏但尚未贫血的儿童(0-6岁), 合并疾病?
+        Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程为12周),剂量,疗程
+        Comparison (C): 不进行铁剂治疗
+        Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标; 
+                    Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
+        Extra requirements: Study design: SR、RCT、观察性研究
+        """
     ]
 
-    for j in range(len(path)):
-        df = pd.read_csv(path[j], usecols=["Abstract_clean", "label"])[:num]
-        df_meta = pd.read_csv(path[j], usecols=["Objective", "Selection_criteria"])
-        keywords = df_meta.loc[0, "Objective"] + " " +df_meta.loc[0, "Selection_criteria"]
+    # === 主循环 ===
+    for i in range(len(path)):
+        print(f"\n正在处理文件: {os.path.basename(path[i])}")
 
-        df["ID"]=range(len(df))
-        df["Flag1"]=""
-        df["Flag2"]=""
-        df["Flag3"]=""
-        df["Reason"]=""
+        # 读取数据
+        df = pd.read_csv(path[i], usecols=["Title", "Abstract_clean", "label"])[:300]
+        keyword = keywords[i]
 
-        await AbstractScreening.use_agent_all(df, keywords, model1, model2, model3)
+        # 初始化中间列
+        df["ID"] = range(len(df))
+        df["Flag1"] = ""
+        df["Flag2"] = ""
+        df["Flag3"] = ""
+        df["Reason"] = ""
 
-        label_map = {0.0: 0, 0.5: 2, 1.0: 1}
+        label_map = {0.0: "0", 1.0: "1"}
         df["label"] = df["label"].map(label_map)
-        df["Flag3"] = df["Flag3"].map(label_map)
 
-        TP_In += ((df["Flag3"] == 1) & (df["label"] == 1)).sum()
-        FP_In += ((df["Flag3"] == 1) & (df["label"] != 1)).sum()
-        TN_In += ((df["Flag3"] != 1) & (df["label"] != 1)).sum()
-        FN_In += ((df["Flag3"] != 1) & (df["label"] == 1)).sum()
+        # === 调用多智能体处理 ===
+        await AbstractScreening.use_agent_all(df, keyword, model1, model2, model3)
 
-        TP_Ex += ((df["Flag3"] == 0) & (df["label"] == 0)).sum()
-        FP_Ex += ((df["Flag3"] == 0) & (df["label"] != 0)).sum()
-        TN_Ex += ((df["Flag3"] != 0) & (df["label"] != 0)).sum()
-        FN_Ex += ((df["Flag3"] != 0) & (df["label"] == 0)).sum()
+        # === 累积评估指标 ===
+        Tp += ((df["Flag3"] == "1") & (df["label"] == "1")).sum()
+        Fp += ((df["Flag3"] == "1") & (df["label"] != "1")).sum()
+        Tn += ((df["Flag3"] != "1") & (df["label"] != "1")).sum()
+        Fn += ((df["Flag3"] != "1") & (df["label"] == "1")).sum()
 
-        TP_May += ((df["Flag3"] == 2) & (df["label"] == 2)).sum()
-        FP_May += ((df["Flag3"] == 2) & (df["label"] != 2)).sum()
-        TN_May += ((df["Flag3"] != 2) & (df["label"] != 2)).sum()
-        FN_May += ((df["Flag3"] != 2) & (df["label"] == 2)).sum()
+        mismatch = df[df["Flag3"] != df["label"]]
 
-        all_df.append(df)
+        cols = ["ID", "Title", "Abstract_clean", "Flag3", "Reason"]
+        mismatch_selected = mismatch[cols]
 
-    print("\n=== Include ===")
-    print("TP:", TP_In, "FP:", FP_In, "TN:", TN_In, "FN:", FN_In)
+        mismatch_selected.to_csv(r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\mismatch_rows.csv", index=False, encoding="utf-8-sig")
 
-    print("\n=== Exclude ===")
-    print("TP:", TP_Ex, "FP:", FP_Ex, "TN:", TN_Ex, "FN:", FN_Ex)
-
-    print("\n=== Maybe ===")
-    print("TP:", TP_May, "FP:", FP_May, "TN:", TN_May, "FN:", FN_May)
-
-    def calc_metrics(TP, FP, TN, FN, name):
-        # 准确率（Accuracy）：预测正确的比例
+    # === 各类指标计算函数 ===
+    def calc_metrics(TP, FP, TN, FN):
         accuracy = (TP + TN) / (TP + FP + TN + FN) if (TP + FP + TN + FN) > 0 else 0
-        
-        # 灵敏度（Sensitivity / Recall）：在所有“实际为正”的样本中，正确预测为正的比例
-        sensitivity = TP / (TP + FN) if (TP + FN) > 0 else 0   
-        
-        # 特异度（Specificity）：在所有“实际为负”的样本中，正确预测为负的比例
+        sensitivity = TP / (TP + FN) if (TP + FN) > 0 else 0
         specificity = TN / (TN + FP) if (TN + FP) > 0 else 0
-        
-        # 精确率（Precision）：在所有预测为正的样本中，真正为正的比例
         precision = TP / (TP + FP) if (TP + FP) > 0 else 0
-        
-        # F1分数（F1-score）：Precision 和 Recall 的调和平均，更全面衡量模型性能
         f1 = 2 * precision * sensitivity / (precision + sensitivity) if (precision + sensitivity) > 0 else 0
 
-        print(f"\n=== {name} Metrics ===")
-        print(f"Accuracy_{name}: {accuracy:.2f}    # 准确率（正确预测的总体比例）")
-        print(f"Sensitivity_{name} (Recall): {sensitivity:.2f}    # 灵敏度 / 召回率")
-        print(f"Specificity_{name}: {specificity:.2f}    # 特异度（正确识别负例的能力）")
-        print(f"Precision_{name}: {precision:.2f}    # 精确率（预测为正中实际为正的比例）")
-        print(f"F1_{name}: {f1:.2f}    # F1分数（Precision 与 Recall 的平衡指标）")
+        print(f"\n=== Metrics ===")
+        print(f"Accuracy: {accuracy:.2f}")
+        print(f"Sensitivity (Recall): {sensitivity:.2f}")
+        print(f"Specificity: {specificity:.2f}")
+        print(f"Precision: {precision:.2f}")
+        print(f"F1: {f1:.2f}")
 
-    def calc_macro_weighted(df, label_col="label", pred_col="Flag3"):
-        y_true = df[label_col]
-        y_pred = df[pred_col]
-
-        acc = accuracy_score(y_true, y_pred)
-        precision_macro, recall_macro, f1_macro, _ = precision_recall_fscore_support(
-            y_true, y_pred, average='macro', zero_division=0
-        )
-        precision_weighted, recall_weighted, f1_weighted, _ = precision_recall_fscore_support(
-            y_true, y_pred, average='weighted', zero_division=0
-        )
-
-        print("\n=== Overall Performance ===")
-        print(f"Accuracy_total: {acc:.2f}")
-        print(f"Macro-average: Precision={precision_macro:.2f}, Recall={recall_macro:.2f}, F1={f1_macro:.2f}")
-        print(f"Weighted-average: Precision={precision_weighted:.2f}, Recall={recall_weighted:.2f}, F1={f1_weighted:.2f}")
-
-    merged_df = pd.concat(all_df, ignore_index=True)
+    print("\nmodel1_name = " + model1_name)
+    print("model2_name = " + model2_name)
+    print("model3_name = " + model3_name)
 
     # === 输出三类结果 ===
-    calc_metrics(TP_In, FP_In, TN_In, FN_In, "Include")
-    calc_metrics(TP_Ex, FP_Ex, TN_Ex, FN_Ex, "Exclude")
-    calc_metrics(TP_May, FP_May, TN_May, FN_May, "Maybe")
+    print("\n=== Results ===")
+    print("TP:", Tp, "FP:", Fp, "TN:", Tn, "FN:", Fn)
 
-    calc_macro_weighted(merged_df, label_col="label", pred_col="Flag3")
+    calc_metrics(Tp, Fp, Tn, Fn)
 
+    # === 总耗时 ===
     end_time = time.time()
     elapsed = end_time - start_time
     print(f"\n总耗时: {elapsed:.2f} 秒")
+
+    print("\n=======================================================================================")
 
 if __name__ == "__main__":
     asyncio.run(main())

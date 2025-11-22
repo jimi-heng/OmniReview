@@ -1,10 +1,5 @@
 from Bio import Entrez
-from Bio import Medline
-import pandas as pd
 import os
-import re
-import json5
-import asyncio
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
@@ -34,9 +29,10 @@ class Weather_List(BaseModel):
 
 # 创建模型
 model1 = ChatOpenAI(
-    model="gpt-4.1-nano",
+    model="claude-sonnet-4-20250514",
     base_url="https://www.dmxapi.cn/v1",
-    api_key=key1
+    api_key=key1,
+    temperature =0
 )
 
 # 用 ToolStrategy 指定返回结构
@@ -51,6 +47,7 @@ response = agent.invoke({
     "messages": [{"role": "user", "content": "What is the weather in London and Beijing"}]
 })
 
+print(response)
 # 输出结构化响应
 result = response["structured_response"]
 
