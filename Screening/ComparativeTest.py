@@ -127,7 +127,7 @@ async def main():
         cols = ["ID", "Title", "Abstract_clean", "Flag3", "Reason"]
         mismatch_selected = mismatch[cols]
 
-        mismatch_selected.to_csv(r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\mismatch_rows.csv", index=False, encoding="utf-8-sig")
+        df.to_csv(r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\mismatch_rows.csv", index=False, encoding="utf-8-sig")
 
     # === 各类指标计算函数 ===
     def calc_metrics(TP, FP, TN, FN):

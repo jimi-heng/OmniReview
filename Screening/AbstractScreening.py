@@ -209,19 +209,21 @@ class Judge_List(BaseModel):
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     global topic_keywords
 
-    choice = 0
-    while True:
-        print("Download files: 1, Upload files: 2, Start abstract screening: 3")
-        choice = int(input("Please choose: "))
-        if (choice == 1):
-            download_to_csv()
-        elif choice == 2:
-            upload_to_csv()
-        elif choice == 3:
-            break
-        else:
-            print("invalid number")
-            continue
+    literature_search()
+    return
+    # choice = 0
+    # while True:
+    #     print("Download files: 1, Upload files: 2")
+    #     choice = int(input("Please choose: "))
+    #     if (choice == 1):
+    #         download_to_csv()
+    #     elif choice == 2:
+    #         upload_to_csv()
+    #     elif choice == 3:
+    #         break
+    #     else:
+    #         print("invalid number")
+    #         continue
 
     # Population = input("Enter Population: ").strip()
     # Intervention = input("Enter Intervention: ").strip()
@@ -250,21 +252,21 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     paper_list=paper_list.to_csv(filename, index=False, encoding='utf-8-sig')
     print(f"保存到: {filename}")
 
-#Download RIS files from PubMed
-def download_to_csv():
+#Download files from PubMed
+def literature_search():
     global whole_paper_list, topic_keywords
-
+    
     query = input("enter key words: ").strip()
     topic_keywords = query + " " + topic_keywords
-    max_number = input("enter number: ").strip()
+    max_number = input("enter max number: ").strip()
 
-    #Search
+    # Search for pubmed List
     handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
     record = Entrez.read(handle)
     handle.close()
     
     pmids = record["IdList"]
-    print(f"找到 {len(pmids)} 篇文献")
+    print(f"find {len(pmids)} papers")
     
     if not pmids:
         return
@@ -274,7 +276,7 @@ def download_to_csv():
     handle.close()
 
     num=len(whole_paper_list)
-    #Transform
+    # Transform
     for idx, record in enumerate(records, start=0):
         row = {
             'ID': num+idx,
@@ -291,6 +293,8 @@ def download_to_csv():
             'Reason': ''
         }
         whole_paper_list.append(row)
+    print("\nExample of first paper:")
+    print(whole_paper_list[0])
 
 #Upload files
 def upload_to_csv():
