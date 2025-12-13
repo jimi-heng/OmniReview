@@ -5,9 +5,12 @@ import os
 import re
 import ThreeAgnets
 import asyncio
+from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-load_dotenv(override=True)
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+load_dotenv(SCRIPT_DIR / ".env", override=True)
 
 Entrez.email = "erzhuzi2023@outlook.com"
 
@@ -90,6 +93,8 @@ userPromptNoReason = """
 
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     global topic_keywords
+    save_dir = Path(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     literature_search()
 
@@ -129,9 +134,9 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
   }
 
     paper_list = pd.DataFrame(whole_paper_list)
-    filename = os.path.join(save_dir, f"CSVList.csv")
+    filename = save_dir / "CSVList.csv"
     await ThreeAgnets.use_agent_all(paper_list, pico1, model1, model2, model3, systemPromptReason, systemPromptNoReason, userPromptReason, userPromptNoReason)
-    paper_list=paper_list.to_csv(filename, index=False, encoding='utf-8-sig')
+    paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"保存到: {filename}")
 
 #Download files from PubMed
@@ -201,7 +206,7 @@ def extract_doi(record):
 
 async def main():
     #save_dir = input("enter address: ").strip()
-    save_dir = r"C:\Users\erzhu\Desktop\GRP-MultiAgent\Screening"
+    save_dir = SCRIPT_DIR
 
     model1_name="claude-haiku-4-5-20251001"
     model2_name="claude-haiku-4-5-20251001"

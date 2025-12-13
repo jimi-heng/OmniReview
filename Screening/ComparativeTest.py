@@ -2,11 +2,15 @@ import AbstractScreening
 import pandas as pd
 import os
 import time
+from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import asyncio
 
-load_dotenv(override=True)
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+
+load_dotenv(SCRIPT_DIR / ".env", override=True)
 
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
@@ -41,11 +45,14 @@ async def main():
 
     start_time = time.time()
 
+    output_dir = REPO_ROOT / "outputs"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     # path = [
-    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_001.csv",
-    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_002.csv",
-    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_003.csv",
-    #     r"C:\Users\erzhu\Desktop\GRP_dataset\pico_004.csv"
+    #     REPO_ROOT / "data" / "pico_001.csv",
+    #     REPO_ROOT / "data" / "pico_002.csv",
+    #     REPO_ROOT / "data" / "pico_003.csv",
+    #     REPO_ROOT / "data" / "pico_004.csv",
     # ]
     # keywords = [
     #     """
@@ -82,7 +89,7 @@ async def main():
     # ]
 
 
-    path = [r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\merged_output.csv"]
+    path = [REPO_ROOT / "data" / "merged_output.csv"]
     keywords = [
         """
         PICO: 
@@ -127,7 +134,8 @@ async def main():
         cols = ["ID", "Title", "Abstract_clean", "Flag3", "Reason"]
         mismatch_selected = mismatch[cols]
 
-        df.to_csv(r"C:\Users\erzhu\Desktop\铁缺乏指南AI筛查 25.11.3\mismatch_rows.csv", index=False, encoding="utf-8-sig")
+        output_path = output_dir / "mismatch_rows.csv"
+        df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
     # === 各类指标计算函数 ===
     def calc_metrics(TP, FP, TN, FN):
