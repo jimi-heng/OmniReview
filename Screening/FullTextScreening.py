@@ -166,15 +166,35 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def write_fulltexts_to_txt(paper_df: pd.DataFrame, output_txt: Path) -> None:
+    output_txt.parent.mkdir(parents=True, exist_ok=True)
+    with output_txt.open("w", encoding="utf-8") as f:
+        for row in paper_df.to_dict("records"):
+            f.write("=" * 80 + "\n")
+            f.write(f"ID: {row.get('ID')}\n")
+            f.write(f"FileName: {row.get('FileName')}\n")
+            f.write(f"RelativePath: {row.get('RelativePath')}\n")
+            f.write(f"Title: {row.get('Title')}\n")
+            f.write(f"FullTextChars: {row.get('FullTextChars')}\n")
+            f.write(f"ReadError: {row.get('ReadError')}\n")
+            f.write("-" * 80 + "\n")
+            f.write((row.get("FullText") or "") + "\n")
+            f.write("\n")
+
+
 async def full_text_screening(
     resources_dir: Path,
     output_csv: Path,
+    output_txt: Path,
     model: ChatOpenAI,
 ) -> None:
     paper_df = load_fulltext_from_resources(resources_dir)
     if paper_df.empty:
         print(f"No supported files found in: {resources_dir}")
         return
+
+    write_fulltexts_to_txt(paper_df, output_txt)
+    print(f"Saved full texts: {output_txt}")
 
     agent = create_agent(
         model=model,
@@ -242,6 +262,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Standalone full-text screening from files in ./resources")
     parser.add_argument("--resources-dir", type=Path, default=PROJECT_DIR / "resources")
     parser.add_argument("--output-csv", type=Path, default=PROJECT_DIR / "outputs" / "fulltext_screening_results.csv")
+    parser.add_argument("--output-txt", type=Path, default=PROJECT_DIR / "outputs" / "fulltext_sent_to_ai.txt")
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1")
     parser.add_argument("--model", type=str, default="glm-4.6")
     return parser.parse_args()
@@ -256,6 +277,7 @@ async def main() -> None:
     await full_text_screening(
         resources_dir=args.resources_dir,
         output_csv=args.output_csv,
+        output_txt=args.output_txt,
         model=model,
     )
 
