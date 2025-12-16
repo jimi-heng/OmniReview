@@ -255,7 +255,7 @@ def _build_model(model_name: str, base_url: str) -> ChatOpenAI:
     key1 = os.getenv("DMX_API_KEY_1")
     if not key1:
         raise RuntimeError("Missing env var in Screening/.env: DMX_API_KEY_1")
-    return ChatOpenAI(model=model_name, base_url=base_url, api_key=key1, temperature=0)
+    return ChatOpenAI(model=model_name, base_url=base_url, api_key=key1, temperature=0) # type: ignore
 
 
 def _parse_args() -> argparse.Namespace:
