@@ -180,8 +180,6 @@ def literature_search():
             'Reason': ''
         }
         whole_paper_list.append(row)
-    print("\nExample of first paper:")
-    print(whole_paper_list[0])
 
 #Upload files
 def upload_to_csv():
