@@ -11,7 +11,6 @@ from langchain.agents import create_agent
 from langchain.agents.structured_output import ToolStrategy
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
-from pypdf import PdfReader
 from typing import Literal, List, Optional
 
 try:
@@ -102,6 +101,11 @@ def _normalize_text(text: str) -> str:
 
 
 def _extract_pdf_text(pdf_path: Path) -> tuple[str, str, int]:
+    try:
+        from pypdf import PdfReader  # local import: avoid hard dependency when not needed
+    except Exception as e:  # pragma: no cover
+        raise RuntimeError(f"pypdf is required for PDF text extraction: {e}") from e
+
     reader = PdfReader(str(pdf_path))
     meta_title = ""
     try:
@@ -124,6 +128,18 @@ def _extract_pdf_text(pdf_path: Path) -> tuple[str, str, int]:
         if page_text.strip():
             parts.append(page_text)
     return ("\n\n".join(parts), meta_title, num_pages)
+
+
+def _extract_pdf_metadata_with_pymupdf(pdf_path: Path) -> tuple[str, int]:
+    if fitz is None:
+        raise RuntimeError("PyMuPDF is required for PDF metadata in vision-only mode. Install `pymupdf`.")
+    with fitz.open(str(pdf_path)) as doc:
+        meta_title = ""
+        try:
+            meta_title = str((doc.metadata or {}).get("title") or "").strip()
+        except Exception:
+            meta_title = ""
+        return meta_title, int(doc.page_count)
 
 
 def _read_text_file(path: Path) -> str:
@@ -200,7 +216,8 @@ def _pdf_pages_to_data_urls(
         return out
 
 
-def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
+def load_fulltext_from_resources(resources_dir: Path, *, extract_pdf_text: bool = True) -> pd.DataFrame:
+    resources_dir = resources_dir.resolve()
     if not resources_dir.exists():
         raise FileNotFoundError(f"resources folder not found: {resources_dir}")
 
@@ -212,6 +229,7 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
 
     rows: list[dict] = []
     for idx, path in enumerate(files):
+        path = path.resolve()
         title = path.stem
         full_text = ""
         num_pages = 0
@@ -219,9 +237,15 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
 
         try:
             if path.suffix.lower() == ".pdf":
-                full_text, meta_title, num_pages = _extract_pdf_text(path)
-                if meta_title:
-                    title = meta_title
+                if extract_pdf_text:
+                    full_text, meta_title, num_pages = _extract_pdf_text(path)
+                    if meta_title:
+                        title = meta_title
+                else:
+                    meta_title, num_pages = _extract_pdf_metadata_with_pymupdf(path)
+                    if meta_title:
+                        title = meta_title
+                    full_text = ""
             else:
                 full_text = _read_text_file(path)
         except Exception as e:
@@ -234,7 +258,7 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
             {
                 "ID": idx,
                 "FileName": path.name,
-                "RelativePath": str(path.relative_to(PROJECT_DIR)),
+                "RelativePath": str(path.relative_to(PROJECT_DIR)) if PROJECT_DIR in path.parents else str(path),
                 "Suffix": path.suffix.lower(),
                 "Title": title,
                 "FullTextPreview": preview,
@@ -283,7 +307,12 @@ async def full_text_screening(
     vision_jpeg_quality: int = 80,
     batch_size_override: int | None = None,
 ) -> None:
-    paper_df = load_fulltext_from_resources(resources_dir)
+    pages_to_use = _parse_page_spec(vision_pages)
+    extract_pdf_text = not (vision and pages_to_use is None)
+    if vision and pages_to_use is None:
+        print("Vision enabled with all pages -> skipping PDF text extraction (not using pypdf).")
+
+    paper_df = load_fulltext_from_resources(resources_dir, extract_pdf_text=extract_pdf_text)
     if paper_df.empty:
         print(f"No supported files found in: {resources_dir}")
         return
@@ -304,7 +333,6 @@ async def full_text_screening(
         + paper_df.loc[unreadable_mask, "ReadError"].astype(str)
     )
 
-    pages_to_use = _parse_page_spec(vision_pages)
     effective_batch_size = batch_size_override or (1 if vision else batch_size)
 
     def _needs_vision(record: dict) -> bool:
