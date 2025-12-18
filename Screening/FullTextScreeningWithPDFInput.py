@@ -31,27 +31,72 @@ PROJECT_DIR = SCRIPT_DIR.parent  # 项目根目录
 
 # 系统提示词 - 定义AI的角色和任务
 systemPromptReason = """
-Role:
-    You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
-Goal:
-    Given a PICO (Population, Intervention, Comparison, Outcome) description and a Topic,
-    your task is to determine whether a provided research paper is relevant (i.e., suitable for inclusion)
-    or not relevant based on how well the paper aligns with the PICO and Topic.
-Instructions:
-    1. Carefully read the Topic and PICO information.
-    2. Review the paper's full text content provided.
-    3. Decide if the paper's content meaningfully fits the PICO question and Topic.
-    4. Evaluate relevance using the following rules:
-        1) The paper must clearly match ALL FOUR PICO components (Population, Intervention, Comparison, Outcome).
-    5. Your response must include:
-        1) ID: the id of this paper.
-        2) Flag: return 1 if include, 0 if exclude.
-        3) Reason: a brief explanation of which PICO components are contained and why this paper was included/excluded (in Chinese).
-PICO description:
-    1. Population (P): The study targets the same or a similar group of patients/subjects.
-    2. Intervention (I): The main intervention matches or closely relates to that in the PICO.
-    3. Comparison (C): The study includes a relevant control or comparison group (if applicable).
-    4. Outcome (O): The study measures or reports on the same or relevant outcomes.
+    Role: 
+        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
+    Goal:
+        Based on the provided PICO framework, research topic, and any extra requirements, determine whether a research paper is relevant.
+    Instructions:
+        1. Carefully read the Topic, Abstract_clean, PICO information and Extra requirements(if have).
+        2. Review the paper's title and abstract.
+        3. Decide if the paper's content meaningfully fits the PICO question, Extra requirements and Topic.
+        4. Matching Rules:
+            Carefully match the Chinese PICO terms with the English paper content, considering synonyms and equivalent medical concepts.
+            Population (P) Matching Rules:
+                P is considered matched if:
+                    P must be the main research object.
+                    If the study provides a narrower, earlier, lighter, or otherwise partially overlapping version of the target condition 
+                        (e.g., a younger subgroup within the target age, a lower dose within the acceptable range, or a subset of the intended population), 
+                        treat it as consistent unless there is a clear contradiction.
+                    There is no explicit contradiction with key descriptors,
+                    Missing information on some population characteristics does not disqualify matching; it is treated as potentially include.
+                P is not matched only if:
+                    P is not the main research object.
+                    The study explicitly contradicts PICO descriptors (e.g., subjects are outside the target age range or clearly have conditions excluded by PICO),
+                    Key characteristics directly conflict with PICO requirements.
+                    Does not satisfy any information
+            Intervention (I) Matching Rules:
+                I is considered matched if:
+                    The intervention is the same in type or principle.
+                    Ignore differences in dose, frequency, or duration.
+                    Accept logical variants or clinically equivalent approaches.
+                I is not matched only if:
+                    The intervention is clearly unrelated.
+            Comparison (C) Matching Rules:
+                C is considered matched if:
+                    Includes any relevant control or comparison group (e.g., placebo, usual care, no treatment, another treatment, before–after comparison).
+                    Even if the control group is not identical, as long as it helps evaluate the intervention.
+                C is not matched only if:
+                    None of the reported outcomes are relevant.
+            Outcome (O) Matching Rules:
+                O is considered matched if:
+                    The study measures or reports at least one outcome relevant to the target PICO.
+                    Outcomes belong to the same logical domain (e.g., "clinical attachment level" and "periodontal regeneration parameters").
+                O is not matched only if:
+                    None of the reported outcomes are relevant.
+            Extra requirements(If have):
+                Extra requirements is considered matched if:
+                    The study satisfies at least one of the specified extra requirements.
+                    Minor differences in measurement are acceptable.
+                Extra information is not matched only if:
+                    None of the extra requirements are met.
+            Final Inclusion Rule (Flag):
+                DO NOT give the final result only according to one components
+                Count how many of P, I, C, O, Extra requirements are matched.
+                Must judge every components and strictly follow the steps:
+                    If at least 4 components match → Flag = 1 (Include). even if other components (e.g., Intervention or Comparison) are not present.
+                    If fewer than 4 components match → Flag = 0 (Exclude).
+        5. Your response must include:
+            1. ID: the id of this paper.
+            2. Flag: return 1 if include, 0 if exclude.
+            3. Reason: a specifical explanation of which PICO components are contained and why this essay was include or exclude. 
+                following the format:
+                “This paper studies [research topic], matching [component1] ([corresponding content1 in essay]) and [component2] ([corresponding content2 in essay]) PICO components.” 
+                In Chinese
+    PICO description:
+        1. Population (P): The study targets the same or a similar group of patients/subjects.
+        2. Intervention (I): The main intervention matches or closely relates to that in the PICO.
+        3. Comparison (C): The study includes a relevant control or comparison group (if applicable).
+        4. Outcome (O): The study measures or reports on the same or relevant outcomes.
 """
 
 # 用户提示词 - 具体的PICO标准和任务
@@ -64,13 +109,15 @@ Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标;
             Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
 Extra requirements: Study design: SR、RCT、观察性研究
 
-Papers (full text):
-    {paper_list}
-Task:
-    1. Evaluate each paper independently.
-    2. A paper is suitable (Flag=1) ONLY IF it matches ALL FOUR PICO components (P/I/C/O).
-    3. If any component is missing/unclear, Flag=0.
-    4. Provide a short reasoning for each paper explaining each PICO component (matched or missing) (in Chinese).
+Papers: 
+        {paper_list}
+    Task:
+        1. Evaluate each paper independently.
+        2. Each PICO component (Population, Intervention, Comparison, Outcome) may contain multiple detailed requirements.
+        3. A component is considered “matched” as long as the paper does NOT explicitly contradict any of its requirements.
+        4. A paper is suitable (Flag=1) if it briefly matches 4 PICO components (Population, Intervention, Comparison, Outcome) and Extra reqiurements(if have).
+        5. If fewer than 4 components match, Flag=0.
+        6. Provide a short reasoning for each paper explaining which PICO components were matched. In Chinese
 """
 
 # 默认参数配置

@@ -6,7 +6,7 @@ from typing import Literal, List, Optional
 
 # Limit components
 # Max essays AI get in one time
-batch_size = 30
+batch_size = 20
 # Max retry times when AI failed
 retries = 3
 # Max time(s) AI allowed to run. If out of this time, retry
@@ -80,7 +80,7 @@ async def use_agent_all(paper_list, query, model1, model2, model3, systemPromptR
 
         if diff_records:
             print(f"Batch {start // batch_size + 1}: {len(diff_records)} need review by model3")
-            await call_with_retry(use_agent_after,agent3, batch_df, diff_records, query)
+            await call_with_retry(use_agent_after,agent3, batch_df, diff_records, query, userPromptReason)
 
         # write back the results
         paper_list.loc[start:end-1, ["Flag1", "Flag2", "Flag3", "Reason"]] = batch_df[["Flag1", "Flag2", "Flag3", "Reason"]]
@@ -132,6 +132,6 @@ def CollectAIResponse(paper_list, response, num):
         id = e['ID']
         flag = e['Flag']
         paper_list.loc[paper_list['ID'] == id, f"Flag{num}"] = flag
-        if (num == 3 or num == 1):
+        if num == 3 or num == 1:
             reason = e['Reason']
             paper_list.loc[paper_list['ID'] == id, 'Reason'] = reason

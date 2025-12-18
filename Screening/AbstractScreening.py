@@ -21,74 +21,153 @@ whole_paper_list=[]
 topic_keywords=""
 
 systemPromptReason = """
-    Role: 
-        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
+    Role:
+        You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
+    
     Goal:
-        Given a PICO (Population, Intervention, Comparison, Outcome) description and a Topic, 
-        your task is to determine whether a provided research paper is relevant (i.e., suitable for inclusion) 
-        or not relevant based on how well the paper aligns with the PICO and Topic.
+        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, and Extra requirements), research topic, and extra requirements (if any).
+    
+    General Screening Principle (High Recall):
+        - Default to inclusion unless there is an explicit contradiction.
+        - Missing, unclear, or partially reported information should be treated as “potentially matched”.
+        - Do NOT require explicit wording or complete reporting for a component to be considered matched.
+        - Ignore Comparison (C) and Outcome (O) in this stage.
+    
     Instructions:
-        1. Carefullly read the Topic and PICO information.
-        2. Review the paper's title and abstract.
-        3. Decide if the paper's content meaningfully fits the PICO question and Topic.
-        4. Evaluate relevance using the following rules:
-            1. The paper must clearly match at least two PICO components (Population, Intervention, Comparison, or Outcome).
-        5. Your response must include:
-            1. ID: the id of this paper.
-            2. Flag: return 1 if include, 0 if exclude.
-            3. Reason: a brief explanation of which PICO componets are contained and why this essay was include or exclude. In Chinese
-    PICO description:
-        1. Population (P): The study targets the same or a similar group of patients/subjects.
-        2. Intervention (I): The main intervention matches or closely relates to that in the PICO.
-        3. Comparison (C): The study includes a relevant control or comparison group (if applicable).
-        4. Outcome (O): The study measures or reports on the same or relevant outcomes.
-"""
+    1. Read the Title, Abstract_clean, PICO information, and Extra requirements (if provided).
+    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), and Extra requirements.
+    3. Match Chinese PICO terms with English content, allowing for synonyms and equivalent medical concepts.
+    
+    Matching Rules:
+    Population (P):
+        - Matched if:
+            - The population is the main research object.
+            - The study includes a narrower or partially overlapping population without clear contradiction.
+            - No explicit conflict with key population descriptors.
+            - Missing details are allowed (treated as potentially included).
+        - Not matched if:
+            - Population is not the main focus.
+            - Explicit contradiction with PICO population.
+            - No relevant population information at all.
+    
+    Intervention (I):
+        - Matched if:
+            - Same or clinically equivalent intervention type or principle.
+            - Differences in dose, frequency, or duration are ignored.
+        - Not matched if:
+            - Intervention is clearly unrelated.
+            **Note: In abstract screening stage, do NOT treat Intervention not matching as automatic exclusion; only count it as one component when calculating matches.**
+    
+    Extra Requirements (if any):
+        - Matched if:
+            - At least one extra requirement is satisfied.
+            - Minor measurement differences are acceptable.
+        - Not matched if:
+            - None of the extra requirements are met.
+    
+    Final Inclusion Rule (Flag):
+        - Evaluate the three components: P, I, Extra.
+        - Count how many components are matched.
+        - If ≥ 1 component matches → Flag = 1 (Include).
+        - If less than 1 components match → Flag = 0 (Exclude).
+    
+    Output Format (must include all):
+    1. ID: the paper ID.
+    2. Flag: 1 (Include) or 0 (Exclude).
+    3. Reason: 
+       A clear explanation in Chinese, using the format:
+       “本文研究了[研究主题]，匹配了PICO中的[组件1]（文中对应内容）和[组件2]（文中对应内容），未匹配PICO中的[组件1](文中对应内容)和[组件2](文中对应内容)，总共匹配了n个PICO，因此被纳入/排除。”
+    """
 
 systemPromptNoReason = """
-    Role: 
-        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
+    Role:
+        You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
+
     Goal:
-        Given a PICO (Population, Intervention, Comparison, Outcome) description and a Topic, 
-        your task is to determine whether a provided research paper is relevant (i.e., suitable for inclusion) 
-        or not relevant based on how well the paper aligns with the PICO and Topic.
+        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, and Extra requirements), research topic, and extra requirements (if any).
+
+    General Screening Principle (High Recall):
+        - Default to inclusion unless there is an explicit contradiction.
+        - Missing, unclear, or partially reported information should be treated as “potentially matched”.
+        - Do NOT require explicit wording or complete reporting for a component to be considered matched.
+        - Ignore Comparison (C) and Outcome (O) in this stage.
+
     Instructions:
-        1. Carefullly read the Topic and PICO information.
-        2. Review the paper's title and abstract.
-        3. Decide if the paper's content meaningfully fits the PICO question and Topic.
-        4. Evaluate relevance using the following rules:
-            1. The paper must clearly match at least two PICO components (Population, Intervention, Comparison, or Outcome).
-        5. Your response must include:
-            1. ID: the id of this paper.
-            2. Flag: return 1 if include, 0 if exclude. Ignore Reason
-    PICO description:
-        1. Population: The study targets the same or a similar group of patients/subjects.
-        2. Intervention: The main intervention matches or closely relates to that in the PICO.
-        3. Comparison: The study includes a relevant control or comparison group (if applicable).
-        4. Outcome: The study measures or reports on the same or relevant outcomes.
-"""
+    1. Read the Title, Abstract_clean, PICO information, and Extra requirements (if provided).
+    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), and Extra requirements.
+    3. Match Chinese PICO terms with English content, allowing for synonyms and equivalent medical concepts.
+
+    Matching Rules:
+    Population (P):
+        - Matched if:
+            - The population is the main research object.
+            - The study includes a narrower or partially overlapping population without clear contradiction.
+            - No explicit conflict with key population descriptors.
+            - Missing details are allowed (treated as potentially included).
+        - Not matched if:
+            - Population is not the main focus.
+            - Explicit contradiction with PICO population.
+            - No relevant population information at all.
+
+    Intervention (I):
+        - Matched if:
+            - Same or clinically equivalent intervention type or principle.
+            - Differences in dose, frequency, or duration are ignored.
+        - Not matched if:
+            - Intervention is clearly unrelated.
+            **Note: In abstract screening stage, do NOT treat Intervention not matching as automatic exclusion; only count it as one component when calculating matches.**
+
+    Extra Requirements (if any):
+        - Matched if:
+            - At least one extra requirement is satisfied.
+            - Minor measurement differences are acceptable.
+        - Not matched if:
+            - None of the extra requirements are met.
+
+    Final Inclusion Rule (Flag):
+        - Evaluate the three components: P, I, Extra.
+        - Count how many components are matched.
+        - If ≥ 1 component matches → Flag = 1 (Include).
+        - If less than 1 components match → Flag = 0 (Exclude).
+
+    Output Format (must include all):
+    1. ID: the paper ID.
+    2. Flag: 1 (Include) or 0 (Exclude).
+    """
 
 userPromptReason = """
-    PICO_Topic dictionary: 
+    PICO_Topic:
         {query}
-    Papers: 
+    
+    Papers:
         {paper_list}
+    
     Task:
-        1. Evaluate each paper independently.
-        2. A paper is suitable (Flag=1) if it matches at least two PICO components (Population, Intervention, Comparison, Outcome).
-        3. If fewer than two components match, Flag=0.
-        4. Provide a short reasoning for each paper explaining which PICO components were matched. In Chinese
+    1. Independently evaluate each paper.
+    2. For each component, only consider Population (P), Intervention (I), and Extra requirements.
+       - A component is considered matched if the paper does NOT explicitly contradict its requirements.
+       - Ignore Comparison (C) and Outcome (O) at this stage.
+    3. Extra requirements (if any) are evaluated the same way.
+    4. If at least 1 component (P, I, or Extra) is matched → Flag = 1 (Include)
+    5. If less than 1 components are matched → Flag = 0 (Exclude)
+    6. Optionally, provide a short reasoning in Chinese, listing which components are matched.
 """
 
 userPromptNoReason = """
-    PICO_Topic dictionary: 
+    PICO_Topic:
         {query}
-    Papers: 
+
+    Papers:
         {paper_list}
+
     Task:
-        1. Evaluate each paper independently.
-        2. A paper is suitable (Flag=1) if it matches at least two PICO components (Population, Intervention, Comparison, Outcome).
-        3. If fewer than two components match, Flag=0.
-        4. Ignore Reason
+    1. Independently evaluate each paper.
+    2. For each component, only consider Population (P), Intervention (I), and Extra requirements.
+       - A component is considered matched if the paper does NOT explicitly contradict its requirements.
+       - Ignore Comparison (C) and Outcome (O) at this stage.
+    3. Extra requirements (if any) are evaluated the same way.
+    4. If at least 1 component (P, I, or Extra) is matched → Flag = 1 (Include)
+    5. If less than 1 components are matched → Flag = 0 (Exclude)
 """
 
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
@@ -182,9 +261,9 @@ def literature_search():
         whole_paper_list.append(row)
 
 #Upload files
-def upload_to_csv():
-    global whole_paper_list, topic_keywords
-    file_dir = input("enter RIS file: ").strip()
+# def upload_to_csv():
+#     global whole_paper_list, topic_keywords
+#     file_dir = input("enter RIS file: ").strip()
 
 #Get DOI 
 def extract_doi(record):
@@ -206,9 +285,9 @@ async def main():
     #save_dir = input("enter address: ").strip()
     save_dir = SCRIPT_DIR
 
-    model1_name="claude-haiku-4-5-20251001"
-    model2_name="claude-haiku-4-5-20251001"
-    model3_name="glm-4.6"
+    model1_name="gpt-4.1"
+    model2_name="gpt-4.1-mini"
+    model3_name="gpt-4.1"
 
     model1 = ChatOpenAI(
         model=model1_name, 

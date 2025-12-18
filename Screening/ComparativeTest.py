@@ -1,4 +1,5 @@
 import AbstractScreening
+import ThreeAgnets
 import pandas as pd
 import os
 import time
@@ -19,7 +20,7 @@ async def main():
     # === 模型设定 ===
     model1_name = "claude-haiku-4-5-20251001"
     model2_name = "claude-haiku-4-5-20251001"
-    model3_name = "glm-4.6"
+    model3_name = "gpt-4.1"
 
     model1 = ChatOpenAI(
         model=model1_name, 
@@ -121,7 +122,7 @@ async def main():
         df["label"] = df["label"].map(label_map)
 
         # === 调用多智能体处理 ===
-        await AbstractScreening.use_agent_all(df, keyword, model1, model2, model3)
+        await ThreeAgnets.use_agent_all(df, keyword, model1, model2, model3, AbstractScreening.systemPromptReason, AbstractScreening.systemPromptNoReason, AbstractScreening.userPromptReason, AbstractScreening.userPromptNoReason)
 
         # === 累积评估指标 ===
         Tp += ((df["Flag3"] == "1") & (df["label"] == "1")).sum()
@@ -135,7 +136,7 @@ async def main():
         mismatch_selected = mismatch[cols]
 
         output_path = output_dir / "mismatch_rows.csv"
-        df.to_csv(output_path, index=False, encoding="utf-8-sig")
+        mismatch_selected.to_csv(output_path, index=False, encoding="utf-8-sig")
 
     # === 各类指标计算函数 ===
     def calc_metrics(TP, FP, TN, FN):
