@@ -1,7 +1,7 @@
 """
-基于AI的全文文献筛选脚本
-用于根据PICO标准自动筛选生物医学文献
-支持PDF和文本文件，可选择视觉多模态分析
+基于AI的全文文献筛选脚本（纯视觉模式）
+用于根据 PICO 标准自动筛选生物医学文献。
+仅支持 PDF 输入，并以 PDF 页面图像作为论文内容来源（适用于包含表格/图片的全文）。
 """
 
 import argparse
@@ -109,8 +109,13 @@ Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标;
             Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
 Extra requirements: Study design: SR、RCT、观察性研究
 
-Papers: 
+Papers (仅元信息；全文内容以PDF页面图片提供):
         {paper_list}
+
+Input format:
+        You will receive PDF page images after this message, labeled as:
+        "Paper ID <ID> - PDF Page <page_number>:" followed by the page image.
+        Use ONLY the images to judge each paper (tables/figures are important); do not assume any missing extracted text.
     Task:
         1. Evaluate each paper independently.
         2. Each PICO component (Population, Intervention, Comparison, Outcome) may contain multiple detailed requirements.
@@ -181,52 +186,6 @@ def _normalize_text(text: str) -> str:
     return text.strip()
 
 
-def _extract_pdf_text(pdf_path: Path) -> tuple[str, str, int]:
-    """
-    使用pypdf提取PDF文本内容
-
-    Args:
-        pdf_path: PDF文件路径
-
-    Returns:
-        tuple: (提取的文本, 元数据标题, 总页数)
-
-    Raises:
-        RuntimeError: 当pypdf未安装时
-    """
-    try:
-        from pypdf import PdfReader  # 局部导入，避免未安装时影响其他功能
-    except Exception as e:  # pragma: no cover
-        raise RuntimeError(f"pypdf is required for PDF text extraction: {e}") from e
-
-    reader = PdfReader(str(pdf_path))
-
-    # 提取元数据标题
-    meta_title = ""
-    try:
-        if reader.metadata and reader.metadata.title:
-            meta_title = str(reader.metadata.title).strip()
-    except Exception:
-        meta_title = ""
-
-    # 获取总页数
-    try:
-        num_pages = len(reader.pages)
-    except Exception:
-        num_pages = 0
-
-    # 逐页提取文本
-    parts: list[str] = []
-    for page in reader.pages:
-        try:
-            page_text = page.extract_text() or ""
-        except Exception:
-            page_text = ""
-        if page_text.strip():
-            parts.append(page_text)
-    return ("\n\n".join(parts), meta_title, num_pages)
-
-
 def _extract_pdf_metadata_with_pymupdf(pdf_path: Path) -> tuple[str, int]:
     """
     使用PyMuPDF提取PDF元数据（仅用于视觉模式）
@@ -250,19 +209,6 @@ def _extract_pdf_metadata_with_pymupdf(pdf_path: Path) -> tuple[str, int]:
         except Exception:
             meta_title = ""
         return meta_title, int(doc.page_count)
-
-
-def _read_text_file(path: Path) -> str:
-    """
-    读取文本文件内容
-
-    Args:
-        path: 文本文件路径
-
-    Returns:
-        文件内容字符串
-    """
-    return path.read_text(encoding="utf-8", errors="ignore")
 
 
 def _parse_page_spec(spec: str) -> list[int] | None:
@@ -365,13 +311,12 @@ def _pdf_pages_to_data_urls(
         return out
 
 
-def load_fulltext_from_resources(resources_dir: Path, *, extract_pdf_text: bool = True) -> pd.DataFrame:
+def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
     """
-    从资源目录加载所有文献全文
+    从资源目录加载文献信息（纯视觉模式）
 
     Args:
         resources_dir: 资源目录路径
-        extract_pdf_text: 是否提取PDF文本（视觉模式下可能跳过）
 
     Returns:
         包含文献信息的DataFrame
@@ -384,7 +329,7 @@ def load_fulltext_from_resources(resources_dir: Path, *, extract_pdf_text: bool 
         raise FileNotFoundError(f"resources folder not found: {resources_dir}")
 
     # 支持的文件扩展名
-    supported_exts = {".pdf", ".txt", ".md"}
+    supported_exts = {".pdf"}
     # 递归查找所有支持的文件
     files = sorted(
         [p for p in resources_dir.rglob("*") if p.is_file() and p.suffix.lower() in supported_exts],
@@ -400,21 +345,10 @@ def load_fulltext_from_resources(resources_dir: Path, *, extract_pdf_text: bool 
         error = ""
 
         try:
-            if path.suffix.lower() == ".pdf":
-                if extract_pdf_text:
-                    # 提取PDF文本和元数据
-                    full_text, meta_title, num_pages = _extract_pdf_text(path)
-                    if meta_title:
-                        title = meta_title  # 优先使用PDF元数据中的标题
-                else:
-                    # 视觉模式下，仅提取元数据
-                    meta_title, num_pages = _extract_pdf_metadata_with_pymupdf(path)
-                    if meta_title:
-                        title = meta_title
-                    full_text = ""  # 视觉模式下不提取文本
-            else:
-                # 文本文件直接读取
-                full_text = _read_text_file(path)
+            meta_title, num_pages = _extract_pdf_metadata_with_pymupdf(path)
+            if meta_title:
+                title = meta_title
+            full_text = ""  # 纯视觉模式下不提取文本
         except Exception as e:
             error = str(e)  # 记录错误信息
 
@@ -445,7 +379,9 @@ def load_fulltext_from_resources(resources_dir: Path, *, extract_pdf_text: bool 
 
 def write_fulltexts_to_txt(paper_df: pd.DataFrame, output_txt: Path) -> None:
     """
-    将文献全文写入文本文件（用于调试和记录）
+    将文献信息写入文本文件（用于调试和记录）
+
+    纯视觉模式下不会提取/写入PDF全文文本，FullText字段将为空。
 
     Args:
         paper_df: 文献DataFrame
@@ -473,11 +409,7 @@ async def full_text_screening(
         output_txt: Path,
         model: ChatOpenAI,
         *,
-        vision: bool = False,
-        vision_mode: str = "fallback",
         vision_pages: str = "all",
-        vision_if_text_lt: int = 200,
-        vision_always_for_pdf: bool = True,
         vision_dpi: int = 180,
         vision_image_format: str = "jpeg",
         vision_jpeg_quality: int = 80,
@@ -491,11 +423,7 @@ async def full_text_screening(
         output_csv: 输出CSV文件路径
         output_txt: 输出文本文件路径
         model: ChatOpenAI模型实例
-        vision: 是否启用视觉模式
-        vision_mode: 视觉模式（fallback/hybrid/text-only）
         vision_pages: 要渲染的PDF页面
-        vision_if_text_lt: 当文本字符数小于此值时使用视觉模式
-        vision_always_for_pdf: 是否总是为PDF文件使用视觉模式
         vision_dpi: 图像DPI
         vision_image_format: 图像格式
         vision_jpeg_quality: JPEG质量
@@ -504,23 +432,21 @@ async def full_text_screening(
     Returns:
         None
     """
+    if fitz is None:
+        raise RuntimeError("PyMuPDF is required for vision-only screening. Install `pymupdf`.")
+
     # 解析页面规格
     pages_to_use = _parse_page_spec(vision_pages)
 
-    # 确定是否提取PDF文本（视觉模式下可能跳过）
-    extract_pdf_text = not (vision and pages_to_use is None)
-    if vision and pages_to_use is None:
-        print("Vision enabled with all pages -> skipping PDF text extraction (not using pypdf).")
-
     # 加载文献数据
-    paper_df = load_fulltext_from_resources(resources_dir, extract_pdf_text=extract_pdf_text)
+    paper_df = load_fulltext_from_resources(resources_dir)
     if paper_df.empty:
         print(f"No supported files found in: {resources_dir}")
         return
 
     # 保存全文到文本文件（用于调试）
     write_fulltexts_to_txt(paper_df, output_txt)
-    print(f"Saved full texts: {output_txt}")
+    print(f"Saved paper metadata: {output_txt}")
 
     # 创建AI代理
     agent = create_agent(
@@ -538,95 +464,95 @@ async def full_text_screening(
     )
 
     # 确定批量大小
-    effective_batch_size = batch_size_override or (1 if vision else batch_size)
-
-    def _needs_vision(record: dict) -> bool:
-        """判断单篇文献是否需要使用视觉模式"""
-        if not vision:
-            return False
-        if str(record.get("Suffix", "")).lower() != ".pdf":
-            return False  # 仅PDF文件支持视觉模式
-        if vision_always_for_pdf:
-            return True  # 总是为PDF使用视觉模式
-        try:
-            # 当提取的文本太少时使用视觉模式
-            return int(record.get("FullTextChars") or 0) < int(vision_if_text_lt)
-        except Exception:
-            return True
+    effective_batch_size = batch_size_override or 1
 
     async def _judge_batch(batch_records: list[dict]) -> list[dict] | None:
         """处理一批文献的筛选"""
-        # 格式化提示词
-        prompt_text = userPromptReason.format(paper_list=batch_records)
+        # 纯视觉模式：不发送提取的全文文本，仅发送 PDF 页图像 + 论文元信息
+        excluded_results: list[dict] = []
+        rendered: list[tuple[dict, list[tuple[int, str]]]] = []
 
-        # 判断是否需要在本次调用中使用视觉模式
-        use_vision_in_call = any(_needs_vision(r) for r in batch_records) and vision_mode != "text-only"
-
-        if use_vision_in_call:
-            # 构建多模态内容（文本+图像）
-            content: list[dict] = [{"type": "text", "text": prompt_text}]
-            content.append(
-                {
-                    "type": "text",
-                    "text": (
-                        "补充信息：部分论文提供了 PDF 页面的图片（按 Paper ID / Page 标注）。"
-                        "请结合文字全文与图片内容共同判断。"
-                    ),
-                }
-            )
-
-            # 为需要视觉分析的文献添加图像
-            for r in batch_records:
-                if not _needs_vision(r):
-                    continue
-                rel = str(r.get("RelativePath") or "")
-                if not rel:
-                    continue
-                pdf_path = PROJECT_DIR / Path(rel)
-                try:
-                    # 生成PDF页面图像
-                    images = _pdf_pages_to_data_urls(
-                        pdf_path,
-                        pages_to_use,
-                        dpi=vision_dpi,
-                        image_format=vision_image_format,
-                        jpeg_quality=vision_jpeg_quality,
-                    )
-                except Exception as e:
-                    print(f"Vision rendering failed for {pdf_path}: {e}")
-                    continue
-
-                # 将图像添加到内容中
-                for page_number, data_url in images:
-                    content.append({"type": "text", "text": f"Paper ID {r.get('ID')} - PDF Page {page_number}:"})
-                    content.append({"type": "image_url", "image_url": {"url": data_url}})
-
-            try:
-                # 调用多模态AI模型
-                response = await agent.ainvoke(
-                    {"messages": [{"role": "user", "content": content}]},
-                    configurable={"reset_context": True},
+        for record in batch_records:
+            if str(record.get("Suffix", "")).lower() != ".pdf":
+                excluded_results.append(
+                    {
+                        "ID": record.get("ID"),
+                        "Flag": "0",
+                        "Reason": "纯视觉模式仅支持PDF输入，当前文件非PDF，默认排除。",
+                    }
                 )
-            except Exception as e:
-                if vision_mode == "fallback":
-                    # 降级到纯文本模式
-                    print(f"Vision call failed, falling back to text-only: {e}")
-                    response = await agent.ainvoke(
-                        {"messages": [{"role": "user", "content": prompt_text}]},
-                        configurable={"reset_context": True},
-                    )
-                else:
-                    raise
-        else:
-            # 纯文本模式
-            response = await agent.ainvoke(
-                {"messages": [{"role": "user", "content": prompt_text}]},
-                configurable={"reset_context": True},
-            )
+                continue
 
-        # 提取结构化响应
+            rel = str(record.get("RelativePath") or "")
+            if not rel:
+                excluded_results.append(
+                    {
+                        "ID": record.get("ID"),
+                        "Flag": "0",
+                        "Reason": "缺少RelativePath，无法定位PDF文件，默认排除。",
+                    }
+                )
+                continue
+
+            pdf_path = PROJECT_DIR / Path(rel)
+            try:
+                images = _pdf_pages_to_data_urls(
+                    pdf_path,
+                    pages_to_use,
+                    dpi=vision_dpi,
+                    image_format=vision_image_format,
+                    jpeg_quality=vision_jpeg_quality,
+                )
+                if not images:
+                    raise RuntimeError("No pages rendered")
+                rendered.append((record, images))
+            except Exception as e:
+                excluded_results.append(
+                    {
+                        "ID": record.get("ID"),
+                        "Flag": "0",
+                        "Reason": f"无法将PDF渲染为图像，默认排除。错误信息：{e}",
+                    }
+                )
+
+        if not rendered:
+            return excluded_results
+
+        paper_list_for_prompt = [
+            {
+                "ID": r.get("ID"),
+                "Title": r.get("Title"),
+                "NumPages": r.get("NumPages"),
+                "RelativePath": r.get("RelativePath"),
+            }
+            for r, _ in rendered
+        ]
+        prompt_text = userPromptReason.format(paper_list=paper_list_for_prompt)
+
+        content: list[dict] = [{"type": "text", "text": prompt_text}]
+        content.append(
+            {
+                "type": "text",
+                "text": (
+                    "补充信息：以下为每篇论文的 PDF 页图像（按 Paper ID / Page 标注）。"
+                    "请仅依据图像内容完成筛选，不要假设存在未提供的文字全文。"
+                ),
+            }
+        )
+
+        for record, images in rendered:
+            for page_number, data_url in images:
+                content.append({"type": "text", "text": f"Paper ID {record.get('ID')} - PDF Page {page_number}:"})
+                content.append({"type": "image_url", "image_url": {"url": data_url}})
+
+        response = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": content}]},
+            configurable={"reset_context": True},
+        )
+
         result = response["structured_response"]
-        return [w.model_dump(exclude_none=True) for w in result.judge_list]
+        judged_results = [w.model_dump(exclude_none=True) for w in result.judge_list]
+        return judged_results + excluded_results
 
     # 处理可读取的文献
     valid_ids = paper_df.loc[~unreadable_mask, "ID"].tolist()
@@ -635,7 +561,7 @@ async def full_text_screening(
         # 提取当前批次的文献数据
         batch_df = paper_df.loc[
             paper_df["ID"].isin(batch_ids),
-            ["ID", "Title", "RelativePath", "Suffix", "FullTextChars", "FullText"],
+            ["ID", "Title", "RelativePath", "Suffix", "NumPages"],
         ].copy()
         batch_records = batch_df.to_dict("records")
 
@@ -685,7 +611,7 @@ def _build_model(model_name: str, base_url: str) -> ChatOpenAI:
 
 def _parse_args() -> argparse.Namespace:
     """解析命令行参数"""
-    parser = argparse.ArgumentParser(description="Standalone full-text screening from files in ./resources")
+    parser = argparse.ArgumentParser(description="Standalone full-text screening (vision-only) from PDFs in ./resources")
 
     # 输入输出路径参数
     parser.add_argument("--resources-dir", type=Path, default=PROJECT_DIR / "resources",
@@ -701,20 +627,16 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--model", type=str, default="glm-4.6",
                         help="模型名称")
     parser.add_argument("--batch-size", type=int, default=None,
-                        help="覆盖批量大小（默认：6，视觉模式下为1）")
+                        help="覆盖批量大小（默认：1，纯视觉模式建议保持为1）")
 
-    # 视觉模式参数
-    parser.add_argument("--vision", action="store_true",
-                        help="启用PDF页面图像作为多模态输入（需要PyMuPDF）")
-    parser.add_argument("--vision-mode", type=str, default="fallback",
-                        choices=["fallback", "hybrid", "text-only"],
-                        help="视觉模式：fallback-先视觉后文本；hybrid-强制视觉；text-only-忽略视觉")
+    # 视觉模式参数（纯视觉模式固定开启；保留参数用于兼容旧命令）
+    parser.add_argument("--vision", action="store_true", default=True,
+                        help="(已默认开启) 使用PDF页面图像作为多模态输入（需要PyMuPDF）")
+    parser.add_argument("--vision-mode", type=str, default="vision-only",
+                        choices=["vision-only", "fallback", "hybrid"],
+                        help="(已弃用) 仅支持vision-only；其他值将被忽略")
     parser.add_argument("--vision-pages", type=str, default="all",
                         help="要渲染的页面，如 'all' 或 '1-2,5'")
-    parser.add_argument("--vision-if-text-lt", type=int, default=200,
-                        help="当提取文本字符数小于N时使用视觉模式")
-    parser.add_argument("--vision-always-for-pdf", action="store_true", default=True,
-                        help="总是为PDF文件附加页面图像")
     parser.add_argument("--vision-dpi", type=int, default=180,
                         help="PDF页面渲染DPI")
     parser.add_argument("--vision-image-format", type=str, default="jpeg",
@@ -743,11 +665,7 @@ async def main() -> None:
         output_csv=args.output_csv,
         output_txt=args.output_txt,
         model=model,
-        vision=bool(args.vision),
-        vision_mode=str(args.vision_mode),
         vision_pages=str(args.vision_pages),
-        vision_if_text_lt=int(args.vision_if_text_lt),
-        vision_always_for_pdf=bool(args.vision_always_for_pdf),
         vision_dpi=int(args.vision_dpi),
         vision_image_format=str(args.vision_image_format),
         vision_jpeg_quality=int(args.vision_jpeg_quality),
