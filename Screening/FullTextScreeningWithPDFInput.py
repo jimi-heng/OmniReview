@@ -9,6 +9,7 @@ import asyncio
 import base64
 import os
 import re
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -675,4 +676,9 @@ async def main() -> None:
 
 if __name__ == "__main__":
     # 异步运行主函数
-    asyncio.run(main())
+    start_time = time.perf_counter()
+    try:
+        asyncio.run(main())
+    finally:
+        elapsed_s = time.perf_counter() - start_time
+        print(f"Elapsed time: {elapsed_s:.2f}s")
