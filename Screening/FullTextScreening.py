@@ -6,8 +6,8 @@
 import argparse
 import asyncio
 import os
-import re
 from pathlib import Path
+from typing import List, Literal, Optional
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -15,8 +15,6 @@ from langchain.agents import create_agent
 from langchain.agents.structured_output import ToolStrategy
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
-from pypdf import PdfReader
-from typing import Literal, List, Optional
 
 # 脚本所在目录和项目根目录
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -156,7 +154,7 @@ async def call_with_retry(coro_func, *args):
 
 
 def _normalize_text(text: str) -> str:
-    """清理和规范化文本
+    """最小化清理文本（尽量不破坏 Markdown 排版）
 
     Args:
         text: 原始文本
@@ -165,39 +163,8 @@ def _normalize_text(text: str) -> str:
         清理后的标准化文本
     """
     text = text.replace("\x00", "")  # 移除空字符
-    text = re.sub(r"[ \t]+", " ", text)  # 合并连续空格和制表符
-    text = re.sub(r"\n{3,}", "\n\n", text)  # 合并过多换行
+    text = text.replace("\r\n", "\n").replace("\r", "\n")  # 统一换行符
     return text.strip()
-
-
-def _extract_pdf_text(pdf_path: Path) -> tuple[str, str]:
-    """从PDF文件中提取文本内容
-
-    Args:
-        pdf_path: PDF文件路径
-
-    Returns:
-        tuple[正文文本, 元数据标题]
-    """
-    reader = PdfReader(str(pdf_path))
-    meta_title = ""
-    try:
-        # 尝试提取PDF元数据中的标题
-        if reader.metadata and reader.metadata.title:
-            meta_title = str(reader.metadata.title).strip()
-    except Exception:
-        meta_title = ""
-
-    parts: list[str] = []
-    # 逐页提取文本
-    for page in reader.pages:
-        try:
-            page_text = page.extract_text() or ""
-        except Exception:
-            page_text = ""
-        if page_text.strip():
-            parts.append(page_text)
-    return ("\n\n".join(parts), meta_title)
 
 
 def _read_text_file(path: Path) -> str:
@@ -213,7 +180,7 @@ def _read_text_file(path: Path) -> str:
 
 
 def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
-    """从资源目录加载所有文献全文
+    """从资源目录加载所有 Markdown 全文（仅支持 .md）
 
     Args:
         resources_dir: 资源目录路径
@@ -224,8 +191,8 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
     if not resources_dir.exists():
         raise FileNotFoundError(f"resources folder not found: {resources_dir}")
 
-    # 支持的文件格式
-    supported_exts = {".pdf", ".txt", ".md"}
+    # 仅支持 Markdown
+    supported_exts = {".md"}
     # 递归查找所有支持的文件
     files = sorted(
         [p for p in resources_dir.rglob("*") if p.is_file() and p.suffix.lower() in supported_exts],
@@ -239,13 +206,7 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
         error = ""
 
         try:
-            # 根据文件类型调用不同的解析方法
-            if path.suffix.lower() == ".pdf":
-                full_text, meta_title = _extract_pdf_text(path)
-                if meta_title:
-                    title = meta_title  # 优先使用PDF元数据中的标题
-            else:
-                full_text = _read_text_file(path)
+            full_text = _read_text_file(path)
         except Exception as e:
             error = str(e)  # 记录读取错误
 
@@ -272,32 +233,9 @@ def load_fulltext_from_resources(resources_dir: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def write_fulltexts_to_txt(paper_df: pd.DataFrame, output_txt: Path) -> None:
-    """将文献全文写入文本文件（用于调试和记录）
-
-    Args:
-        paper_df: 文献DataFrame
-        output_txt: 输出文本文件路径
-    """
-    output_txt.parent.mkdir(parents=True, exist_ok=True)
-    with output_txt.open("w", encoding="utf-8") as f:
-        for row in paper_df.to_dict("records"):
-            f.write("=" * 80 + "\n")
-            f.write(f"ID: {row.get('ID')}\n")
-            f.write(f"FileName: {row.get('FileName')}\n")
-            f.write(f"RelativePath: {row.get('RelativePath')}\n")
-            f.write(f"Title: {row.get('Title')}\n")
-            f.write(f"FullTextChars: {row.get('FullTextChars')}\n")
-            f.write(f"ReadError: {row.get('ReadError')}\n")
-            f.write("-" * 80 + "\n")
-            f.write((row.get("FullText") or "") + "\n")
-            f.write("\n")
-
-
 async def full_text_screening(
         resources_dir: Path,
         output_csv: Path,
-        output_txt: Path,
         model: ChatOpenAI,
 ) -> None:
     """执行全文本筛选的主函数
@@ -305,7 +243,6 @@ async def full_text_screening(
     Args:
         resources_dir: 文献资源目录
         output_csv: 输出CSV文件路径
-        output_txt: 输出文本文件路径
         model: AI模型实例
     """
     # 1. 加载文献全文
@@ -314,18 +251,14 @@ async def full_text_screening(
         print(f"No supported files found in: {resources_dir}")
         return
 
-    # 2. 将全文写入文本文件（供参考）
-    write_fulltexts_to_txt(paper_df, output_txt)
-    print(f"Saved full texts: {output_txt}")
-
-    # 3. 创建AI代理
+    # 2. 创建AI代理
     agent = create_agent(
         model=model,
         response_format=ToolStrategy(Judge_List),  # 指定结构化输出格式
         system_prompt=systemPromptReason,
     )
 
-    # 4. 标记无法读取的文献（自动排除）
+    # 3. 标记无法读取的文献（自动排除）
     unreadable_mask = paper_df["ReadError"].astype(str).str.strip().ne("")
     paper_df.loc[unreadable_mask, "Flag"] = "0"
     paper_df.loc[unreadable_mask, "Reason"] = (
@@ -358,7 +291,7 @@ async def full_text_screening(
         # 转换为字典格式
         return [w.model_dump(exclude_none=True) for w in result.judge_list]
 
-    # 5. 分批处理可读文献
+    # 4. 分批处理可读文献
     valid_ids = paper_df.loc[~unreadable_mask, "ID"].tolist()
     for start in range(0, len(valid_ids), batch_size):
         batch_ids = valid_ids[start: start + batch_size]
@@ -383,7 +316,7 @@ async def full_text_screening(
         print(f"Batch {start // batch_size + 1} done")
         await asyncio.sleep(1)  # 批处理间隔
 
-    # 7. 保存结果到CSV
+    # 5. 保存结果到CSV
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     result_df = paper_df.drop(columns=["FullText"])  # 移除全文内容以减小文件大小
     result_df.to_csv(output_csv, index=False, encoding="utf-8-sig")  # 支持中文的编码
@@ -417,12 +350,10 @@ def _parse_args() -> argparse.Namespace:
     Returns:
         包含解析后参数的命名空间
     """
-    parser = argparse.ArgumentParser(description="Standalone full-text screening from files in ./resources")
+    parser = argparse.ArgumentParser(description="Standalone full-text screening from Markdown files in ./resources")
     parser.add_argument("--resources-dir", type=Path, default=PROJECT_DIR / "resources", help="文献资源目录")
     parser.add_argument("--output-csv", type=Path, default=PROJECT_DIR / "outputs" / "fulltext_screening_results.csv",
                         help="输出CSV文件路径")
-    parser.add_argument("--output-txt", type=Path, default=PROJECT_DIR / "outputs" / "fulltext_sent_to_ai.txt",
-                        help="输出文本文件路径")
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1", help="API基础URL")
     parser.add_argument("--model", type=str, default="glm-4.6", help="AI模型名称")
     return parser.parse_args()
@@ -442,7 +373,6 @@ async def main() -> None:
     await full_text_screening(
         resources_dir=args.resources_dir,
         output_csv=args.output_csv,
-        output_txt=args.output_txt,
         model=model,
     )
 
