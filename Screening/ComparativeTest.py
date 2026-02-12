@@ -16,6 +16,7 @@ load_dotenv(SCRIPT_DIR / ".env", override=True)
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
 
+
 async def main():
     # === 模型设定 ===
     model1_name = "claude-haiku-4-5-20251001"
@@ -23,21 +24,21 @@ async def main():
     model3_name = "gpt-4.1"
 
     model1 = ChatOpenAI(
-        model=model1_name, 
-        base_url="https://www.dmxapi.cn/v1", 
-        api_key=key1, 
+        model=model1_name,
+        base_url="https://www.dmxapi.cn/v1",
+        api_key=key1,
         temperature=0
     )
     model2 = ChatOpenAI(
-        model=model2_name, 
-        base_url="https://www.dmxapi.cn/v1", 
-        api_key=key2, 
+        model=model2_name,
+        base_url="https://www.dmxapi.cn/v1",
+        api_key=key2,
         temperature=0
     )
     model3 = ChatOpenAI(
-        model=model3_name, 
-        base_url="https://www.dmxapi.cn/v1", 
-        api_key=key1, 
+        model=model3_name,
+        base_url="https://www.dmxapi.cn/v1",
+        api_key=key1,
         temperature=0
     )
 
@@ -89,7 +90,6 @@ async def main():
     #     """
     # ]
 
-
     path = [REPO_ROOT / "data" / "merged_output.csv"]
     keywords = [
         """
@@ -108,7 +108,8 @@ async def main():
         print(f"\n正在处理文件: {os.path.basename(path[i])}")
 
         # 读取数据
-        df = pd.read_csv(path[i], usecols=["Title", "Abstract_clean", "label"])[:300]
+        df = pd.read_csv(path[i], usecols=["Title", "Abstract_clean", "label"])[200:300]
+        df = df.reset_index(drop=True)
         keyword = keywords[i]
 
         # 初始化中间列
@@ -122,7 +123,11 @@ async def main():
         df["label"] = df["label"].map(label_map)
 
         # === 调用多智能体处理 ===
-        await ThreeAgnets.use_agent_all(df, keyword, model1, model2, model3, AbstractScreening.systemPromptReason, AbstractScreening.systemPromptNoReason, AbstractScreening.userPromptReason, AbstractScreening.userPromptNoReason)
+        await ThreeAgnets.use_agent_all(df, keyword, model1_name, model2_name, model3_name,
+                                             AbstractScreening.systemPromptReason,
+                                             AbstractScreening.systemPromptNoReason,
+                                             AbstractScreening.userPromptReason,
+                                             AbstractScreening.userPromptNoReason)
 
         # === 累积评估指标 ===
         Tp += ((df["Flag3"] == "1") & (df["label"] == "1")).sum()
@@ -169,6 +174,7 @@ async def main():
     print(f"\n总耗时: {elapsed:.2f} 秒")
 
     print("\n=======================================================================================")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

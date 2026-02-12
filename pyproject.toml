@@ -22,6 +22,7 @@ dependencies = [
     "pydantic>=2.12.3",
     "pymupdf>=1.24.0",
     "pypdf>=6.4.2",
+    "pytesseract>=0.3.13",
     "python-dotenv>=1.2.1",
     "scikit-learn>=1.7.2",
 ]

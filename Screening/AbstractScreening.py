@@ -14,28 +14,28 @@ load_dotenv(SCRIPT_DIR / ".env", override=True)
 
 Entrez.email = "erzhuzi2023@outlook.com"
 
-key1=os.getenv("DMX_API_KEY_1")
-key2=os.getenv("DMX_API_KEY_2")
+key1 = os.getenv("DMX_API_KEY_1")
+key2 = os.getenv("DMX_API_KEY_2")
 
-whole_paper_list=[]
-topic_keywords=""
+whole_paper_list = []
+topic_keywords = ""
 
 systemPromptReason = """
     Role:
         You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
     
     Goal:
-        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, and Extra requirements), research topic, and extra requirements (if any).
+        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, Comparison and Extra requirements), research title, and extra requirements (if any).
     
     General Screening Principle (High Recall):
         - Default to inclusion unless there is an explicit contradiction.
         - Missing, unclear, or partially reported information should be treated as “potentially matched”.
         - Do NOT require explicit wording or complete reporting for a component to be considered matched.
-        - Ignore Comparison (C) and Outcome (O) in this stage.
+        - Ignore Outcome (O) in this stage.
     
     Instructions:
     1. Read the Title, Abstract_clean, PICO information, and Extra requirements (if provided).
-    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), and Extra requirements.
+    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), Comparison (C) and Extra requirements.
     3. Match Chinese PICO terms with English content, allowing for synonyms and equivalent medical concepts.
     
     Matching Rules:
@@ -49,14 +49,29 @@ systemPromptReason = """
             - Population is not the main focus.
             - Explicit contradiction with PICO population.
             - No relevant population information at all.
+        - IMPORTANT:
+            - In abstract screening, population mismatch MUST NOT be used as a reason for exclusion.
+            - Population matching status is for counting purposes only.
     
     Intervention (I):
         - Matched if:
             - Same or clinically equivalent intervention type or principle.
             - Differences in dose, frequency, or duration are ignored.
-        - Not matched if:
-            - Intervention is clearly unrelated.
-            **Note: In abstract screening stage, do NOT treat Intervention not matching as automatic exclusion; only count it as one component when calculating matches.**
+        - Consider it not matched if:
+            - Intervention is clearly different or unrelated.
+        - IMPORTANT:
+            - In abstract screening, intervention mismatch MUST NOT be used as a reason for exclusion.
+            - Intervention matching status is for counting purposes only.
+            
+    Comparison (C) Matching Rules:
+                - Matched if:
+                    - Includes any relevant control or comparison group (e.g., placebo, usual care, no treatment, another treatment, before–after comparison).
+                    - Even if the control group is not identical, as long as it helps evaluate the intervention.
+                - Consider it not matched if:
+                    - No comparison information is mentioned.
+                - IMPORTANT:
+                    - Comparison mismatch MUST NOT be used as a reason for exclusion.
+                    - Comparison matching status is for counting purposes only.
     
     Extra Requirements (if any):
         - Matched if:
@@ -66,10 +81,11 @@ systemPromptReason = """
             - None of the extra requirements are met.
     
     Final Inclusion Rule (Flag):
-        - Evaluate the three components: P, I, Extra.
+        - Evaluate the three components: P, I, C, Extra.
         - Count how many components are matched.
-        - If ≥ 1 component matches → Flag = 1 (Include).
-        - If less than 1 components match → Flag = 0 (Exclude).
+        - Do NOT exclude a paper solely because Population or Intervention or Comparison does not match.
+        - If ≥ 2 component matches → Flag = 1 (Include).
+        - If less than 2 components match → Flag = 0 (Exclude).
     
     Output Format (must include all):
     1. ID: the paper ID.
@@ -84,17 +100,17 @@ systemPromptNoReason = """
         You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
     Goal:
-        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, and Extra requirements), research topic, and extra requirements (if any).
+        Determine whether a research paper is potentially relevant based on the provided PICO framework (considering only Population, Intervention, Comparison and Extra requirements), research title, and extra requirements (if any).
 
     General Screening Principle (High Recall):
         - Default to inclusion unless there is an explicit contradiction.
         - Missing, unclear, or partially reported information should be treated as “potentially matched”.
         - Do NOT require explicit wording or complete reporting for a component to be considered matched.
-        - Ignore Comparison (C) and Outcome (O) in this stage.
+        - Ignore Outcome (O) in this stage.
 
     Instructions:
     1. Read the Title, Abstract_clean, PICO information, and Extra requirements (if provided).
-    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), and Extra requirements.
+    2. Evaluate the paper using the PICO framework, but only for Population (P), Intervention (I), Comparison (C) and Extra requirements.
     3. Match Chinese PICO terms with English content, allowing for synonyms and equivalent medical concepts.
 
     Matching Rules:
@@ -108,14 +124,29 @@ systemPromptNoReason = """
             - Population is not the main focus.
             - Explicit contradiction with PICO population.
             - No relevant population information at all.
+        - IMPORTANT:
+            - In abstract screening, population mismatch MUST NOT be used as a reason for exclusion.
+            - Population matching status is for counting purposes only.
 
     Intervention (I):
         - Matched if:
             - Same or clinically equivalent intervention type or principle.
             - Differences in dose, frequency, or duration are ignored.
-        - Not matched if:
-            - Intervention is clearly unrelated.
-            **Note: In abstract screening stage, do NOT treat Intervention not matching as automatic exclusion; only count it as one component when calculating matches.**
+        - Consider it not matched if:
+            - Intervention is clearly different or unrelated.
+        - IMPORTANT:
+            - In abstract screening, intervention mismatch MUST NOT be used as a reason for exclusion.
+            - Intervention matching status is for counting purposes only.
+            
+    Comparison (C) Matching Rules:
+                - Matched if:
+                    - Includes any relevant control or comparison group (e.g., placebo, usual care, no treatment, another treatment, before–after comparison).
+                    - Even if the control group is not identical, as long as it helps evaluate the intervention.
+                - Consider it not matched if:
+                    - No comparison information is mentioned.
+                - IMPORTANT:
+                    - Comparison mismatch MUST NOT be used as a reason for exclusion.
+                    - Comparison matching status is for counting purposes only.
 
     Extra Requirements (if any):
         - Matched if:
@@ -125,10 +156,11 @@ systemPromptNoReason = """
             - None of the extra requirements are met.
 
     Final Inclusion Rule (Flag):
-        - Evaluate the three components: P, I, Extra.
+        - Evaluate the three components: P, I, C, Extra.
         - Count how many components are matched.
-        - If ≥ 1 component matches → Flag = 1 (Include).
-        - If less than 1 components match → Flag = 0 (Exclude).
+        - Do NOT exclude a paper solely because Population or Intervention or Comparison does not match.
+        - If ≥ 2 component matches → Flag = 1 (Include).
+        - If less than 2 components match → Flag = 0 (Exclude).
 
     Output Format (must include all):
     1. ID: the paper ID.
@@ -144,12 +176,12 @@ userPromptReason = """
     
     Task:
     1. Independently evaluate each paper.
-    2. For each component, only consider Population (P), Intervention (I), and Extra requirements.
+    2. For each component, only consider Population (P), Intervention (I), Comparison (C) and Extra requirements.
        - A component is considered matched if the paper does NOT explicitly contradict its requirements.
-       - Ignore Comparison (C) and Outcome (O) at this stage.
+       - Ignore Outcome (O) at this stage.
     3. Extra requirements (if any) are evaluated the same way.
-    4. If at least 1 component (P, I, or Extra) is matched → Flag = 1 (Include)
-    5. If less than 1 components are matched → Flag = 0 (Exclude)
+    4. If at least 2 component (P, I, C or Extra) is matched → Flag = 1 (Include)
+    5. If less than 2 components are matched → Flag = 0 (Exclude)
     6. Optionally, provide a short reasoning in Chinese, listing which components are matched.
 """
 
@@ -162,13 +194,14 @@ userPromptNoReason = """
 
     Task:
     1. Independently evaluate each paper.
-    2. For each component, only consider Population (P), Intervention (I), and Extra requirements.
+    2. For each component, only consider Population (P), Intervention (I), Comparison (C) and Extra requirements.
        - A component is considered matched if the paper does NOT explicitly contradict its requirements.
-       - Ignore Comparison (C) and Outcome (O) at this stage.
+       - Ignore Outcome (O) at this stage.
     3. Extra requirements (if any) are evaluated the same way.
-    4. If at least 1 component (P, I, or Extra) is matched → Flag = 1 (Include)
-    5. If less than 1 components are matched → Flag = 0 (Exclude)
+    4. If at least 2 component (P, I, C or Extra) is matched → Flag = 1 (Include)
+    5. If less than 2 components are matched → Flag = 0 (Exclude)
 """
+
 
 async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     global topic_keywords
@@ -210,18 +243,20 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
         "Intervention": "Application of medical-grade honey dressings (e.g., Manuka honey)",
         "Comparison": "Standard wound care (e.g., saline or silver dressings)",
         "Outcome": "Shorter wound healing time (faster recovery)"
-  }
+    }
 
     paper_list = pd.DataFrame(whole_paper_list)
     filename = save_dir / "CSVList.csv"
-    await ThreeAgnets.use_agent_all(paper_list, pico1, model1, model2, model3, systemPromptReason, systemPromptNoReason, userPromptReason, userPromptNoReason)
+    await ThreeAgnets.use_agent_all(paper_list, pico1, model1, model2, model3, systemPromptReason, systemPromptNoReason,
+                                    userPromptReason, userPromptNoReason)
     paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"保存到: {filename}")
 
-#Download files from PubMed
+
+# Download files from PubMed
 def literature_search():
     global whole_paper_list, topic_keywords
-    
+
     query = input("enter key words: ").strip()
     topic_keywords = query + " " + topic_keywords
     max_number = input("enter max number: ").strip()
@@ -230,22 +265,22 @@ def literature_search():
     handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
     record = Entrez.read(handle)
     handle.close()
-    
+
     pmids = record["IdList"]
     print(f"find {len(pmids)} papers")
-    
+
     if not pmids:
         return
-    
+
     handle = Entrez.efetch(db="pubmed", id=pmids, rettype="medline", retmode="text")
     records = list(Medline.parse(handle))
     handle.close()
 
-    num=len(whole_paper_list)
+    num = len(whole_paper_list)
     # Transform
     for idx, record in enumerate(records, start=0):
         row = {
-            'ID': num+idx,
+            'ID': num + idx,
             'Title': record.get('TI', ''),
             'Abstract': record.get('AB', ''),
             'Authors': '; '.join(record.get('AU', [])),
@@ -260,12 +295,13 @@ def literature_search():
         }
         whole_paper_list.append(row)
 
-#Upload files
+
+# Upload files
 # def upload_to_csv():
 #     global whole_paper_list, topic_keywords
 #     file_dir = input("enter RIS file: ").strip()
 
-#Get DOI 
+# Get DOI
 def extract_doi(record):
     doi_pattern = re.compile(r"10\.\d{4,9}/[^\s\]]+", re.IGNORECASE)
     for key in ("LID", "AID"):
@@ -281,16 +317,17 @@ def extract_doi(record):
             return match.group(0)
     return ""
 
+
 async def main():
-    #save_dir = input("enter address: ").strip()
+    # save_dir = input("enter address: ").strip()
     save_dir = SCRIPT_DIR
 
-    model1_name="gpt-4.1"
-    model2_name="gpt-4.1-mini"
-    model3_name="gpt-4.1"
+    model1_name = "gpt-4.1"
+    model2_name = "gpt-4.1-mini"
+    model3_name = "gpt-4.1"
 
     model1 = ChatOpenAI(
-        model=model1_name, 
+        model=model1_name,
         base_url="https://www.dmxapi.cn/v1",
         api_key=key1,
         temperature=0
@@ -314,6 +351,7 @@ async def main():
         model2,
         model3
     )
+
 
 if __name__ == "__main__":
     asyncio.run(main())
