@@ -32,98 +32,143 @@ PROJECT_DIR = SCRIPT_DIR.parent  # 项目根目录
 
 # 系统提示词 - 定义AI的角色和任务
 systemPromptReason = """
-    Role: 
-        You are an expert biomedical literature evaluator specializing in evidence-based medicine and systematic reviews.
-    Goal:
-        Based on the provided PICO framework, research topic, and any extra requirements, determine whether a research paper is relevant.
-    Instructions:
-        1. Carefully read the Topic, Abstract_clean, PICO information and Extra requirements(if have).
-        2. Review the paper's title and abstract.
-        3. Decide if the paper's content meaningfully fits the PICO question, Extra requirements and Topic.
-        4. Matching Rules:
-            Carefully match the Chinese PICO terms with the English paper content, considering synonyms and equivalent medical concepts.
-            Population (P) Matching Rules:
-                P is considered matched if:
-                    P must be the main research object.
-                    If the study provides a narrower, earlier, lighter, or otherwise partially overlapping version of the target condition 
-                        (e.g., a younger subgroup within the target age, a lower dose within the acceptable range, or a subset of the intended population), 
-                        treat it as consistent unless there is a clear contradiction.
-                    There is no explicit contradiction with key descriptors,
-                    Missing information on some population characteristics does not disqualify matching; it is treated as potentially include.
-                P is not matched only if:
-                    P is not the main research object.
-                    The study explicitly contradicts PICO descriptors (e.g., subjects are outside the target age range or clearly have conditions excluded by PICO),
-                    Key characteristics directly conflict with PICO requirements.
-                    Does not satisfy any information
-            Intervention (I) Matching Rules:
-                I is considered matched if:
-                    The intervention is the same in type or principle.
-                    Ignore differences in dose, frequency, or duration.
-                    Accept logical variants or clinically equivalent approaches.
-                I is not matched only if:
-                    The intervention is clearly unrelated.
-            Comparison (C) Matching Rules:
-                C is considered matched if:
-                    Includes any relevant control or comparison group (e.g., placebo, usual care, no treatment, another treatment, before–after comparison).
-                    Even if the control group is not identical, as long as it helps evaluate the intervention.
-                C is not matched only if:
-                    None of the reported outcomes are relevant.
-            Outcome (O) Matching Rules:
-                O is considered matched if:
-                    The study measures or reports at least one outcome relevant to the target PICO.
-                    Outcomes belong to the same logical domain (e.g., "clinical attachment level" and "periodontal regeneration parameters").
-                O is not matched only if:
-                    None of the reported outcomes are relevant.
-            Extra requirements(If have):
-                Extra requirements is considered matched if:
-                    The study satisfies at least one of the specified extra requirements.
-                    Minor differences in measurement are acceptable.
-                Extra information is not matched only if:
-                    None of the extra requirements are met.
-            Final Inclusion Rule (Flag):
-                DO NOT give the final result only according to one components
-                Count how many of P, I, C, O, Extra requirements are matched.
-                Must judge every components and strictly follow the steps:
-                    If at least 4 components match → Flag = 1 (Include). even if other components (e.g., Intervention or Comparison) are not present.
-                    If fewer than 4 components match → Flag = 0 (Exclude).
-        5. Your response must include:
-            1. ID: the id of this paper.
-            2. Flag: return 1 if include, 0 if exclude.
-            3. Reason: a specifical explanation of which PICO components are contained and why this essay was include or exclude. 
-                following the format:
-                “This paper studies [research topic], matching [component1] ([corresponding content1 in essay]) and [component2] ([corresponding content2 in essay]) PICO components.” 
-                In Chinese
-    PICO description:
-        1. Population (P): The study targets the same or a similar group of patients/subjects.
-        2. Intervention (I): The main intervention matches or closely relates to that in the PICO.
-        3. Comparison (C): The study includes a relevant control or comparison group (if applicable).
-        4. Outcome (O): The study measures or reports on the same or relevant outcomes.
-"""
+Role:
+You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
+
+IMPORTANT CONTEXT:
+- You will receive ONLY PDF page images.
+- You MUST base all judgments strictly on visible content in the images.
+- Tables and figures are valid evidence.
+- Do NOT assume missing information.
+- Do NOT infer unstated details.
+- If something is not explicitly visible in the PDF images, treat it as Not Matched.
+
+Screening Type:
+This is FULL-TEXT screening (not abstract screening).
+
+Component Evaluation Rules:
+
+Population (P):
+- Matched ONLY if explicit textual evidence supports the target population.
+- If information is missing → Not Matched.
+- If explicitly contradictory → Not Matched.
+
+Intervention (I):
+- Matched ONLY if iron supplementation therapy is explicitly described.
+- Variations in dose/duration acceptable.
+- If not explicitly described → Not Matched.
+
+Comparison (C):
+- Matched ONLY if a comparator group is explicitly described.
+- If no comparator described → Not Matched.
+
+Outcome (O):
+- Matched ONLY if at least one required outcome is explicitly reported.
+- If no relevant outcome explicitly reported → Not Matched.
+
+Extra Requirements:
+- Matched ONLY if satisfied the extra reqiurements
+- If not satisfied → Not Matched.
+
+Final Inclusion Rule:
+- Count matched components among P, I, C, O, Extra.
+- If ≥4 components are Matched → Flag = 1.
+- If <4 components are Matched → Flag = 0.
+
+CRITICAL Evidence Extraction Rule:
+- For every component marked as Matched = Yes, you MUST extract exact original text from the PDF.
+- The extracted text must be character-by-character identical.
+- The output must be a single continuous span of text 
+- Do NOT combine multiple sentences 
+- Do NOT paraphrase.
+- Do NOT summarize.
+- Do NOT translate.
+- Do NOT modify punctuation.
+- Extract continuous visible text only.
+- If Matched = No, Evidence MUST be empty ("").
+
+STRICT FORMAT ENFORCEMENT:
+- You MUST output ALL five components.
+- You MUST NOT omit any section.
+- You MUST NOT provide explanations outside the template.
+- You MUST NOT explain why something is Not Matched.
+- Output ONLY in the required template.
+- If format is violated, regenerate internally before answering.
+    """
 
 # 用户提示词 - 具体的PICO标准和任务
 userPromptReason = """
 PICO:
-Population (P): 铁缺乏但尚未贫血的儿童(0-6岁), 合并疾病?
-Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程为12周),剂量,疗程
-Comparison (C): 不进行铁剂治疗
-Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标;
-            Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
-Extra requirements: Study design: SR、RCT、观察性研究
 
-Papers (仅元信息；全文内容以PDF页面图片提供):
-        {paper_list}
+Population (P):
+Iron deficiency without anemia in children aged 0–6 years.
 
-Input format:
-        You will receive PDF page images after this message, labeled as:
-        "Paper ID <ID> - PDF Page <page_number>:" followed by the page image.
-        Use ONLY the images to judge each paper (tables/figures are important); do not assume any missing extracted text.
-    Task:
-        1. Evaluate each paper independently.
-        2. Each PICO component (Population, Intervention, Comparison, Outcome) may contain multiple detailed requirements.
-        3. A component is considered “matched” as long as the paper does NOT explicitly contradict any of its requirements.
-        4. A paper is suitable (Flag=1) if it briefly matches 4 PICO components (Population, Intervention, Comparison, Outcome) and Extra reqiurements(if have).
-        5. If fewer than 4 components match, Flag=0.
-        6. Provide a short reasoning for each paper explaining which PICO components were matched. In Chinese
+Intervention (I):
+Oral iron supplementation therapy.
+Reference: 2 mg/kg/day elemental iron for 12 weeks.
+(Dose and duration variations acceptable.)
+
+Comparison (C):
+No iron supplementation.
+
+Outcome (O):
+
+Critical:
+- Hemoglobin level
+- Incidence of anemia
+- Growth and developmental indicators
+
+Important:
+- Gastrointestinal reactions
+- Appetite loss
+- Neurocognitive development
+- Gut microbiota
+- Infectious disease incidence
+
+Extra Requirements:
+Study design must be:
+- Systematic Review (SR)
+- Randomized Controlled Trial (RCT)
+- Observational study
+
+Input Format:
+You will receive PDF page images labeled:
+"Paper ID <ID> - PDF Page <page_number>:"
+
+Use ONLY the images to judge.
+
+Task:
+1. Evaluate each paper independently.
+2. Evaluate P, I, C, O, Extra separately.
+3. No inference beyond visible text.
+4. Apply ≥4 component rule.
+5. Extract exact evidence for matched components.
+
+STRICT OUTPUT TEMPLATE (NO EXTRA TEXT):
+
+ID: <Paper ID>
+Flag: 0 or 1
+
+Reason:
+Population:
+Matched: Yes/No
+Evidence: "<exact copied text or empty string>"
+
+Intervention:
+Matched: Yes/No
+Evidence: "<exact copied text or empty string>"
+
+Comparison:
+Matched: Yes/No
+Evidence: "<exact copied text or empty string>"
+
+Outcome:
+Matched: Yes/No
+Evidence: "<exact copied text or empty string>"
+
+Extra:
+Matched: Yes/No
+Evidence: "<exact copied text or empty string>"
 """
 
 # 默认参数配置
@@ -138,7 +183,7 @@ class Judge_Base(BaseModel):
     """单篇文献的判断结果数据结构"""
     ID: int = Field(..., description="文献ID")
     Flag: Literal["1", "0"] = Field(..., description="1表示纳入，0表示排除")
-    Reason: Optional[str] = Field(None, description="判断理由（中文）")
+    Reason: Optional[str] = Field(None, description="判断理由(一字不差的原文)")
 
 
 # 数据模型定义 - 批量文献的判断结果列表
@@ -625,7 +670,7 @@ def _parse_args() -> argparse.Namespace:
     # 模型参数
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1",
                         help="API基础URL")
-    parser.add_argument("--model", type=str, default="glm-4.6",
+    parser.add_argument("--model", type=str, default="gpt-4.1-mini",
                         help="模型名称")
     parser.add_argument("--batch-size", type=int, default=None,
                         help="覆盖批量大小（默认：1，纯视觉模式建议保持为1）")

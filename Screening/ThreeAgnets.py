@@ -29,7 +29,7 @@ delay = 3
 class Judge_Base(BaseModel):
     """Judge whether the essay is suitable"""
     ID: int = Field(..., description="The ID of the eaasy")
-    Flag: Literal["1", "0"] = Field(..., description="the judge of whether the value is suitbale")
+    Flag: Literal["1", "0"] = Field(..., description="the judge of whether the value is suitable")
     Reason: Optional[str] = Field(None, description="the reason of the judge")
 
 
