@@ -16,6 +16,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+downloads_api/
 eggs/
 .eggs/
 lib/
@@ -214,5 +215,7 @@ __marimo__/
 outputs/
 resources/
 data/
+resources_md/
 
 AGENTS.md
+.DS_Store
