@@ -98,38 +98,13 @@ STRICT FORMAT ENFORCEMENT:
 
 # 用户提示词 - 具体的PICO标准和任务
 userPromptReason = """
-PICO:
-
-Population (P):
-Iron deficiency without anemia in children aged 0–6 years.
-
-Intervention (I):
-Oral iron supplementation therapy.
-Reference: 2 mg/kg/day elemental iron for 12 weeks.
-(Dose and duration variations acceptable.)
-
-Comparison (C):
-No iron supplementation.
-
-Outcome (O):
-
-Critical:
-- Hemoglobin level
-- Incidence of anemia
-- Growth and developmental indicators
-
-Important:
-- Gastrointestinal reactions
-- Appetite loss
-- Neurocognitive development
-- Gut microbiota
-- Infectious disease incidence
-
-Extra Requirements:
-Study design must be:
-- Systematic Review (SR)
-- Randomized Controlled Trial (RCT)
-- Observational study
+ PICO: 
+        Population (P): 铁缺乏但尚未贫血的儿童(0-6岁), 合并疾病?
+        Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程为12周),剂量,疗程
+        Comparison (C): 不进行铁剂治疗
+        Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标; 
+                    Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
+        Extra requirements: Study design: SR、RCT、观察性研究
 
 Input Format:
 You will receive PDF page images labeled:
@@ -169,6 +144,9 @@ Evidence: "<exact copied text or empty string>"
 Extra:
 Matched: Yes/No
 Evidence: "<exact copied text or empty string>"
+
+Conclusion:
+"a short reason to explain why flag is 1 or 0"
 """
 
 # 默认参数配置

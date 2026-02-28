@@ -208,34 +208,31 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    literature_search()
+    while True:
+        print("Download files: 1, Upload files: 2, Start abstract screening: 3")
+        choice = int(input("Please choose: "))
+        if (choice == 1):
+            literature_search()
+        elif choice == 2:
+            upload_to_csv()
+        elif choice == 3:
+            break
+        else:
+            print("invalid number")
+            continue
 
-    # choice = 0
-    # while True:
-    #     print("Download files: 1, Upload files: 2")
-    #     choice = int(input("Please choose: "))
-    #     if (choice == 1):
-    #         download_to_csv()
-    #     elif choice == 2:
-    #         upload_to_csv()
-    #     elif choice == 3:
-    #         break
-    #     else:
-    #         print("invalid number")
-    #         continue
+    population = input("Enter Population: ").strip()
+    intervention = input("Enter Intervention: ").strip()
+    comparison = input("Enter Comparison: ").strip()
+    outcome = input("Enter Outcome: ").strip()
 
-    # Population = input("Enter Population: ").strip()
-    # Intervention = input("Enter Intervention: ").strip()
-    # Comparision = input("Enter Comparision: ").strip()
-    # Outcome = input("Enter Outcome: ").strip()
-
-    # query = {
-    #     "Topic" : topic_keywords,
-    #     "Population" : Population,
-    #     "Intervention" : Intervention,
-    #     "Comparision" : Comparision,
-    #     "Outcome" : Outcome
-    # }
+    query = {
+        "Topic" : topic_keywords,
+        "Population" : population,
+        "Intervention" : intervention,
+        "Comparison" : comparison,
+        "Outcome" : outcome
+    }
 
     pico1 = {
         "Topic": "Wound Healing Rate",
@@ -247,7 +244,7 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
 
     paper_list = pd.DataFrame(whole_paper_list)
     filename = save_dir / "CSVList.csv"
-    await ThreeAgnets.use_agent_all(paper_list, pico1, model1, model2, model3, systemPromptReason, systemPromptNoReason,
+    await ThreeAgnets.use_agent_all(paper_list, query, model1, model2, model3, systemPromptReason, systemPromptNoReason,
                                     userPromptReason, userPromptNoReason)
     paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"保存到: {filename}")
@@ -297,9 +294,9 @@ def literature_search():
 
 
 # Upload files
-# def upload_to_csv():
-#     global whole_paper_list, topic_keywords
-#     file_dir = input("enter RIS file: ").strip()
+def upload_to_csv():
+    global whole_paper_list, topic_keywords
+    file_dir = input("enter RIS file: ").strip()
 
 # Get DOI
 def extract_doi(record):
@@ -320,7 +317,7 @@ def extract_doi(record):
 
 async def main():
     # save_dir = input("enter address: ").strip()
-    save_dir = SCRIPT_DIR
+    save_dir = SCRIPT_DIR.parent / "resources"
 
     model1_name = "gpt-4.1"
     model2_name = "gpt-4.1-mini"
@@ -347,9 +344,9 @@ async def main():
 
     await abstract_screening(
         save_dir,
-        model1,
-        model2,
-        model3
+        model1_name,
+        model2_name,
+        model3_name
     )
 
 
