@@ -342,8 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let totalSuccess = 0; // 成功上传的文献数
-      let errorFiles = [];   // 处理失败的文件
+      let totalSuccess = 0;    // 成功上传的新文献数
+      let totalDuplicates = 0; // 记录被拦截的重复文献数
+      let errorFiles = [];     // 处理失败的文件
 
       // 批量处理每个文件
       for (let i = 0; i < files.length; i++) {
@@ -373,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
           continue;
         }
 
-        // 解析为空的情况
         if (literatures.length === 0) {
           errorFiles.push(`${file.name} (no valid literature found)`);
           continue;
@@ -381,24 +381,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 批量上传到后端
         try {
+          if (!currentProject || !currentProject.id) {
+             alert('Error: No active project found. Please select or create a project first.');
+             return;
+          }
+          
           for (let lit of literatures) {
+            lit.project_id = currentProject.id;
+            
             const response = await fetch('http://localhost:3000/api/upload-literature', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(lit)
             });
             const result = await response.json();
-            if (result.success) totalSuccess++;
+            
+            // 根据后端的 inserted 标志判断是成功插入还是重复跳过
+            if (result.success) {
+                if (result.inserted) {
+                    totalSuccess++;
+                } else {
+                    totalDuplicates++; // 命中去重逻辑
+                }
+            }
           }
         } catch (err) {
           errorFiles.push(`${file.name} (upload failed)`);
         }
       }
 
-      // 处理完成后提示
-      let message = `Successfully uploaded ${totalSuccess} literatures!`;
+      // 优化处理完成后的提示框信息
+      let message = `Upload Task Completed!\n`;
+      message += `- Successfully saved: ${totalSuccess} new papers.\n`;
+      if (totalDuplicates > 0) {
+          message += `- Skipped duplicates: ${totalDuplicates} papers.\n`;
+      }
       if (errorFiles.length > 0) {
-        message += `\nFailed files: ${errorFiles.join(', ')}`;
+          message += `- Failed files: ${errorFiles.join(', ')}`;
       }
       alert(message);
 
@@ -415,21 +434,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 3. 加载文献列表并渲染到表格
+  // 3. 加载文献列表并渲染到表格 (核心修改：只请求当前项目的文献)
+// 3. 加载文献列表并渲染到表格 (核心修改：只请求当前项目的文献)
   window.loadLiteratureList = async function() {
     const tableBody = document.getElementById('literature-table-body');
     if (!tableBody) return;
+    
+    if (!currentProject || !currentProject.id) return;
 
     try {
-      const response = await fetch('http://localhost:3000/api/get-literatures');
+      const response = await fetch('http://localhost:3000/api/get-literatures', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: currentProject.id })
+      });
       const result = await response.json();
 
       if (result.success && result.data.length > 0) {
         // 有数据，渲染表格
         tableBody.innerHTML = '';
-        result.data.forEach(lit => {
+        
+        // 【核心修复】：加上 index 参数，用于生成独立的显示序号
+        result.data.forEach((lit, index) => {
+          const displayId = index + 1; // 生成 1, 2, 3... 的独立序号
+          
           const tr = document.createElement('tr');
+          // 注意：我们在标签上保存真实的数据库ID (data-id)，但页面上显示的是 displayId
+          tr.setAttribute('data-id', lit.id);
           tr.innerHTML = `
-            <td style="border: 1px solid #ddd; padding: 8px;">${lit.id}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${displayId}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.title || '-'}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.author || '-'}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.journal || '-'}</td>
@@ -441,7 +474,6 @@ document.addEventListener('DOMContentLoaded', () => {
           tableBody.appendChild(tr);
         });
       } else {
-        // 无数据，显示空提示
         tableBody.innerHTML = `
           <tr>
             <td colspan="6" class="empty-data">No literature data yet - Upload or search to view results</td>
@@ -449,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       }
     } catch (error) {
-      // 加载失败提示
       tableBody.innerHTML = `
         <tr>
           <td colspan="6" class="empty-data" style="color: red;">
@@ -461,13 +492,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 4. 扩展showPage函数，进入import-search-page时自动加载列表
+  // 4. 扩展showPage函数，进入各个页面时加载对应数据
   const originalShowPage = window.showPage;
   window.showPage = function(pageId) {
     originalShowPage(pageId);
+    
     // 进入文献导入页时加载列表
     if (pageId === 'import-search-page') {
-      setTimeout(loadLiteratureList, 100); // 延迟100ms确保页面渲染完成
+      setTimeout(loadLiteratureList, 100); 
+    }
+    // 进入摘要筛选页面时加载筛查列表
+    else if (pageId === 'abstract-screen-page') {
+      setTimeout(loadAbstractScreening, 100);
     }
   };
 
@@ -484,6 +520,78 @@ document.addEventListener('DOMContentLoaded', () => {
     event.target.classList.add('active');
   };
 });
+
+// ====== 新增：处理 PubMed 在线检索逻辑 ======
+// ====== 处理 PubMed 在线检索逻辑 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const searchPubmedBtn = document.getElementById('search-pubmed-btn');
+    if (searchPubmedBtn) {
+        searchPubmedBtn.addEventListener('click', async () => {
+            const keywords = document.getElementById('search-keywords').value.trim();
+            const maxPapers = document.getElementById('max-papers').value;
+            
+            if (!keywords) {
+                alert('Please enter search keywords!');
+                return;
+            }
+            if (!currentProject || !currentProject.id) {
+                alert('Error: No active project found.');
+                return;
+            }
+
+            // 1. 按钮变为 Loading 状态
+            const originalText = searchPubmedBtn.textContent;
+            searchPubmedBtn.textContent = 'Searching PubMed... Please wait...';
+            searchPubmedBtn.disabled = true;
+
+            // 2. 【核心修复】：立即清空下方表格，显示正在加载的状态
+            const tableBody = document.getElementById('literature-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-data" style="color: #2c6ecb; font-weight: bold;">
+                            Searching PubMed database... This might take a few seconds...
+                        </td>
+                    </tr>
+                `;
+            }
+
+            try {
+                // 3. 发送请求给后端
+                const response = await fetch('http://localhost:3000/api/search-pubmed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_id: currentProject.id,
+                        keywords: keywords,
+                        max_papers: parseInt(maxPapers)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    // 4. 搜索成功后，重新从数据库拉取该项目的最新文献列表并覆盖表格
+                    loadLiteratureList(); 
+                } else {
+                    alert('Search Error: ' + result.message);
+                    // 如果失败了，恢复空状态或者显示原来的文献
+                    loadLiteratureList();
+                }
+            } catch (error) {
+                console.error('Search request failed:', error);
+                alert('Network error. Is the Python backend running?');
+                loadLiteratureList();
+            } finally {
+                // 5. 恢复按钮状态
+                searchPubmedBtn.textContent = originalText;
+                searchPubmedBtn.disabled = false;
+            }
+        });
+    }
+});
+
 
 // 加载用户的项目列表
 async function loadUserProjects() {
@@ -508,6 +616,7 @@ async function loadUserProjects() {
     }
 }
 
+// 渲染项目列表到页面
 // 渲染项目列表到页面
 function renderProjects(projects) {
     const homePage = document.getElementById('home-page');
@@ -541,7 +650,10 @@ function renderProjects(projects) {
                         </p>
                         <p><small>Status: ${project.status} | Created: ${project.created_at}</small></p>
                     </div>
-                    <button class="btn btn-secondary btn-sm" onclick="continueProject(${project.id})">Continue</button>
+                    <div>
+                        <button class="btn btn-secondary btn-sm" onclick="continueProject(${project.id})">Continue</button>
+                        <button class="btn btn-sm" style="background-color: #dc3545; color: white; margin-left: 5px; border: none;" onclick="deleteProject(${project.id}, '${project.project_name}')">Delete</button>
+                    </div>
                 </div>
             `;
         });
@@ -559,7 +671,6 @@ function renderProjects(projects) {
     // 重新绑定创建项目按钮事件
     const createBtn = document.getElementById('create-project-btn');
     if (createBtn) {
-        // 移除旧的事件监听器（如果有）
         createBtn.replaceWith(createBtn.cloneNode(true));
         const newCreateBtn = document.getElementById('create-project-btn');
         newCreateBtn.addEventListener('click', () => {
@@ -578,9 +689,7 @@ async function createNewProject(projectName) {
     try {
         const response = await fetch('http://localhost:3000/api/create-project', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 user_id: currentUser.id,
                 project_name: projectName
@@ -590,7 +699,6 @@ async function createNewProject(projectName) {
         const result = await response.json();
         
         if (result.success) {
-            // 设置当前项目
             currentProject = {
                 id: result.project_id,
                 name: projectName,
@@ -598,7 +706,9 @@ async function createNewProject(projectName) {
             };
             sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
             
-            // 跳转到PICO页面
+            // 【核心修复】：新建项目时，先清空上一个项目遗留的输入！
+            clearAllInputs();
+            
             showPage('pico-page');
         } else {
             alert('Failed to create project: ' + result.message);
@@ -611,24 +721,21 @@ async function createNewProject(projectName) {
 // 继续项目
 async function continueProject(projectId) {
     try {
-        // 获取项目数据
+        // 【核心修复】：加载项目前，先清空面板，防止上一个项目的数据串号！
+        clearAllInputs();
+
         const response = await fetch('http://localhost:3000/api/get-project-data', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                project_id: projectId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: projectId })
         });
         
         const result = await response.json();
         
         if (result.success) {
-            // 设置当前项目
             currentProject = { id: projectId };
             
-            // 加载各阶段数据到表单
+            // 加载 PICO 数据
             if (result.data.pico) {
                 document.getElementById('population').value = result.data.pico.population || '';
                 document.getElementById('intervention').value = result.data.pico.intervention || '';
@@ -636,18 +743,22 @@ async function continueProject(projectId) {
                 document.getElementById('outcome').value = result.data.pico.outcome || '';
             }
             
+            // 加载 Protocol 数据
             if (result.data.protocol) {
                 document.getElementById('research-objective').value = result.data.protocol.objective || '';
                 document.getElementById('inclusion-criteria').value = result.data.protocol.inclusion || '';
                 document.getElementById('exclusion-criteria').value = result.data.protocol.exclusion || '';
             }
+
+            // 【核心修复】：加载 Search 阶段的数据（隔离各项目的搜索参数）
+            if (result.data.search_params) {
+                document.getElementById('search-keywords').value = result.data.search_params.keywords || '';
+                document.getElementById('max-papers').value = result.data.search_params.maxPapers || 200;
+            }
             
-            // 根据项目状态跳转到对应页面
             const projectResponse = await fetch('http://localhost:3000/api/get-projects', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: currentUser.id })
             });
             
@@ -658,22 +769,12 @@ async function continueProject(projectId) {
                 currentProject.name = project.project_name;
                 sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
                 
-                // 根据状态跳转
                 switch(project.status) {
-                    case 'PICO Setup':
-                        showPage('pico-page');
-                        break;
-                    case 'Import/Search':
-                        showPage('import-search-page');
-                        break;
-                    case 'Abstract Screening':
-                        showPage('abstract-screen-page');
-                        break;
-                    case 'Data Extraction':
-                        showPage('data-extraction-page');
-                        break;
-                    default:
-                        showPage('pico-page');
+                    case 'PICO Setup': showPage('pico-page'); break;
+                    case 'Import/Search': showPage('import-search-page'); break;
+                    case 'Abstract Screening': showPage('abstract-screen-page'); break;
+                    case 'Data Extraction': showPage('data-extraction-page'); break;
+                    default: showPage('pico-page');
                 }
             }
         }
@@ -712,6 +813,40 @@ async function editProjectName(projectId, buttonElement) {
         } catch (error) {
             alert('Failed to update project name');
         }
+    }
+}
+
+// 新增：删除项目逻辑
+async function deleteProject(projectId, projectName) {
+    // 增加二次确认，防止用户误删
+    if (!confirm(`Are you sure you want to permanently delete the project "${projectName}"?\nThis will erase all PICO data, imported literatures, and AI reasoning. This action cannot be undone.`)) {
+        return; 
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/delete-project', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: projectId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // 如果用户删除的正好是他们当前正在操作的项目，清空当前项目缓存防干扰
+            if (currentProject && currentProject.id === projectId) {
+                currentProject = null;
+                sessionStorage.removeItem('currentProject');
+                clearAllInputs();
+            }
+            // 重新拉取并渲染最新的项目列表
+            loadUserProjects();
+        } else {
+            alert('Failed to delete project: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Failed to delete project:', error);
+        alert('Network error occurred while trying to delete the project.');
     }
 }
 
@@ -804,9 +939,13 @@ function addNavigationListeners() {
     }
     
     // Import/Search页面的 Proceed to Abstract Screening 按钮
+    // Import/Search页面的 Proceed to Abstract Screening 按钮
     const proceedBtn = document.getElementById('proceed-to-abstract-btn');
     if (proceedBtn) {
         proceedBtn.onclick = async () => {
+            // 【核心修复】：离开搜索界面前，将关键词等输入内容保存进该项目的数据库中
+            await saveSearchData();
+            
             await updateProjectStatus('Abstract Screening');
             showPage('abstract-screen-page');
         };
@@ -850,3 +989,167 @@ console.log('8. addNavigationListeners 函数是否存在:', typeof addNavigatio
 console.log('=== 调试信息结束 ===');
 }
 
+// ========== Abstract Screening 动态渲染与保存逻辑 ==========
+
+// 加载当前项目文献至摘要筛选表格
+// 加载当前项目文献至摘要筛选表格
+window.loadAbstractScreening = async function() {
+    const screenTableBody = document.getElementById('screenTableBody');
+    if (!screenTableBody || !currentProject || !currentProject.id) return;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/get-literatures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: currentProject.id })
+        });
+        const result = await response.json();
+
+        if (result.success && result.data.length > 0) {
+            screenTableBody.innerHTML = '';
+            
+            // 【核心修改】：在 forEach 中加入 index，用来生成显示的序号
+            result.data.forEach((lit, index) => {
+                const displayId = index + 1; // 生成从 1 开始的显示序号
+                
+                // 根据 AI 决定设置颜色
+                let aiColor = lit.ai_decision === 'Included' ? 'green' : (lit.ai_decision === 'Excluded' ? 'red' : '#6c757d');
+                let shortReason = lit.reasoning && lit.reasoning.length > 80 ? lit.reasoning.substring(0, 80) + '...' : (lit.reasoning || 'No reasoning provided yet');
+                
+                const tr = document.createElement('tr');
+                // 真实数据库 ID 保存在 DOM 属性里
+                tr.setAttribute('data-id', lit.id);
+                tr.setAttribute('data-reason', lit.reasoning || '');
+                
+                tr.innerHTML = `
+                    <td>${displayId}</td> <td>${lit.title}</td>
+                    <td style="color: ${aiColor}; font-weight: 600;">${lit.ai_decision}</td>
+                    <td class="reason-display">${shortReason}</td>
+                    <td>
+                        <select class="user-decision-select" style="font-size: 12px; padding: 6px;" onchange="updateDecision(${lit.id}, this.value)">
+                            <option value="Keep" ${lit.user_decision === 'Keep' ? 'selected' : ''}>Keep AI Decision</option>
+                            <option value="Include" ${lit.user_decision === 'Include' ? 'selected' : ''}>Manually Include</option>
+                            <option value="Exclude" ${lit.user_decision === 'Exclude' ? 'selected' : ''}>Manually Exclude</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm edit-reason-btn" onclick="openEditModal(this)">View/Edit</button>
+                    </td>
+                `;
+                screenTableBody.appendChild(tr);
+            });
+        } else {
+             screenTableBody.innerHTML = `<tr><td colspan="6" class="empty-data">No literatures found. Please import some papers first.</td></tr>`;
+        }
+    } catch (error) {
+        console.error('Failed to load abstract screening data:', error);
+    }
+};
+
+
+// 更新用户的Include/Exclude决定
+window.updateDecision = async function(literatureId, decision) {
+    try {
+        await fetch('http://localhost:3000/api/update-literature-decision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                literature_id: literatureId,
+                user_decision: decision
+            })
+        });
+    } catch (error) {
+        console.error('Failed to update decision:', error);
+    }
+};
+
+// 打开编辑推理弹窗（替换原本固定的事件绑定）
+window.openEditModal = function(btnElement) {
+    currentEditRow = btnElement.closest('tr');
+    const originalReason = currentEditRow.getAttribute('data-reason');
+    document.getElementById('reasonText').value = originalReason;
+    document.getElementById('reasonModal').style.display = 'flex';
+};
+
+// 改写 Save Reason 按钮逻辑（添加后端调用）
+document.getElementById('saveReason').addEventListener('click', async function() {
+    if (!currentEditRow) return;
+    const newReason = document.getElementById('reasonText').value.trim();
+    const litId = currentEditRow.getAttribute('data-id'); // 获取文献ID
+    
+    if (newReason) {
+        try {
+            // 调用我们刚才在 app.py 里写的接口保存到数据库
+            const response = await fetch('http://localhost:3000/api/update-literature-decision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    literature_id: litId,
+                    reasoning: newReason
+                })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                // 更新前端 DOM
+                currentEditRow.setAttribute('data-reason', newReason);
+                const shortReason = newReason.length > 80 ? newReason.substring(0, 80) + '...' : newReason;
+                currentEditRow.querySelector('.reason-display').textContent = shortReason;
+                closeReasonModal();
+                alert('Reasoning updated successfully!');
+            } else {
+                alert('Failed to save reasoning to database.');
+            }
+        } catch (error) {
+            console.error('Save reasoning error:', error);
+        }
+    } else {
+        alert('Reasoning content cannot be empty!');
+    }
+});
+
+function clearAllInputs() {
+    // 1. 清空 PICO 和 Protocol 输入框
+    const textInputs = [
+        'population', 'intervention', 'comparison', 'outcome',
+        'research-objective', 'inclusion-criteria', 'exclusion-criteria',
+        'search-keywords' // 连同搜索界面的关键字一起清空
+    ];
+    textInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // 2. 恢复 Search 界面的 Max Papers 默认值
+    const maxPapers = document.getElementById('max-papers');
+    if (maxPapers) maxPapers.value = 200;
+
+    // 3. 清空文件上传框
+    const fileUpload = document.getElementById('file-upload');
+    if (fileUpload) fileUpload.value = '';
+}
+
+
+// ====== 新增：保存 Search 界面的数据 ======
+async function saveSearchData() {
+    if (!currentProject || !currentProject.id) return;
+    
+    const searchData = {
+        keywords: document.getElementById('search-keywords').value,
+        maxPapers: document.getElementById('max-papers').value
+    };
+    
+    try {
+        await fetch('http://localhost:3000/api/save-project-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                project_id: currentProject.id,
+                data_type: 'search_params',  // 存入数据库时的类型标识
+                data_content: searchData
+            })
+        });
+    } catch (error) {
+        console.error('Failed to save search data:', error);
+    }
+}

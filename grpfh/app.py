@@ -1,9 +1,26 @@
 # app.py
+import os
+import sys
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import hashlib
 import json
+# === 路径注入核心代码 开始 ===
+# 1. 获取上一级根目录 (GRP-MULTIAGENT)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+# 2. 获取 Screening 目录，并加入 Python 搜索路径
+# 这样 AbstractScreening.py 里面直接 import ThreeAgnets 就能找到了
+screening_dir = os.path.join(parent_dir, 'Screening')
+sys.path.insert(0, screening_dir)
+
+
 from database import get_db  # 只导入get_db，不导入init_database
+# app.py 顶部引入
+from Screening.AbstractScreening import search_pubmed
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
@@ -99,6 +116,9 @@ def register():
         return jsonify({'success': False, 'message': f'Register failed: {str(e)}'})
 
 # 上传文献接口
+# ==========================================
+# 修改：本地上传文献接口（增加去重拦截）
+# ==========================================
 @app.route('/api/upload-literature', methods=['POST', 'OPTIONS'])
 def upload_literature():
     if request.method == 'OPTIONS':
@@ -109,42 +129,140 @@ def upload_literature():
         return response
     
     data = request.json
+    project_id = data.get('project_id')
     title = data.get('title')
-    author = data.get('author')
-    journal = data.get('journal')
+    author = data.get('author', '')
+    journal = data.get('journal', '')
     year = data.get('year')
     
-    if not title:
-        return jsonify({'success': False, 'message': 'Literature title cannot be empty!'})
+    if not project_id or not title:
+        return jsonify({'success': False, 'message': 'Project ID and Literature title cannot be empty!'})
     
     try:
         conn = get_db()
         cursor = conn.cursor()
+        
+        # 【核心修复】：查重 - 检查当前项目中是否已经存在相同标题的文献
+        cursor.execute('SELECT id FROM literatures WHERE project_id = ? AND title = ?', (project_id, title))
+        if cursor.fetchone():
+            conn.close()
+            # 发现重复：返回 success=True 防止前端报错，但通过 inserted=False 告诉前端这是重复数据
+            return jsonify({'success': True, 'inserted': False, 'message': 'Duplicate literature skipped.'})
+            
+        # 没有重复，正常插入
         cursor.execute(
-            'INSERT INTO literatures (title, author, journal, year) VALUES (?, ?, ?, ?)',
-            (title, author, journal, year)
+            '''INSERT INTO literatures (project_id, title, author, journal, year, ai_decision, reasoning) 
+               VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            (project_id, title, author, journal, year, 'Pending', 'Waiting for AI screening...')
         )
         conn.commit()
         conn.close()
         
-        return jsonify({'success': True, 'message': 'Literature uploaded successfully!'})
+        return jsonify({'success': True, 'inserted': True, 'message': 'Literature uploaded successfully!'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to save literature: {str(e)}'})
 
+    
+# 在 app.py 中新增：PubMed 自动检索并保存接口
+@app.route('/api/search-pubmed', methods=['POST', 'OPTIONS'])
+def api_search_pubmed():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
+    data = request.json
+    project_id = data.get('project_id')
+    keywords = data.get('keywords')
+    max_papers = data.get('max_papers', 200)
+    
+    if not project_id or not keywords:
+        return jsonify({'success': False, 'message': 'Project ID and keywords are required'})
+    
+    try:
+        # 1. 调用 AbstractScreening.py 中的函数去 PubMed 抓取数据
+        papers = search_pubmed(keywords, max_papers)
+        
+        if not papers:
+            return jsonify({'success': True, 'message': 'No literatures found for these keywords.', 'count': 0})
+            
+        # 2. 将抓取到的数据批量存入 SQLite 数据库（新增去重逻辑）
+        conn = get_db()
+        cursor = conn.cursor()
+        inserted_count = 0
+        duplicate_count = 0  # 新增：记录重复跳过的文献数量
+        
+        for paper in papers:
+            if not paper['title']: 
+                continue # 跳过没有标题的无效数据
+                
+            # 【核心修复】：查重 - 检查当前项目中是否已经存在相同标题的文献
+            cursor.execute('SELECT id FROM literatures WHERE project_id = ? AND title = ?', (project_id, paper['title']))
+            if cursor.fetchone():
+                duplicate_count += 1
+                continue # 发现重复，直接跳过，不插入数据库
+                
+            cursor.execute('''
+                INSERT INTO literatures 
+                (project_id, title, author, journal, year, ai_decision, reasoning) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                project_id, 
+                paper['title'], 
+                paper['author'], 
+                paper['journal'], 
+                paper['year'], 
+                'Pending', 
+                'Abstract:\n' + paper['abstract']
+            ))
+            inserted_count += 1
+            
+        conn.commit()
+        conn.close()
+        
+        # 优化返回信息，告知用户去重情况
+        msg = f'Successfully saved {inserted_count} new papers.'
+        if duplicate_count > 0:
+            msg += f' (Skipped {duplicate_count} duplicate papers).'
+            
+        return jsonify({
+            'success': True, 
+            'message': msg, 
+            'count': inserted_count
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Search failed: {str(e)}'})
+    
+
 # 获取文献列表接口
-@app.route('/api/get-literatures', methods=['GET', 'OPTIONS'])
+@app.route('/api/get-literatures', methods=['POST', 'OPTIONS'])
 def get_literatures():
     if request.method == 'OPTIONS':
         response = jsonify({'success': True})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
         return response
     
+    data = request.json
+    project_id = data.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+        
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('SELECT id, title, author, journal, year FROM literatures ORDER BY upload_time DESC')
+        # 核心修改：只查询当前项目下的文献
+        cursor.execute('''
+            SELECT id, title, author, journal, year, ai_decision, user_decision, reasoning 
+            FROM literatures 
+            WHERE project_id = ? 
+            ORDER BY upload_time DESC
+        ''', (project_id,))
         rows = cursor.fetchall()
         literatures = [dict(row) for row in rows]
         conn.close()
@@ -152,6 +270,53 @@ def get_literatures():
         return jsonify({'success': True, 'data': literatures})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to get literatures: {str(e)}'})
+    
+
+@app.route('/api/update-literature-decision', methods=['POST', 'OPTIONS'])
+def update_literature_decision():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
+    data = request.json
+    literature_id = data.get('literature_id')
+    user_decision = data.get('user_decision')
+    reasoning = data.get('reasoning')
+    
+    if not literature_id:
+        return jsonify({'success': False, 'message': 'Literature ID required'})
+        
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 动态构建更新语句，支持单独更新decision或reasoning
+        updates = []
+        params = []
+        if user_decision is not None:
+            updates.append("user_decision = ?")
+            params.append(user_decision)
+        if reasoning is not None:
+            updates.append("reasoning = ?")
+            params.append(reasoning)
+            
+        if not updates:
+            return jsonify({'success': False, 'message': 'Nothing to update'})
+            
+        params.append(literature_id)
+        query = f"UPDATE literatures SET {', '.join(updates)} WHERE id = ?"
+        
+        cursor.execute(query, tuple(params))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Decision updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to update decision: {str(e)}'})
+
 
 # 获取用户的所有项目
 @app.route('/api/get-projects', methods=['POST', 'OPTIONS'])
@@ -376,6 +541,37 @@ def update_project_name():
         return jsonify({'success': True, 'message': 'Project name updated successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to update name: {str(e)}'})
+
+
+# 删除项目接口
+@app.route('/api/delete-project', methods=['POST', 'OPTIONS'])
+def delete_project():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
+    data = request.json
+    project_id = data.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+    
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 因为数据库表设置了 ON DELETE CASCADE，删除项目会自动删除关联的 project_data 和 literatures
+        cursor.execute('DELETE FROM projects WHERE id = ?', (project_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Project deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to delete project: {str(e)}'})
+    
 
 if __name__ == '__main__':
     print('=' * 50)

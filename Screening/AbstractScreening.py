@@ -300,20 +300,62 @@ def extract_doi(record):
         val = record.get(key)
         if not val:
             continue
-        if isinstance(val, list):
-            text = " ".join(val)
-        else:
-            text = str(val)
+        text = " ".join(val) if isinstance(val, list) else str(val)
         match = doi_pattern.search(text)
         if match:
             return match.group(0)
     return ""
 
-
 async def main():
     # save_dir = input("enter address: ").strip()
 
     await abstract_screening()
+
+def search_pubmed(query, max_number):
+    try:
+        # 1. 搜索获取文献 ID 列表
+        handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
+        record = Entrez.read(handle)
+        handle.close()
+
+        pmids = record.get("IdList", [])
+        if not pmids:
+            return []  # 没搜到就返回空列表
+
+        # 2. 根据 ID 抓取文献详细信息
+        handle = Entrez.efetch(db="pubmed", id=pmids, rettype="medline", retmode="text")
+        records = list(Medline.parse(handle))
+        handle.close()
+
+        # 3. 格式化并返回结果
+        results = []
+        for record in records:
+            # 尝试提取发表年份
+            year_str = record.get('DP', '')
+            year = None
+            if year_str:
+                # 取前 4 位作为年份
+                try:
+                    year = int(year_str[:4])
+                except ValueError:
+                    year = None
+
+            row = {
+                'title': record.get('TI', ''),
+                'abstract': record.get('AB', ''),
+                'author': '; '.join(record.get('AU', [])),
+                'journal': record.get('JT', ''),
+                'year': year,
+                'doi': extract_doi(record),
+                'keywords': '; '.join(record.get('OT', record.get('MH', [])))
+            }
+            results.append(row)
+            
+        return results
+    except Exception as e:
+        print(f"PubMed search error: {e}")
+        return []
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

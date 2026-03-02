@@ -1,8 +1,6 @@
 # database.py
 import sqlite3
-import json
 import os
-from datetime import datetime
 
 DB_PATH = 'ai_screening.db'
 
@@ -11,7 +9,7 @@ def init_database():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
-    # 创建users表
+    # 1. 创建users表
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,19 +19,7 @@ def init_database():
         )
     ''')
     
-    # 创建literatures表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS literatures (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            author TEXT DEFAULT '',
-            journal TEXT DEFAULT '',
-            year INTEGER,
-            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # 创建projects表
+    # 2. 创建projects表
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,14 +31,31 @@ def init_database():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+
+    # 3. 创建literatures表 (核心修改：绑定 project_id，新增筛选决策字段)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS literatures (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            author TEXT DEFAULT '',
+            journal TEXT DEFAULT '',
+            year INTEGER,
+            ai_decision TEXT DEFAULT 'Pending',   -- AI的初步决定: Pending, Included, Excluded
+            user_decision TEXT DEFAULT 'Keep',    -- 用户的最终决定: Keep, Include, Exclude
+            reasoning TEXT,                       -- AI/User的推理说明
+            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )
+    ''')
     
-    # 创建project_data表
+    # 4. 创建project_data表 (用于存PICO等无固定格式的JSON数据)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS project_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             project_id INTEGER NOT NULL,
             data_type TEXT NOT NULL,
-            data_content TEXT,  -- SQLite没有JSON类型，用TEXT存储JSON字符串
+            data_content TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
@@ -60,7 +63,7 @@ def init_database():
         )
     ''')
     
-    # 创建触发器自动更新updated_at
+    # 5. 创建触发器自动更新updated_at
     cursor.execute('''
         CREATE TRIGGER IF NOT EXISTS update_projects_timestamp 
         AFTER UPDATE ON projects
@@ -84,9 +87,8 @@ def init_database():
 def get_db():
     """获取数据库连接"""
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # 让返回的结果可以通过列名访问
+    conn.row_factory = sqlite3.Row
     return conn
 
-# 初始化数据库
 if __name__ == '__main__':
     init_database()
