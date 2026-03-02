@@ -17,6 +17,10 @@ Entrez.email = "erzhuzi2023@outlook.com"
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
 
+model1_name = "gpt-4.1"
+model2_name = "gpt-4.1-mini"
+model3_name = "gpt-4.1"
+
 whole_paper_list = []
 topic_keywords = ""
 
@@ -202,24 +206,15 @@ userPromptNoReason = """
     5. If less than 2 components are matched → Flag = 0 (Exclude)
 """
 
-
-async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
-    global topic_keywords
-    save_dir = Path(save_dir)
+def save_file(paper_list):
+    save_dir = Path(SCRIPT_DIR.parent / "resources")
     save_dir.mkdir(parents=True, exist_ok=True)
+    filename = save_dir / "CSVList.csv"
+    paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
+    print(f"保存到: {filename}")
 
-    while True:
-        print("Download files: 1, Upload files: 2, Start abstract screening: 3")
-        choice = int(input("Please choose: "))
-        if (choice == 1):
-            literature_search()
-        elif choice == 2:
-            upload_to_csv()
-        elif choice == 3:
-            break
-        else:
-            print("invalid number")
-            continue
+async def abstract_screening():
+    global topic_keywords
 
     population = input("Enter Population: ").strip()
     intervention = input("Enter Intervention: ").strip()
@@ -243,11 +238,9 @@ async def abstract_screening(save_dir, model1=None, model2=None, model3=None):
     }
 
     paper_list = pd.DataFrame(whole_paper_list)
-    filename = save_dir / "CSVList.csv"
-    await ThreeAgnets.use_agent_all(paper_list, query, model1, model2, model3, systemPromptReason, systemPromptNoReason,
+    await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, systemPromptReason, systemPromptNoReason,
                                     userPromptReason, userPromptNoReason)
-    paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
-    print(f"保存到: {filename}")
+    save_file(paper_list)
 
 
 # Download files from PubMed
@@ -291,6 +284,8 @@ def literature_search():
             'Reason': ''
         }
         whole_paper_list.append(row)
+    paper_list = pd.DataFrame(whole_paper_list)
+    save_file(paper_list)
 
 
 # Upload files
@@ -317,38 +312,8 @@ def extract_doi(record):
 
 async def main():
     # save_dir = input("enter address: ").strip()
-    save_dir = SCRIPT_DIR.parent / "resources"
 
-    model1_name = "gpt-4.1"
-    model2_name = "gpt-4.1-mini"
-    model3_name = "gpt-4.1"
-
-    model1 = ChatOpenAI(
-        model=model1_name,
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key1,
-        temperature=0
-    )
-    model2 = ChatOpenAI(
-        model=model2_name,
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key2,
-        temperature=0
-    )
-    model3 = ChatOpenAI(
-        model=model3_name,
-        base_url="https://www.dmxapi.cn/v1",
-        api_key=key1,
-        temperature=0
-    )
-
-    await abstract_screening(
-        save_dir,
-        model1_name,
-        model2_name,
-        model3_name
-    )
-
+    await abstract_screening()
 
 if __name__ == "__main__":
     asyncio.run(main())
