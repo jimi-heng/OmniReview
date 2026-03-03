@@ -24,6 +24,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
+from TextHighlight import highlight_pdf
 
 import httpx
 from dotenv import load_dotenv
@@ -39,47 +40,132 @@ PROJECT_DIR = SCRIPT_DIR.parent
 
 
 # Keep prompts local to this script to avoid changing the existing vision pipeline.
-SYSTEM_PROMPT = """Role:
+SYSTEM_PROMPT = """
+Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
+
+IMPORTANT CONTEXT:
+- You will receive ONLY PDF page images.
+- You MUST base all judgments strictly on visible content in the images.
+- Tables and figures are valid evidence.
+- Do NOT assume missing information.
+- Do NOT infer unstated details.
+- If something is not explicitly visible in the PDF images, treat it as Not Matched.
 
 Screening Type:
 This is FULL-TEXT screening (not abstract screening).
 
-Rules:
-- Base judgments strictly on the provided PDF content.
-- Tables and figures are valid evidence.
-- Do NOT assume missing information.
-- Do NOT infer unstated details.
+Component Evaluation Rules:
+
+Population (P):
+- Matched ONLY if explicit textual evidence supports the target population.
+- If explicitly contradictory → Not Matched.
+- If not mentioned at all → Not Matched.
+
+Intervention (I):
+- Matched ONLY if iron supplementation therapy is explicitly described.
+- Variations in dose/duration acceptable.
+- If explicitly contradictory → Not Matched.
+- If not mentioned → Not Matched.
+
+Comparison (C):
+- Matched ONLY if a comparator group is explicitly described.
+- If explicitly contradictory → Not Matched.
+- If not mentioned → Not Matched.
+
+Outcome (O):
+- Matched ONLY if at least one required outcome is explicitly reported.
+- If explicitly contradictory → Not Matched.
+- If not mentioned → Not Matched.
+
+Extra Requirements:
+- Matched ONLY if study design explicitly satisfies requirements.
+- If explicitly contradictory → Not Matched.
+- If not mentioned → Not Matched.
 
 Final Inclusion Rule:
-- Evaluate P, I, C, O, Extra.
-- If >=4 components are Matched -> Flag = 1, else Flag = 0.
+- Count matched components among P, I, C, O, Extra.
+- If ≥4 components are Matched → Flag = 1.
+- If <4 components are Matched → Flag = 0.
 
-CRITICAL Evidence Extraction Rule:
-- For every component marked as Matched = Yes, extract exact original text from the PDF.
-- The extracted text must be character-by-character identical.
-- Output must follow the template only.
+CRITICAL Evidence Extraction Rule (UPDATED – STRICT):
+
+For EVERY component (P, I, C, O, Extra):
+
+1. Evidence MUST be extracted regardless of whether Matched is Yes or No.
+2. If Matched = Yes:
+   - Extract exact original text that directly supports why it satisfies the requirement.
+3. If Matched = No:
+   - If the text explicitly contradicts the requirement → extract exact contradictory text.
+   - If the text explicitly shows a different population/intervention/outcome/design → extract that text.
+4. If the component is completely not mentioned anywhere in the PDF images:
+   - Evidence MUST be empty string ("").
+
+CRITICAL REQUIREMENT FOR EVIDENCE:
+
+For each evidence item (Population, Intervention, Comparison, Outcome, Extra):
+
+- The evidence MUST be copied verbatim from the PDF.
+- The text must match the original wording exactly.
+- Do NOT paraphrase.
+- Do NOT summarize.
+- Do NOT rewrite.
+- Do NOT modify grammar.
+- Do NOT change tense.
+- Do NOT omit words.
+- Do NOT add words.
+- Do NOT merge sentences.
+- Do NOT correct typos.
+- Do NOT remove punctuation.
+
+If you cannot find an exact sentence in the PDF, return an empty string for that evidence item.
+
+The evidence must be directly traceable to a visible sentence in the PDF page images.
+
+Global Summary Requirement (NEW):
+- Regardless of Flag = 0 or 1,
+- You MUST provide a short overall summary in the Conclusion section.
+- The summary must briefly explain why the paper is included or excluded based on component counts.
+- The summary must be concise but logically complete.
+
+STRICT FORMAT ENFORCEMENT:
+- You MUST output ALL five components.
+- You MUST NOT omit any section.
+- You MUST NOT provide explanations outside the template.
+- Output ONLY in the required template.
+- If format is violated, regenerate internally before answering.
 """
 
 
-USER_PROMPT_TEMPLATE = """PICO:
-Population (P): 铁缺乏但尚未贫血的儿童0-6岁, 合并疾病?
-Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程≥2周), 剂量, 疗程
-Comparison (C): 不进行铁剂治疗
-Outcome (O):
-  Critical: 血色素水平, 贫血的发生率, 生长发育指标
-  Important: 安全性指标：胃肠道反应、食欲下降; 神经认知发育, 肠道菌群, 感染性疾病患病率
-Extra requirements: Study design: SR、RCT、观察性研究
+USER_PROMPT_TEMPLATE = """
+PICO: 
+        Population (P): 铁缺乏但尚未贫血的儿童(0-6岁), 合并疾病?
+        Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程为12周),剂量,疗程
+        Comparison (C): 不进行铁剂治疗
+        Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标; 
+                    Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
+        Extra requirements: Study design: SR、RCT、观察性研究
+
+Input Format:
+You will receive PDF page images labeled:
+"Paper ID <ID> - PDF Page <page_number>:"
+
+Use ONLY the images to judge.
 
 Task:
-Evaluate the PDF for Paper ID {paper_id}. Use ONLY PDF content.
+1. Evaluate each paper independently.
+2. Evaluate P, I, C, O, Extra separately.
+3. No inference beyond visible text.
+4. Apply ≥4 component rule.
+5. Extract exact evidence for ALL components (including Not Matched).
 
 STRICT OUTPUT TEMPLATE (NO EXTRA TEXT):
 
-ID: {paper_id}
+ID: <Paper ID>
 Flag: 0 or 1
 
 Reason:
+
 Population:
 Matched: Yes/No
 Evidence: "<exact copied text or empty string>"
@@ -101,9 +187,30 @@ Matched: Yes/No
 Evidence: "<exact copied text or empty string>"
 
 Conclusion:
-"a short reason to explain why flag is 1 or 0"
+"<concise overall explanation why the paper is included (Flag=1) or excluded (Flag=0), based strictly on visible matched component count>"
 """
 
+def extract_evidence(text):
+    components = ["Population", "Intervention", "Comparison", "Outcome", "Extra"]
+    evidences = {}
+
+    for comp in components:
+        pattern = rf"{comp}:\s*Matched:\s*(?:Yes|No)\s*Evidence:\s*\"(.*?)\""
+        match = re.search(pattern, text, re.DOTALL)
+
+        if match:
+            evidences[comp] = match.group(1).strip()
+        else:
+            evidences[comp] = ""
+
+    return evidences
+
+def extract_conclusion(text: str) -> str:
+    pattern = r'Conclusion:\s*"(.*?)"'
+    match = re.search(pattern, text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return ""
 
 def _parse_pages_spec(spec: str) -> Optional[list[int]]:
     s = (spec or "").strip().lower()
@@ -354,6 +461,27 @@ async def main() -> None:
                     data = resp.json()
                     text = _extract_output_text(data)
                     flag = _extract_flag(text)
+                    evidences = extract_evidence(text)
+                    conclusion = extract_conclusion(text)
+
+                    # ====== 高亮PDF ======
+                    try:
+                        input_pdf = Path(p.path)
+
+                        output_dir = Path("../outputs")
+                        output_dir.mkdir(exist_ok=True)
+
+                        output_pdf = output_dir / input_pdf.name
+
+                        highlight_pdf(
+                            input_pdf=input_pdf,
+                            output_pdf=output_pdf,
+                            evidences=evidences
+                        )
+
+
+                    except Exception as e:
+                        print(f"[Paper {p.paper_id}] Highlight error: {e!r}")
 
                     await queue.put(
                         {
@@ -361,7 +489,7 @@ async def main() -> None:
                             "Title": p.title,
                             "RelativePath": _safe_relative(p.path, PROJECT_DIR),
                             "Flag": flag,
-                            "Reason": text,
+                            "Reason": evidences,
                         }
                     )
 
