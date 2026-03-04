@@ -467,23 +467,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.author || '-'}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.journal || '-'}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">${lit.year || '-'}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">
-              <button class="btn btn-sm btn-secondary">Select</button>
-            </td>
           `;
           tableBody.appendChild(tr);
         });
       } else {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="6" class="empty-data">No literature data yet - Upload or search to view results</td>
+            <td colspan="5" class="empty-data">No literature data yet - Upload or search to view results</td>
           </tr>
         `;
       }
     } catch (error) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="empty-data" style="color: red;">
+          <td colspan="5" class="empty-data" style="color: red;">
             Failed to load literatures! Please check backend server.
           </td>
         </tr>
@@ -1021,10 +1018,11 @@ window.loadAbstractScreening = async function() {
                 tr.setAttribute('data-id', lit.id);
                 tr.setAttribute('data-reason', lit.reasoning || '');
                 
+                // 新顺序：ID -> Title -> AI Decision -> User Action -> Reasoning -> Edit
                 tr.innerHTML = `
-                    <td>${displayId}</td> <td>${lit.title}</td>
+                    <td>${displayId}</td>
+                    <td>${lit.title}</td>
                     <td style="color: ${aiColor}; font-weight: 600;">${lit.ai_decision}</td>
-                    <td class="reason-display">${shortReason}</td>
                     <td>
                         <select class="user-decision-select" style="font-size: 12px; padding: 6px;" onchange="updateDecision(${lit.id}, this.value)">
                             <option value="Keep" ${lit.user_decision === 'Keep' ? 'selected' : ''}>Keep AI Decision</option>
@@ -1032,6 +1030,7 @@ window.loadAbstractScreening = async function() {
                             <option value="Exclude" ${lit.user_decision === 'Exclude' ? 'selected' : ''}>Manually Exclude</option>
                         </select>
                     </td>
+                    <td class="reason-display">${shortReason}</td>
                     <td>
                         <button class="btn btn-primary btn-sm edit-reason-btn" onclick="openEditModal(this)">View/Edit</button>
                     </td>
@@ -1198,3 +1197,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ====== 新增：处理导出 CSV 逻辑 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', () => {
+            if (!currentProject || !currentProject.id) {
+                alert('Error: No active project found.');
+                return;
+            }
+            
+            // 对于文件下载，最简单的方式是直接让浏览器打开带有参数的 GET 请求 URL
+            const downloadUrl = `http://localhost:3000/api/export-csv?project_id=${currentProject.id}`;
+            window.open(downloadUrl, '_blank');
+        });
+    }
+});
+
+// ====== 新增：处理非线性 Maximum Papers 预设跳跃逻辑 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const maxPapersInput = document.getElementById('max-papers');
+    const btnUp = document.getElementById('max-papers-up');
+    const btnDown = document.getElementById('max-papers-down');
+    
+    // 你要求的预设档位
+    const steps = [10, 30, 50, 100, 200];
+    
+    if (maxPapersInput && btnUp && btnDown) {
+        btnUp.addEventListener('click', () => {
+            let currentVal = parseInt(maxPapersInput.value) || 0;
+            // 找到数组中第一个大于当前值的数，如果都比它小，就取最大值 200
+            let nextVal = steps.find(s => s > currentVal) || steps[steps.length - 1];
+            maxPapersInput.value = nextVal;
+        });
+        
+        btnDown.addEventListener('click', () => {
+            let currentVal = parseInt(maxPapersInput.value) || 0;
+            // 把数组反转，找第一个小于当前值的数，如果都比它大，就取最小值 10
+            let prevVal = [...steps].reverse().find(s => s < currentVal) || steps[0];
+            maxPapersInput.value = prevVal;
+        });
+    }
+});
+

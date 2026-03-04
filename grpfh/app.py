@@ -9,6 +9,9 @@ import json
 
 import pandas as pd
 import asyncio
+import csv
+from io import StringIO
+from flask import make_response
 
 # === 路径注入核心代码 开始 ===
 # 1. 获取上一级根目录 (GRP-MULTIAGENT)
@@ -645,7 +648,77 @@ def run_ai_screening_api():
         
     except Exception as e:
         return jsonify({'success': False, 'message': f'AI Screening failed: {str(e)}'})
+
+# ==========================================
+# 新增：动态导出 CSV 文件接口
+# ==========================================
+@app.route('/api/export-csv', methods=['GET', 'OPTIONS'])
+def export_csv():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+
+    # 注意：下载文件通常用 GET 请求，参数放在 URL 里
+    project_id = request.args.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'}), 400
         
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取项目名称，用于生成文件名
+        cursor.execute("SELECT project_name FROM projects WHERE id = ?", (project_id,))
+        project_row = cursor.fetchone()
+        project_name = project_row['project_name'] if project_row else "project"
+        
+        # 查询该项目下的所有文献记录
+        cursor.execute('''
+            SELECT id, title, author, journal, year, ai_decision, user_decision, reasoning 
+            FROM literatures 
+            WHERE project_id = ? 
+            ORDER BY id ASC
+        ''', (project_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        # 在内存中创建 CSV 字符串
+        si = StringIO()
+        cw = csv.writer(si)
+        
+        # 写入表头 (综合了搜索结果和筛查结果的所有列)
+        cw.writerow(['Database_ID', 'Title', 'Authors', 'Journal', 'Publication_Year', 'AI_Decision', 'User_Decision', 'Reasoning/Abstract'])
+        
+        # 写入数据
+        for row in rows:
+            cw.writerow([
+                row['id'], 
+                row['title'], 
+                row['author'], 
+                row['journal'], 
+                row['year'], 
+                row['ai_decision'], 
+                row['user_decision'], 
+                row['reasoning']
+            ])
+
+        # 将内存中的 CSV 数据转换为响应对象，强制浏览器下载
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = f"attachment; filename=screening_results_{project_name.replace(' ', '_')}.csv"
+        output.headers["Content-type"] = "text/csv; charset=utf-8-sig" # 使用 utf-8-sig 确保 Excel 打开中文不乱码
+        
+        # 处理跨域
+        output.headers['Access-Control-Allow-Origin'] = '*'
+        return output
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Export failed: {str(e)}'}), 500
+    
+
 if __name__ == '__main__':
     print('=' * 50)
     print('Python后端服务器启动在 http://localhost:3000')

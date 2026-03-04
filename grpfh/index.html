@@ -252,6 +252,30 @@
             padding: 30px;
             font-size: 14px;
         }
+        /* 隐藏原生数字输入框的小箭头 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            appearance: none; /* <- 补上这行标准属性解决兼容提示 */
+            margin: 0; 
+        }
+        input[type=number] { 
+            -moz-appearance: textfield; 
+            appearance: textfield; /* <- 补上这行标准属性解决兼容提示 */
+        }
+        
+        /* 自定义预设数量控件的样式 */
+        .custom-number-input { display: flex; align-items: stretch; }
+        .custom-number-input input { border-radius: 4px 0 0 4px; border-right: none; margin: 0; }
+        .custom-number-input .spin-btns { display: flex; flex-direction: column; }
+        .spin-btn { 
+            background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; 
+            height: 50%; width: 28px; font-size: 10px; 
+            display: flex; align-items: center; justify-content: center; color: #666;
+        }
+        .spin-btn.up { border-radius: 0 4px 0 0; border-bottom: none; }
+        .spin-btn.down { border-radius: 0 0 4px 0; }
+        .spin-btn:hover { background: #e2e6ea; color: #333; }
     </style>
 </head>
 <body>
@@ -461,8 +485,14 @@
                     <input type="text" id="search-keywords" placeholder="e.g. diabetes AND metformin OR glipizide NOT animal study">
                 </div>
                 <div class="form-group" style="max-width: 300px;">
-                    <label for="max-papers">Maximum Number of Literatures to Retrieve</label>
-                    <input type="number" id="max-papers" min="10" max="1000" value="200">
+                    <label>Maximum Number of Literatures to Retrieve</label>
+                    <div class="custom-number-input">
+                        <input type="number" id="max-papers" value="50">
+                        <div class="spin-btns">
+                            <button class="spin-btn up" id="max-papers-up">▲</button>
+                            <button class="spin-btn down" id="max-papers-down">▼</button>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top: 10px;">
                     <button class="btn btn-primary" id="search-pubmed-btn">Initiate Literature Search</button>
@@ -470,7 +500,6 @@
                 </div>
             </div>
             
-            <!-- 搜索/上传后结果预览区（核心修改：给tbody加ID，关联JS渲染） -->
             <div class="card">
                 <h4>Import/Search Results Preview</h4>
                 <table class="table" style="margin-top: 15px;">
@@ -481,13 +510,11 @@
                             <th>Author</th>
                             <th>Journal</th>
                             <th>Year</th>
-                            <th>Action</th>
-                        </tr>
+                            </tr>
                     </thead>
-                    <!-- 关键修改：给tbody加ID，用于JS渲染数据 -->
                     <tbody id="literature-table-body">
                         <tr>
-                            <td colspan="6" class="empty-data">No literature data yet - Upload or search to view results</td>
+                            <td colspan="5" class="empty-data">No literature data yet - Upload or search to view results</td>
                         </tr>
                     </tbody>
                 </table>
@@ -517,45 +544,14 @@
                             <th style="width: 5%;">ID</th>
                             <th class="title-col">Paper Title</th>
                             <th style="width: 10%;">AI Decision</th>
-                            <th class="reason-col">Full Reasoning</th>
                             <th style="width: 12%;">User Action</th>
+                            <th class="reason-col">Full Reasoning</th>
                             <th style="width: 10%;">Reason Edit</th>
                         </tr>
                     </thead>
                     <tbody id="screenTableBody">
-                        <!-- 示例数据1 -->
-                        <tr data-reason="Matches PICO: Population (hard-to-heal wounds), Outcome (microbial identification). Abstract mentions intervention of dressing sonication which aligns with the pre-defined study criteria and inclusion rules.">
-                            <td>1</td>
-                            <td>Testing Sonication for Microbial Detection in Hard-to-Heal Wounds</td>
-                            <td style="color: green; font-weight: 600;">Included</td>
-                            <td>Matches PICO: Population (hard-to-heal wounds), Outcome (microbial identification)...</td>
-                            <td>
-                                <select style="font-size: 12px; padding: 6px;">
-                                    <option value="keep">Keep AI Decision</option>
-                                    <option value="include">Manually Include</option>
-                                    <option value="exclude">Manually Exclude</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button class="btn btn-primary btn-sm edit-reason-btn">View/Edit</button>
-                            </td>
-                        </tr>
-                        <!-- 示例数据2 -->
-                        <tr data-reason="Does not match Intervention and Population criteria. Study focuses on machine learning algorithms for vascular dementia diagnosis rather than clinical intervention for diabetic patients. Excluded by PICO mismatch and inclusion criteria (no clinical intervention data).">
-                            <td>2</td>
-                            <td>Machine Learning for Vascular Dementia Diagnosis in Elderly Patients</td>
-                            <td style="color: red; font-weight: 600;">Excluded</td>
-                            <td>Does not match Intervention criteria. Study focuses on ML algorithms rather than clinical intervention...</td>
-                            <td>
-                                <select style="font-size: 12px; padding: 6px;">
-                                    <option value="keep">Keep AI Decision</option>
-                                    <option value="include">Manually Include</option>
-                                    <option value="exclude">Manually Exclude</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button class="btn btn-primary btn-sm edit-reason-btn">View/Edit</button>
-                            </td>
+                        <tr>
+                            <td colspan="6" class="empty-data">Loading AI screening results...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -564,7 +560,11 @@
                     <button class="btn btn-secondary">Reset All Selections</button>
                 </div>
             </div>
-            <button class="btn btn-primary" id="proceed-to-data-btn">Proceed to Full-Text Screening & Data Extraction</button>
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+                <button class="btn btn-secondary" id="export-csv-btn">⬇️ Export Results as CSV</button>
+                <button class="btn btn-primary" id="proceed-to-data-btn">Proceed to Full-Text Screening & Data Extraction</button>
+            </div>
         </div>
 
         <!-- 6. 数据提取页 -->
