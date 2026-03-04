@@ -6,6 +6,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import hashlib
 import json
+
+import pandas as pd
+import asyncio
+
 # === 路径注入核心代码 开始 ===
 # 1. 获取上一级根目录 (GRP-MULTIAGENT)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -20,8 +24,9 @@ sys.path.insert(0, screening_dir)
 from database import get_db  # 只导入get_db，不导入init_database
 # app.py 顶部引入
 from Screening.AbstractScreening import search_pubmed
-
-
+# app.py 顶部导入区域，更新这一行
+from Screening.AbstractScreening import search_pubmed, run_ai_screening_sync
+import Screening.ThreeAgnets
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
 
@@ -571,8 +576,76 @@ def delete_project():
         return jsonify({'success': True, 'message': 'Project deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to delete project: {str(e)}'})
-    
 
+
+# ==========================================
+# 触发 AI 摘要筛查接口 (完美对接 ThreeAgnets)
+# ==========================================
+@app.route('/api/run-ai-screening', methods=['POST', 'OPTIONS'])
+def run_ai_screening_api():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
+    data = request.json
+    project_id = data.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+    
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 1. 获取该项目的 PICO 设定并解析为字典
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'pico'", (project_id,))
+        pico_row = cursor.fetchone()
+        if not pico_row:
+            return jsonify({'success': False, 'message': 'PICO data not found. Please setup PICO first.'})
+            
+        pico_data = json.loads(pico_row['data_content']) # 这是一个字典，包含 population, intervention 等
+        
+        # 2. 获取所有 Pending 状态的文献（上传时摘要暂存在了 reasoning 里）
+        cursor.execute("SELECT id, title, reasoning FROM literatures WHERE project_id = ? AND ai_decision = 'Pending'", (project_id,))
+        pending_rows = cursor.fetchall()
+        
+        if not pending_rows:
+            return jsonify({'success': True, 'message': 'No pending literatures to screen.', 'count': 0})
+            
+        papers_to_screen = []
+        for row in pending_rows:
+            papers_to_screen.append({
+                'id': row['id'],
+                'title': row['title'],
+                'abstract': row['reasoning'] # 提取摘要发给 AI
+            })
+            
+        # 3. 将 PICO 字典和文献列表传给我们的同步包装函数
+        screen_results = run_ai_screening_sync(pico_data, papers_to_screen)
+        
+        # 4. 将 AI 智能体跑出的结果批量覆盖写回数据库
+        for res in screen_results:
+            cursor.execute('''
+                UPDATE literatures 
+                SET ai_decision = ?, reasoning = ? 
+                WHERE id = ?
+            ''', (res['ai_decision'], res['reasoning'], res['id']))
+            
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully screened {len(screen_results)} papers using Multi-Agent workflow!', 
+            'count': len(screen_results)
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'AI Screening failed: {str(e)}'})
+        
 if __name__ == '__main__':
     print('=' * 50)
     print('Python后端服务器启动在 http://localhost:3000')

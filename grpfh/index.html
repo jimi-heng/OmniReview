@@ -502,7 +502,14 @@
                 <h1>Abstract Screening Interface</h1>
                 <button class="btn btn-secondary" onclick="showPage('import-search-page')">Back to Search</button>
             </div>
-            <div style="margin: 10px 0; font-size: 14px; color: #6c757d;">Screening Progress: 12/100 papers completed | AI Pre-Screening Finished</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="font-size: 14px; color: #6c757d;">Reviewing imported literatures based on your PICO criteria</div>
+                <button id="run-ai-screening-btn" class="btn btn-primary" style="background-color: #28a745; border: none; font-weight: bold; box-shadow: 0 4px 6px rgba(40,167,69,0.3); transition: all 0.3s;">
+                    ▶️ Run AI Screening for Pending Papers
+                </button>
+            </div>
+
             <div class="card">
                 <table class="table">
                     <thead>

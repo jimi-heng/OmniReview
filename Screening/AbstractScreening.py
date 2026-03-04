@@ -8,6 +8,7 @@ import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+import asyncio
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
@@ -356,6 +357,99 @@ def search_pubmed(query, max_number):
         print(f"PubMed search error: {e}")
         return []
     
+
+# --- 新增对接接口开始 ---
+
+async def _run_ai_screening_async(pico_data, papers):
+    # 1. 引入文件顶部定义好的全局 Prompt 和模型变量
+    global model1_name, model2_name, model3_name
+    global systemPromptReason, systemPromptNoReason, userPromptReason, userPromptNoReason
+    global topic_keywords 
+    
+    results = []
+    if not papers:
+        return results
+        
+    # 2. 组装 ThreeAgnets 期望的 query 字典
+    query = {
+        "Topic": topic_keywords if 'topic_keywords' in globals() else "",
+        "Population": pico_data.get('population', ''),
+        "Intervention": pico_data.get('intervention', ''),
+        "Comparison": pico_data.get('comparison', ''),
+        "Outcome": pico_data.get('outcome', '')
+    }
+    
+    # 3. 将后端传来的 SQLite 数据转换为你们期望的 DataFrame
+    df_list = []
+    for p in papers:
+        df_list.append({
+            'ID': p['id'],             # 【核心】：列名必须大写 ID，ThreeAgnets 内部使用它来定位行
+            'Title': p['title'],
+            'Abstract_clean': p['abstract'],
+            'Abstract': p['abstract'],
+            'Flag1': '',
+            'Flag2': '',
+            'Flag3': '',               # 仲裁后的最终结果会存放在 Flag3
+            'Reason': ''               # 最终的推理理由
+        })
+    paper_list_df = pd.DataFrame(df_list)
+    
+    try:
+        # 4. 调用你们的终极多智能体函数！传入完整的 9 个参数
+        updated_df = await ThreeAgnets.use_agent_all(
+            paper_list_df, 
+            query, 
+            model1_name, 
+            model2_name, 
+            model3_name, 
+            systemPromptReason, 
+            systemPromptNoReason,
+            userPromptReason, 
+            userPromptNoReason
+        )
+        
+        # 5. 读取被 ThreeAgnets 写入了最终判定的 DataFrame，准备返回给数据库
+        for index, row in updated_df.iterrows():
+            # 按照你们的逻辑，最终结果一定在 Flag3 中（如果1和2一致，Flag3=Flag1；如果不一致，Agent3会写入Flag3）
+            flag_val = str(row.get('Flag3', '0')).strip()
+            ai_decision = 'Included' if '1' in flag_val else 'Excluded'
+            
+            # 获取推导理由
+            reason = str(row.get('Reason', ''))
+            if not reason or reason.strip() == '' or reason == 'nan':
+                reason = "AI successfully screened this paper but did not output detailed reasoning."
+                
+            results.append({
+                'id': row['ID'],
+                'ai_decision': ai_decision,
+                'reasoning': reason
+            })
+            
+    except Exception as e:
+        print(f"ThreeAgnets Screening Error: {e}")
+        # 若大模型调用出错，保留 Pending 并返回错误信息
+        for p in papers:
+            results.append({
+                'id': p['id'],
+                'ai_decision': 'Pending',
+                'reasoning': f"AI Screening Error: {str(e)}"
+            })
+            
+    return results
+
+def run_ai_screening_sync(pico_data, papers):
+    """
+    同步包装函数，供 app.py 在普通的 Flask 路由中调用
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        results = loop.run_until_complete(_run_ai_screening_async(pico_data, papers))
+        return results
+    finally:
+        loop.close()
+# --- 新增对接接口结束 ---
+
 
 if __name__ == "__main__":
     asyncio.run(main())

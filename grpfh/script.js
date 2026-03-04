@@ -1153,3 +1153,48 @@ async function saveSearchData() {
         console.error('Failed to save search data:', error);
     }
 }
+
+// ====== 新增：触发 AI 摘要筛查 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const runAiBtn = document.getElementById('run-ai-screening-btn');
+    if (runAiBtn) {
+        runAiBtn.addEventListener('click', async () => {
+            if (!currentProject || !currentProject.id) {
+                alert('Error: No active project found.');
+                return;
+            }
+
+            // 防抖与 Loading 提示
+            const originalText = runAiBtn.innerHTML;
+            runAiBtn.innerHTML = '⏳ AI is reading and screening... Please do not close the page.';
+            runAiBtn.disabled = true;
+            runAiBtn.style.backgroundColor = '#6c757d';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/run-ai-screening', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: currentProject.id })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    // 运行完毕，重新加载带有全新 Include/Exclude 状态的表格
+                    loadAbstractScreening(); 
+                } else {
+                    alert('Screening Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('AI Screening request failed:', error);
+                alert('Network error. Check if the Python backend is running properly.');
+            } finally {
+                // 恢复按钮状态
+                runAiBtn.innerHTML = originalText;
+                runAiBtn.disabled = false;
+                runAiBtn.style.backgroundColor = '#28a745';
+            }
+        });
+    }
+});
