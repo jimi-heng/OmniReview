@@ -60,7 +60,6 @@ Component Evaluation Rules:
 Population (P):
 - Matched ONLY if explicit textual evidence supports the target population.
 - If explicitly contradictory → Not Matched.
-- If not mentioned at all → Not Matched.
 
 Intervention (I):
 - Matched ONLY if iron supplementation therapy is explicitly described.
@@ -382,7 +381,7 @@ async def main() -> None:
     parser.add_argument("--timeout", type=float, default=300.0)
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--retry-delay", type=float, default=3.0)
-    parser.add_argument("--max-concurrency", type=int, default=5)
+    parser.add_argument("--max-concurrency", type=int, default=10)
 
     args = parser.parse_args()
 
