@@ -30,6 +30,10 @@ from Screening.AbstractScreening import search_pubmed
 # app.py 顶部导入区域，更新这一行
 from Screening.AbstractScreening import search_pubmed, run_ai_screening_sync
 import Screening.ThreeAgnets
+from Screening.download import ImprovedPaperDownloader
+from flask import Flask, request, jsonify, make_response, send_file # 新增 send_file
+# ...
+from Screening.WebFullText import run_fulltext_ai_sync # 新增引入口
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
 
@@ -141,7 +145,9 @@ def upload_literature():
     title = data.get('title')
     author = data.get('author', '')
     journal = data.get('journal', '')
+    # === 将获取参数和 INSERT 语句替换为以下内容 ===
     year = data.get('year')
+    doi = data.get('doi', '') # 新增：提取 DOI
     
     if not project_id or not title:
         return jsonify({'success': False, 'message': 'Project ID and Literature title cannot be empty!'})
@@ -150,22 +156,20 @@ def upload_literature():
         conn = get_db()
         cursor = conn.cursor()
         
-        # 【核心修复】：查重 - 检查当前项目中是否已经存在相同标题的文献
         cursor.execute('SELECT id FROM literatures WHERE project_id = ? AND title = ?', (project_id, title))
         if cursor.fetchone():
             conn.close()
-            # 发现重复：返回 success=True 防止前端报错，但通过 inserted=False 告诉前端这是重复数据
             return jsonify({'success': True, 'inserted': False, 'message': 'Duplicate literature skipped.'})
             
-        # 没有重复，正常插入
+        # 新增：插入 doi 字段
         cursor.execute(
-            '''INSERT INTO literatures (project_id, title, author, journal, year, ai_decision, reasoning) 
-               VALUES (?, ?, ?, ?, ?, ?, ?)''',
-            (project_id, title, author, journal, year, 'Pending', 'Waiting for AI screening...')
+            '''INSERT INTO literatures (project_id, title, author, journal, year, doi, ai_decision, reasoning) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            (project_id, title, author, journal, year, doi, 'Pending', 'Waiting for AI screening...')
         )
         conn.commit()
         conn.close()
-        
+
         return jsonify({'success': True, 'inserted': True, 'message': 'Literature uploaded successfully!'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Failed to save literature: {str(e)}'})
@@ -212,16 +216,18 @@ def api_search_pubmed():
                 duplicate_count += 1
                 continue # 发现重复，直接跳过，不插入数据库
                 
+            # === 将原来的 INSERT 语句替换为以下内容 ===
             cursor.execute('''
                 INSERT INTO literatures 
-                (project_id, title, author, journal, year, ai_decision, reasoning) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (project_id, title, author, journal, year, doi, ai_decision, reasoning) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 project_id, 
                 paper['title'], 
                 paper['author'], 
                 paper['journal'], 
                 paper['year'], 
+                paper.get('doi', ''), # 新增：将 PubMed 抓取到的 DOI 存入数据库
                 'Pending', 
                 'Abstract:\n' + paper['abstract']
             ))
@@ -265,11 +271,13 @@ def get_literatures():
         conn = get_db()
         cursor = conn.cursor()
         # 核心修改：只查询当前项目下的文献
+        # 核心修改：查询增加了 doi 和全文筛选阶段的新字段
         cursor.execute('''
-            SELECT id, title, author, journal, year, ai_decision, user_decision, reasoning 
+            SELECT id, title, author, journal, year, doi, ai_decision, user_decision, reasoning,
+                   pdf_status, pdf_path, full_text_decision, pico_evidence
             FROM literatures 
             WHERE project_id = ? 
-            ORDER BY upload_time DESC
+            ORDER BY id ASC
         ''', (project_id,))
         rows = cursor.fetchall()
         literatures = [dict(row) for row in rows]
@@ -718,6 +726,145 @@ def export_csv():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Export failed: {str(e)}'}), 500
     
+# ==========================================
+# 触发 全文 PDF 自动下载接口 (对接 download.py)
+# ==========================================
+@app.route('/api/fetch-pdfs', methods=['POST', 'OPTIONS'])
+def fetch_pdfs_api():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
+    data = request.json
+    project_id = data.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+        
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 1. 筛选出所有在摘要阶段被“纳入(Included)”的文献
+        # 逻辑：用户手动设为Include，或者(用户未手动排除 且 AI判定为Included)
+        cursor.execute('''
+            SELECT id, title, doi FROM literatures 
+            WHERE project_id = ? 
+            AND (user_decision = 'Include' OR (COALESCE(user_decision, 'Keep') = 'Keep' AND ai_decision = 'Included'))
+            AND (pdf_status = 'Pending' OR pdf_status IS NULL)
+        ''', (project_id,))
+        papers = cursor.fetchall()
+        
+        if not papers:
+            return jsonify({'success': True, 'message': 'No new included papers require PDF download.', 'count': 0})
+            
+        # 2. 初始化下载器和存储路径
+        downloader = ImprovedPaperDownloader()
+        output_dir = os.path.join(parent_dir, 'resources') # 统一存放在项目的 resources 文件夹
+        os.makedirs(output_dir, exist_ok=True)
+        
+        success_count = 0
+        
+        # 3. 遍历下载并更新数据库状态
+        for paper in papers:
+            doi = paper['doi']
+            if not doi:
+                cursor.execute("UPDATE literatures SET pdf_status = 'Failed (No DOI)' WHERE id = ?", (paper['id'],))
+                continue
+                
+            # 调用你们的强力下载器
+            ok = downloader.download_paper(doi, output_dir=output_dir)
+            if ok:
+                filepath = os.path.join(output_dir, doi.replace("/", "_") + ".pdf")
+                cursor.execute("UPDATE literatures SET pdf_status = 'Downloaded', pdf_path = ? WHERE id = ?", (filepath, paper['id']))
+                success_count += 1
+            else:
+                cursor.execute("UPDATE literatures SET pdf_status = 'Failed (Paywalled/Error)' WHERE id = ?", (paper['id'],))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Attempted {len(papers)} downloads. Successfully fetched {success_count} Open-Access PDFs.',
+            'count': success_count
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Fetch PDFs failed: {str(e)}'})
+
+
+# ==========================================
+# 触发 AI 全文多模态筛选与高亮接口
+# ==========================================
+@app.route('/api/run-fulltext-ai', methods=['POST', 'OPTIONS'])
+def run_fulltext_ai_api():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+        
+    data = request.json
+    project_id = data.get('project_id')
+    if not project_id: return jsonify({'success': False, 'message': 'Project ID required'})
+        
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'pico'", (project_id,))
+        pico_row = cursor.fetchone()
+        pico_data = json.loads(pico_row['data_content']) if pico_row else {}
+        
+        # 只取出成功下载了 PDF 且还未被判定过的文献
+        cursor.execute('''
+            SELECT id, title, pdf_path FROM literatures 
+            WHERE project_id = ? AND pdf_status = 'Downloaded' AND (full_text_decision = 'Pending' OR full_text_decision IS NULL)
+        ''', (project_id,))
+        papers = cursor.fetchall()
+        
+        if not papers:
+            return jsonify({'success': True, 'message': 'No pending downloaded papers to screen.', 'count': 0})
+            
+        papers_to_screen = [{'id': p['id'], 'title': p['title'], 'pdf_path': p['pdf_path']} for p in papers]
+        
+        # 调用大模型多模态阅片与高亮
+        results = run_fulltext_ai_sync(papers_to_screen, pico_data)
+        
+        # 将判决结果、抽取的 JSON 证据，以及带有颜色高亮的 PDF 路径写回数据库
+        success_count = 0
+        for res in results:
+            if res['decision'] != 'Error':
+                # 如果高亮成功，就用高亮版的 PDF 替换原来的普通 PDF 路径
+                final_pdf_path = res['hl_path'] if res['hl_path'] else papers_to_screen[success_count]['pdf_path']
+                cursor.execute('''
+                    UPDATE literatures 
+                    SET full_text_decision = ?, pico_evidence = ?, pdf_path = ?
+                    WHERE id = ?
+                ''', (res['decision'], res['evidence'], final_pdf_path, res['id']))
+                success_count += 1
+                
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': f'AI Processed {success_count} full-text papers.', 'count': success_count})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'AI Screening failed: {str(e)}'})
+
+# ==========================================
+# 预览高亮 PDF 文件的路由
+# ==========================================
+@app.route('/api/view-pdf', methods=['GET'])
+def view_pdf():
+    pdf_path = request.args.get('path')
+    if pdf_path and os.path.exists(pdf_path):
+        return send_file(pdf_path, mimetype='application/pdf')
+    return "PDF not found on server", 404
+
 
 if __name__ == '__main__':
     print('=' * 50)

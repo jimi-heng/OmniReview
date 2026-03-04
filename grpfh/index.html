@@ -288,7 +288,8 @@
             <div class="progress-step disabled" id="step-pico">3. PICO Setup</div>
             <div class="progress-step disabled" id="step-import">4. Import/Search</div>
             <div class="progress-step disabled" id="step-abstract">5. Abstract Screening</div>
-            <div class="progress-step disabled" id="step-data">6. Data Extraction</div>
+            <div class="progress-step disabled" id="step-fulltext">6. Full-Text Screening</div>
+            <div class="progress-step disabled" id="step-data">7. Data Extraction</div>
         </div>
     </div>
 
@@ -563,7 +564,58 @@
 
             <div style="margin-top: 20px; display: flex; justify-content: space-between;">
                 <button class="btn btn-secondary" id="export-csv-btn">⬇️ Export Results as CSV</button>
-                <button class="btn btn-primary" id="proceed-to-data-btn">Proceed to Full-Text Screening & Data Extraction</button>
+                <button class="btn btn-primary" id="proceed-to-data-btn">Proceed to Full-Text Screening</button>
+            </div>
+        </div>
+
+        <div id="full-text-screen-page" class="container" style="display: none;">
+            <div class="header">
+                <h1>Full-Text Screening Interface</h1>
+                <button class="btn btn-secondary" onclick="showPage('abstract-screen-page')">Back to Abstract</button>
+            </div>
+            
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-left: 5px solid #17a2b8;">
+                <div>
+                    <h3 style="margin-bottom: 5px;">Step 1: Retrieve Full-Text</h3>
+                    <p style="font-size: 13px; color: #6c757d; margin: 0;">Automatically download Open-Access PDFs using DOIs for all "Included" papers.</p>
+                </div>
+                <button id="fetch-pdfs-btn" class="btn btn-primary" style="background-color: #17a2b8; border: none; font-weight: bold; box-shadow: 0 4px 6px rgba(23,162,184,0.3);">
+                    ⬇️ Auto-Fetch PDFs
+                </button>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-left: 5px solid #28a745;">
+                <div>
+                    <h3 style="margin-bottom: 5px;">Step 2: AI Multi-Modal Screening & Highlighting</h3>
+                    <p style="font-size: 13px; color: #6c757d; margin: 0;">Analyze PDF page images to evaluate PICO and generate highlighted source documents.</p>
+                </div>
+                <button id="run-fulltext-ai-btn" class="btn btn-primary" style="background-color: #28a745; border: none; font-weight: bold; box-shadow: 0 4px 6px rgba(40,167,69,0.3);">
+                    ▶️ Run AI Full-Text Screening
+                </button>
+            </div>
+
+            <div class="card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 23%;">Paper Title</th>
+                            <th style="width: 15%;">PDF Status</th>
+                            <th style="width: 10%;">Decision</th>
+                            <th style="width: 35%;">Evidence Summary</th>
+                            <th style="width: 12%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fulltextTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-data">Loading included papers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button class="btn btn-primary" id="proceed-to-data-from-fulltext-btn">Proceed to Data Extraction</button>
             </div>
         </div>
 

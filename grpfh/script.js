@@ -6,50 +6,56 @@ let currentProject = null; // 存储当前正在进行的项目
 
 
 // 1. 更新顶部进度导航激活状态
+// 1. 更新顶部进度导航激活状态
 function updateProgressStep(activeStepId) {
-    const steps = ['step-login', 'step-home', 'step-pico', 'step-import', 'step-abstract', 'step-data'];
+    // 【核心修改】：加入了 'step-fulltext'
+    const steps = ['step-login', 'step-home', 'step-pico', 'step-import', 'step-abstract', 'step-fulltext', 'step-data'];
     steps.forEach(id => {
         const step = document.getElementById(id);
-        step.classList.remove('active');
-        step.classList.add('disabled');
+        if(step) {
+            step.classList.remove('active');
+            step.classList.add('disabled');
+        }
     });
-    document.getElementById(activeStepId).classList.add('active');
-    document.getElementById(activeStepId).classList.remove('disabled');
+    const activeEl = document.getElementById(activeStepId);
+    if(activeEl) {
+        activeEl.classList.add('active');
+        activeEl.classList.remove('disabled');
+    }
 }
 
 // 2. 通用页面切换函数（所有按钮跳转核心）
+// 2. 通用页面切换函数（所有按钮跳转核心）
 function showPage(pageId) {
-    // 隐藏所有页面（添加register-page）
-    const allPages = ['login-page', 'register-page', 'home-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'data-extraction-page'];
-    allPages.forEach(id => document.getElementById(id).style.display = 'none');
-    // 显示目标页面并更新进度
-    document.getElementById(pageId).style.display = 'block';
+    // 【核心修改】：加入了 'full-text-screen-page'
+    const allPages = ['login-page', 'register-page', 'home-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
+    allPages.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none';
+    });
+    
+    const targetEl = document.getElementById(pageId);
+    if(targetEl) targetEl.style.display = 'block';
+    
     switch (pageId) {
         case 'login-page':
-        case 'register-page':
-            updateProgressStep('step-login'); 
-            break;
+        case 'register-page': updateProgressStep('step-login'); break;
         case 'home-page':
             updateProgressStep('step-home');
-            // 如果是首页且有用户信息，加载项目列表
-            if (currentUser) {
-                loadUserProjects();
-            }
+            if (currentUser) loadUserProjects();
             break;
-        case 'pico-page':
-            updateProgressStep('step-pico'); 
-            break;
+        case 'pico-page': updateProgressStep('step-pico'); break;
         case 'import-search-page':
             updateProgressStep('step-import');
-            // 如果是文献导入页，加载文献列表
             setTimeout(loadLiteratureList, 100);
             break;
-        case 'abstract-screen-page':
-            updateProgressStep('step-abstract'); 
+        case 'abstract-screen-page': updateProgressStep('step-abstract'); break;
+        // 【新增】：当跳转到 Full-Text 时更新导航栏
+        case 'full-text-screen-page': 
+            updateProgressStep('step-fulltext'); 
+            setTimeout(loadFullTextScreening, 100); // 留好坑位，后续接入后端用
             break;
-        case 'data-extraction-page':
-            updateProgressStep('step-data'); 
-            break;
+        case 'data-extraction-page': updateProgressStep('step-data'); break;
     }
 }
 
@@ -308,13 +314,15 @@ function parseBibFile(text) {
     const authorMatch = entry.match(/author\s*=\s*\{([^}]+)\}/i);
     const journalMatch = entry.match(/journal\s*=\s*\{([^}]+)\}/i);
     const yearMatch = entry.match(/year\s*=\s*\{([0-9]+)\}/i);
+    const doiMatch = entry.match(/doi\s*=\s*\{([^}]+)\}/i); // 新增：匹配 DOI
 
     if (titleMatch) {
       literatures.push({
         title: titleMatch[1].trim().replace(/[\{\}]/g, ''),
         author: authorMatch ? authorMatch[1].trim().replace(/[\{\}]/g, '') : '',
         journal: journalMatch ? journalMatch[1].trim().replace(/[\{\}]/g, '') : '',
-        year: yearMatch ? parseInt(yearMatch[1]) : null
+        year: yearMatch ? parseInt(yearMatch[1]) : null,
+        doi: doiMatch ? doiMatch[1].trim().replace(/[\{\}]/g, '') : '' // 新增：保存 DOI
       });
     }
   });
@@ -949,9 +957,19 @@ function addNavigationListeners() {
     }
     
     // Abstract Screening页面的 Proceed to Full-Text Screening 按钮
+    // Abstract Screening页面的 Proceed 按钮
     const abstractProceedBtn = document.getElementById('proceed-to-data-btn');
     if (abstractProceedBtn) {
         abstractProceedBtn.onclick = async () => {
+            await updateProjectStatus('Full-Text Screening');
+            showPage('full-text-screen-page'); // 【修改】：现在跳到全文筛选页
+        };
+    }
+    
+    // 【新增】：Full-Text Screening 页面跳往 Data Extraction 的按钮
+    const fulltextProceedBtn = document.getElementById('proceed-to-data-from-fulltext-btn');
+    if (fulltextProceedBtn) {
+        fulltextProceedBtn.onclick = async () => {
             await updateProjectStatus('Data Extraction');
             showPage('data-extraction-page');
         };
@@ -1241,3 +1259,151 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ==========================================
+// Full-Text Screening 专属逻辑
+// ==========================================
+
+// 1. 自动下载 PDF 按钮事件
+document.addEventListener('DOMContentLoaded', () => {
+    const fetchPdfsBtn = document.getElementById('fetch-pdfs-btn');
+    if (fetchPdfsBtn) {
+        fetchPdfsBtn.addEventListener('click', async () => {
+            if (!currentProject || !currentProject.id) return;
+            
+            const originalText = fetchPdfsBtn.innerHTML;
+            fetchPdfsBtn.innerHTML = '⏳ Crawler is downloading PDFs... Please wait...';
+            fetchPdfsBtn.disabled = true;
+            fetchPdfsBtn.style.backgroundColor = '#6c757d';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/fetch-pdfs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: currentProject.id })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    loadFullTextScreening(); // 刷新表格，显示已下载/失败状态
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network error while fetching PDFs.');
+            } finally {
+                fetchPdfsBtn.innerHTML = originalText;
+                fetchPdfsBtn.disabled = false;
+                fetchPdfsBtn.style.backgroundColor = '#17a2b8';
+            }
+        });
+    }
+});
+
+// 2. 加载 Full-Text 阶段文献列表
+window.loadFullTextScreening = async function() {
+    const tbody = document.getElementById('fulltextTableBody');
+    if (!tbody || !currentProject) return;
+    
+    try {
+        const response = await fetch('http://localhost:3000/api/get-literatures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: currentProject.id })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // 核心逻辑：只挑出被判定为 Included 的文献进入全文筛选！
+            const includedPapers = result.data.filter(lit => {
+                return lit.user_decision === 'Include' || 
+                       ((!lit.user_decision || lit.user_decision === 'Keep') && lit.ai_decision === 'Included');
+            });
+            
+            if (includedPapers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-data">No included papers found. Please review Abstract Screening first.</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            includedPapers.forEach((lit, index) => {
+                let statusColor = '#6c757d'; 
+                if (lit.pdf_status === 'Downloaded') statusColor = 'green';
+                if (lit.pdf_status && lit.pdf_status.includes('Failed')) statusColor = 'red';
+                
+                // 动态解析 AI 返回的 JSON 证据
+                let evidenceText = 'Waiting for AI Analysis...';
+                if (lit.pico_evidence && lit.pico_evidence !== '{}') {
+                    try {
+                        const ev = JSON.parse(lit.pico_evidence);
+                        evidenceText = `💡 <b>AI Conclusion:</b> ${ev.conclusion || 'Extracted'}`;
+                    } catch(e) {
+                        evidenceText = '✅ Extracted by AI';
+                    }
+                }
+                
+                // 动态生成在线预览高亮 PDF 的按钮
+                let pdfBtn = `<button class="btn btn-sm btn-secondary" disabled>View PDF</button>`;
+                if (lit.pdf_path) {
+                    // 使用原生浏览器新标签页打开后端的 PDF 流
+                    const safePath = encodeURIComponent(lit.pdf_path);
+                    pdfBtn = `<button class="btn btn-sm btn-primary" onclick="window.open('http://localhost:3000/api/view-pdf?path=${safePath}', '_blank')">👁️ View PDF</button>`;
+                }
+                
+                let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${lit.title}</td>
+                    <td style="color: ${statusColor}; font-weight: bold; font-size: 13px;">${lit.pdf_status || 'Pending'}</td>
+                    <td style="color: ${decisionColor}; font-weight: bold;">${lit.full_text_decision || 'Pending'}</td>
+                    <td style="font-size: 13px; color: #555;">${evidenceText}</td>
+                    <td>${pdfBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (e) {
+        console.error("Failed to load full-text screening data:", e);
+    }
+};
+
+// 3. 触发 AI 多模态全文阅片与高亮
+document.addEventListener('DOMContentLoaded', () => {
+    const runAiBtn = document.getElementById('run-fulltext-ai-btn');
+    if (runAiBtn) {
+        runAiBtn.addEventListener('click', async () => {
+            if (!currentProject || !currentProject.id) return;
+            
+            const originalText = runAiBtn.innerHTML;
+            runAiBtn.innerHTML = '⏳ Multimodal AI is reading and highlighting PDFs...';
+            runAiBtn.disabled = true;
+            runAiBtn.style.backgroundColor = '#6c757d';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/run-fulltext-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: currentProject.id })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    loadFullTextScreening(); 
+                } else {
+                    alert('AI Error: ' + result.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network error while running AI.');
+            } finally {
+                runAiBtn.innerHTML = originalText;
+                runAiBtn.disabled = false;
+                runAiBtn.style.backgroundColor = '#28a745';
+            }
+        });
+    }
+});
