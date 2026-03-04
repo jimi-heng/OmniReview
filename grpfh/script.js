@@ -778,6 +778,7 @@ async function continueProject(projectId) {
                     case 'PICO Setup': showPage('pico-page'); break;
                     case 'Import/Search': showPage('import-search-page'); break;
                     case 'Abstract Screening': showPage('abstract-screen-page'); break;
+                    case 'Full-Text Screening': showPage('full-text-screen-page'); break; // 新增：全文筛选的跳转
                     case 'Data Extraction': showPage('data-extraction-page'); break;
                     default: showPage('pico-page');
                 }
@@ -1332,7 +1333,6 @@ window.loadFullTextScreening = async function() {
                 if (lit.pdf_status === 'Downloaded') statusColor = 'green';
                 if (lit.pdf_status && lit.pdf_status.includes('Failed')) statusColor = 'red';
                 
-                // 动态解析 AI 返回的 JSON 证据
                 let evidenceText = 'Waiting for AI Analysis...';
                 if (lit.pico_evidence && lit.pico_evidence !== '{}') {
                     try {
@@ -1343,26 +1343,50 @@ window.loadFullTextScreening = async function() {
                     }
                 }
                 
-                // 动态生成在线预览高亮 PDF 的按钮
-                let pdfBtn = `<button class="btn btn-sm btn-secondary" disabled>View PDF</button>`;
+                // 给灰色不可点按钮也加上相同的 div 占位和 width: 100% 样式
+                let pdfBtn = `
+                    <div style="position: sticky; top: 120px; z-index: 10;">
+                        <button class="btn btn-sm btn-secondary" disabled style="width: 100%; font-weight: bold;">View PDF</button>
+                    </div>
+                `;
                 if (lit.pdf_path) {
-                    // 使用原生浏览器新标签页打开后端的 PDF 流
                     const safePath = encodeURIComponent(lit.pdf_path);
-                    pdfBtn = `<button class="btn btn-sm btn-primary" onclick="window.open('http://localhost:3000/api/view-pdf?path=${safePath}', '_blank')">👁️ View PDF</button>`;
+                    pdfBtn = `
+                        <div style="position: sticky; top: 120px; z-index: 10;">
+                            <button id="view-pdf-btn-${lit.id}" class="btn btn-sm btn-primary" onclick="togglePdfView(${lit.id}, '${safePath}')" style="width: 100%; font-weight: bold; transition: all 0.3s;">View PDF</button>
+                        </div>
+                    `;
                 }
                 
                 let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+                // 1. 生成主信息行
+                const mainTr = document.createElement('tr');
+                mainTr.id = `main-row-${lit.id}`;
+                mainTr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${lit.title}</td>
                     <td style="color: ${statusColor}; font-weight: bold; font-size: 13px;">${lit.pdf_status || 'Pending'}</td>
                     <td style="color: ${decisionColor}; font-weight: bold;">${lit.full_text_decision || 'Pending'}</td>
                     <td style="font-size: 13px; color: #555;">${evidenceText}</td>
-                    <td>${pdfBtn}</td>
+                    <td id="action-cell-${lit.id}" style="vertical-align: top; background-color: #fff; border-left: 1px solid #eee;">${pdfBtn}</td>
                 `;
-                tbody.appendChild(tr);
+                tbody.appendChild(mainTr);
+
+                // 2. 生成紧跟在下方的隐藏 PDF 渲染行
+                if (lit.pdf_path) {
+                    const pdfTr = document.createElement('tr');
+                    pdfTr.id = `pdf-row-${lit.id}`;
+                    pdfTr.style.display = 'none'; // 初始隐藏
+                    // 【核心魔法2】注意这里 colspan 是 5！因为第6列(Action列)会被上面的主行通过 rowspan 霸占下来
+                    pdfTr.innerHTML = `
+                        <td colspan="5" style="padding: 0; border-bottom: 3px solid #17a2b8;">
+                            <div id="pdf-container-${lit.id}" style="width: 100%; background: #e9ecef; position: relative;">
+                                </div>
+                        </td>
+                    `;
+                    tbody.appendChild(pdfTr);
+                }
             });
         }
     } catch (e) {
@@ -1407,3 +1431,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+// ====== Full-Text: 展开/关闭行内 PDF 视图 ======
+window.togglePdfView = function(litId, safePath) {
+    const pdfRow = document.getElementById(`pdf-row-${litId}`);
+    const pdfContainer = document.getElementById(`pdf-container-${litId}`);
+    const actionCell = document.getElementById(`action-cell-${litId}`);
+    const btn = document.getElementById(`view-pdf-btn-${litId}`);
+
+    if (pdfRow.style.display === 'none') {
+        // 【展开逻辑】
+        pdfRow.style.display = 'table-row';
+        // 让 Action 列动态跨越两行，包裹住上方摘要和下方巨幅 PDF
+        actionCell.rowSpan = 2; 
+        
+        // 懒加载：只有第一次点击才生成 iframe 获取文件，避免页面加载时同时请求几十个PDF卡死服务器
+        if (!pdfContainer.innerHTML.trim()) {
+            pdfContainer.innerHTML = `<iframe src="http://localhost:3000/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
+        }
+        
+        // 按钮变红，文字变为关闭
+        btn.innerHTML = 'Close PDF';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-danger');
+    } else {
+        // 【关闭逻辑】
+        pdfRow.style.display = 'none';
+        // Action 列恢复单行模式
+        actionCell.rowSpan = 1; 
+        
+        // 按钮变蓝，文字恢复
+        btn.innerHTML = 'View PDF';
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+    }
+};
