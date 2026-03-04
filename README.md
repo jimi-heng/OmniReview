@@ -1,6 +1,25 @@
 # Before Started
-- First, please download langchain. Run this code "pip install langchain" in your terminal. And check whether your python version is greater or equal to 3.12.
-- Second, every model in langchain should install a component. You can download deepseek to run this code "pip install langchain-deepseek".
-- Third, please run "pip install python-dotenv".
-- Fourth, please create a .env file in the same foler of SearchAgent.py. And inside the .env file, please add your models' API KEY. e.g. DEEPSEEK_API_KEY=sk-c98b52609b2e4ef092435718f6076e9d
+
+- Create a ".env" file under the same folder of AbstractScreening.py. In the file, copy paste these code
+
+```python
+DMX_API_KEY_1=sk-qUyWwUB5y3wiprWPKjQYw73MkBU8K0pLSi4pGQ8bVv06IfLt
+```
+
+```python
+DMX_API_KEY_2=sk-ujAXlwqFIYyGCpqqB9zjjlAtoEyfI5iQ9cJL5mIHVP2MdpH4
+```
+
+- Please download uv. Run this code in terminal
+
+```python
+pip install uv
+```
+
+- Use the code below and it will download packages automatically
+
+```python
+uv run projectName.py
+```
+
 - Here is the langchain's reference: https://docs.langchain.com/oss/python/releases/langchain-v1
