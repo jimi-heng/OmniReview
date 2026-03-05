@@ -1369,6 +1369,18 @@ window.loadFullTextScreening = async function() {
                     <td style="color: ${statusColor}; font-weight: bold; font-size: 13px;">${lit.pdf_status || 'Pending'}</td>
                     <td style="color: ${decisionColor}; font-weight: bold;">${lit.full_text_decision || 'Pending'}</td>
                     <td style="font-size: 13px; color: #555;">${evidenceText}</td>
+                    <td style="vertical-align: top; ">
+                        <input type="file"
+                            id="upload-${lit.id}"
+                            accept="application/pdf"
+                            style="font-size:12px; margin-bottom:4px;">
+                    
+                        <button class="btn btn-sm btn-warning"
+                            onclick="uploadPDF(${lit.id})"
+                            style="font-weight:bold;">
+                            Upload PDF
+                        </button>
+                    </td>
                     <td id="action-cell-${lit.id}" style="vertical-align: top; background-color: #fff; border-left: 1px solid #eee;">${pdfBtn}</td>
                 `;
                 tbody.appendChild(mainTr);
@@ -1378,9 +1390,9 @@ window.loadFullTextScreening = async function() {
                     const pdfTr = document.createElement('tr');
                     pdfTr.id = `pdf-row-${lit.id}`;
                     pdfTr.style.display = 'none'; // 初始隐藏
-                    // 【核心魔法2】注意这里 colspan 是 5！因为第6列(Action列)会被上面的主行通过 rowspan 霸占下来
+                    // 【核心魔法2】注意这里 colspan 是 6！因为第6列(Action列)会被上面的主行通过 rowspan 霸占下来
                     pdfTr.innerHTML = `
-                        <td colspan="5" style="padding: 0; border-bottom: 3px solid #17a2b8;">
+                        <td colspan="6" style="padding: 0; border-bottom: 3px solid #17a2b8;">
                             <div id="pdf-container-${lit.id}" style="width: 100%; background: #e9ecef; position: relative;">
                                 </div>
                         </td>
@@ -1392,6 +1404,39 @@ window.loadFullTextScreening = async function() {
     } catch (e) {
         console.error("Failed to load full-text screening data:", e);
     }
+};
+
+window.uploadPDF = function(paperId) {
+
+    const fileInput = document.getElementById(`upload-${paperId}`);
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a PDF first.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("paper_id", paperId);
+    formData.append("file", file);
+
+    fetch("http://localhost:3000/api/upload-pdf", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Upload successful!");
+            loadFullTextScreening();   // 重新加载表格
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Upload failed");
+    });
 };
 
 // 3. 触发 AI 多模态全文阅片与高亮

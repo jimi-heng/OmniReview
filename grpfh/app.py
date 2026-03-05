@@ -796,6 +796,52 @@ def fetch_pdfs_api():
         return jsonify({'success': False, 'message': f'Fetch PDFs failed: {str(e)}'})
 
 
+@app.route('/api/upload-pdf', methods=['POST'])
+def upload_pdf():
+
+    paper_id = request.form.get('paper_id')
+    file = request.files.get('file')
+
+    if not file:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT doi FROM literatures WHERE id = ?",
+        (paper_id,)
+    )
+    paper = cursor.fetchone()
+
+    if not paper:
+        return jsonify({'success': False, 'message': 'Paper not found'})
+
+    doi = paper['doi']
+    filename = doi.replace("/", "_") + ".pdf"
+
+    save_dir = os.path.join(parent_dir, "resources")
+    os.makedirs(save_dir, exist_ok=True)
+
+    filepath = os.path.join(save_dir, filename)
+
+    file.save(filepath)
+
+    cursor.execute("""
+        UPDATE literatures
+        SET pdf_status = 'Downloaded',
+            pdf_path = ?
+        WHERE id = ?
+    """, (filepath, paper_id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'message': 'PDF uploaded successfully'
+    })
+
 # ==========================================
 # 触发 AI 全文多模态筛选与高亮接口
 # ==========================================
