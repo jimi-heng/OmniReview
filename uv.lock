@@ -613,6 +613,7 @@ dependencies = [
     { name = "pytesseract" },
     { name = "python-dotenv" },
     { name = "rapidfuzz" },
+    { name = "requests" },
     { name = "scikit-learn" },
 ]
 
@@ -640,6 +641,7 @@ requires-dist = [
     { name = "pytesseract", specifier = ">=0.3.13" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "rapidfuzz", specifier = ">=3.14.3" },
+    { name = "requests", specifier = ">=2.32.0" },
     { name = "scikit-learn", specifier = ">=1.7.2" },
 ]
 
