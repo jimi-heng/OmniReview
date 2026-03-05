@@ -96,8 +96,8 @@ systemPromptReason = """
     1. ID: the paper ID.
     2. Flag: 1 (Include) or 0 (Exclude).
     3. Reason: 
-       A clear explanation in Chinese, using the format:
-       “本文研究了[研究主题]，匹配了PICO中的[组件1]（文中对应内容）和[组件2]（文中对应内容），未匹配PICO中的[组件1](文中对应内容)和[组件2](文中对应内容)，总共匹配了n个PICO，因此被纳入/排除。”
+       A clear explanation in English, using the format:
+       “This paper studied the [research topic] and matched [component 1] (corresponding content in the text) and [component 2] (corresponding content in the text) in PICO. It did not match [component 1] (corresponding content in the text) and [component 2] (corresponding content in the text) in PICO. A total of n PICOs were matched, therefore they were included/excluded.”
     """
 
 systemPromptNoReason = """
@@ -187,7 +187,7 @@ userPromptReason = """
     3. Extra requirements (if any) are evaluated the same way.
     4. If at least 2 component (P, I, C or Extra) is matched → Flag = 1 (Include)
     5. If less than 2 components are matched → Flag = 0 (Exclude)
-    6. Optionally, provide a short reasoning in Chinese, listing which components are matched.
+    6. Optionally, provide a short reasoning in English, listing which components are matched.
 """
 
 userPromptNoReason = """
