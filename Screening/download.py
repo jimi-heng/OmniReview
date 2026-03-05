@@ -103,8 +103,38 @@ class ImprovedPaperDownloader:
 
     def _handle_no_pdf(self, paper_url: str) -> None:
         # Keep failure handling consistent across "no PDF link" and "non-PDF downloaded".
-        print("✗ Could not find PDF link")
+        print("ERROR: Could not find PDF link")
         print(f"   Try visiting this URL in your browser: {paper_url}")
+
+    def _is_pdf_file_valid(self, path: str, eof_tail_bytes: int = 8192) -> bool:
+        """Lightweight PDF validation: must start with %PDF and contain %%EOF near the end.
+
+        This catches common truncation cases (e.g. only the first chunk saved, missing trailer).
+        """
+        try:
+            p = Path(path)
+            if not p.is_file():
+                return False
+
+            size = p.stat().st_size
+            if size <= 0:
+                return False
+
+            with open(p, "rb") as f:
+                head = f.read(16)
+                if not head.startswith(b"%PDF"):
+                    return False
+
+                tail_len = min(size, int(eof_tail_bytes))
+                if tail_len <= 0:
+                    return False
+
+                f.seek(-tail_len, os.SEEK_END)
+                tail = f.read(tail_len)
+
+            return b"%%EOF" in tail
+        except Exception:
+            return False
     
     def download_paper(self, doi, output_dir="downloads"):
         """
@@ -131,8 +161,16 @@ class ImprovedPaperDownloader:
         # Skip if already downloaded (useful when rerunning large DOI lists)
         existing_path = os.path.join(output_dir, doi.replace("/", "_") + ".pdf")
         if os.path.exists(existing_path):
-            print(f"✓ Already exists, skipping: {existing_path}")
-            return True
+            if self._is_pdf_file_valid(existing_path):
+                print(f"SKIP: Already exists, skipping: {existing_path}")
+                return True
+
+            print(f"Existing file looks corrupted, re-downloading: {existing_path}")
+            try:
+                os.remove(existing_path)
+            except Exception as e:
+                print(f"ERROR: Could not remove existing file: {e}")
+                return False
         
         # Step 1: Resolve DOI to publisher URL
         doi_url = f"https://doi.org/{doi}"
@@ -381,42 +419,72 @@ class ImprovedPaperDownloader:
     
     def _download_pdf(self, pdf_url, doi, output_dir):
         """Download the PDF file with validation (PDF-only; non-PDF responses are ignored)."""
-        try:
-            print(f"Downloading from: {pdf_url}")
-            
-            # Set headers for PDF download
-            headers = {
-                'Accept': 'application/pdf,*/*',
-                'Referer': pdf_url,
-            }
+        filename = doi.replace("/", "_") + ".pdf"
+        filepath = os.path.join(output_dir, filename)
+        part_path = filepath + ".part"
+        max_attempts = 3
 
-            # Use a context manager so the connection is always released, even if we bail early
-            # after checking the first bytes. (Requests streaming best practice.)
-            with self._request("GET", pdf_url, stream=True, headers=headers) as response:
-                if response.status_code != 200:
-                    return False
+        # Set headers for PDF download
+        headers = {
+            "Accept": "application/pdf,*/*",
+            "Referer": pdf_url,
+        }
 
-                # Read first chunk to check content
-                first_chunk = next(response.iter_content(chunk_size=1024), b"")
-                if not first_chunk or not first_chunk.startswith(b"%PDF"):
-                    # Non-PDF content (HTML login pages, error pages, etc.) -> treat as failure.
-                    return False
+        for attempt in range(1, max_attempts + 1):
+            try:
+                # Remove stale partial file from previous attempts, if any.
+                if os.path.exists(part_path):
+                    try:
+                        os.remove(part_path)
+                    except Exception:
+                        pass
 
-                filename = doi.replace("/", "_") + ".pdf"
-                filepath = os.path.join(output_dir, filename)
+                print(f"Downloading from: {pdf_url} (attempt {attempt}/{max_attempts})")
 
-                with open(filepath, "wb") as f:
-                    f.write(first_chunk)
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
+                # Use a context manager so the connection is always released, even if we bail early.
+                with self._request("GET", pdf_url, stream=True, headers=headers) as response:
+                    if response.status_code != 200:
+                        raise RuntimeError(f"HTTP {response.status_code}")
 
-                print(f"✓ Successfully downloaded: {filepath}")
+                    # IMPORTANT: iter_content() must be consumed via a single iterator. Calling it
+                    # twice on a streamed response can truncate downloads (common with chunked TE).
+                    it = response.iter_content(chunk_size=8192)
+                    first_chunk = next(it, b"")
+
+                    if not first_chunk or not first_chunk.startswith(b"%PDF"):
+                        ct = response.headers.get("Content-Type", "")
+                        raise RuntimeError(f"Non-PDF response (Content-Type: {ct})")
+
+                    with open(part_path, "wb") as f:
+                        f.write(first_chunk)
+                        for chunk in it:
+                            if chunk:
+                                f.write(chunk)
+
+                # Validate the completed file before moving into place.
+                if not self._is_pdf_file_valid(part_path):
+                    raise RuntimeError("Downloaded file failed PDF validation (possibly truncated)")
+
+                os.replace(part_path, filepath)
+                print(f"OK: Successfully downloaded: {filepath}")
                 return True
-                
-        except Exception as e:
-            print(f"✗ Download error: {e}")
-            return False
+
+            except Exception as e:
+                # Ensure we don't leave behind corrupted partial files.
+                try:
+                    if os.path.exists(part_path):
+                        os.remove(part_path)
+                except Exception:
+                    pass
+
+                if attempt < max_attempts:
+                    print(f"Attempt {attempt}/{max_attempts} failed: {e}")
+                    # Small retry backoff (+ jitter). DomainBackoff still handles 429/5xx globally.
+                    time.sleep(0.5 * attempt + random.uniform(0.0, 0.3))
+                    continue
+
+                print(f"ERROR: Download failed after {max_attempts} attempts: {e}")
+                return False
 
 
 # ==================== USAGE EXAMPLES ====================
@@ -474,14 +542,14 @@ def main():
     print()
 
     if not doi_file_path.exists():
-        print(f"\n✗ Error: Could not find the DOI file at '{doi_file_path}'.")
+        print(f"\nERROR: Could not find the DOI file at '{doi_file_path}'.")
         print("Please create it and try again.")
         return
 
     try:
         dois = _read_dois_from_file(doi_file_path)
     except Exception as e:
-        print(f"✗ Error reading file: {e}")
+        print(f"ERROR: Error reading file: {e}")
         return
 
     dois = _dedupe_preserve_order(dois)
