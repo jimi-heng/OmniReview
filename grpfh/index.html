@@ -311,6 +311,22 @@
         </div>
     </div>
 
+    <div class="reason-modal" id="abstractModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Paper Abstract</h3>
+                <button class="close-modal" id="closeAbstractModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <div id="abstractText" style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; min-height: 100px; max-height: 400px; overflow-y: auto; line-height: 1.5; white-space: pre-wrap;">
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeAbstractBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 主内容区 -->
     <div class="main-content">
         <!-- 1. 登录页 -->
@@ -547,7 +563,7 @@
                             <th style="width: 10%;">AI Decision</th>
                             <th style="width: 12%;">User Action</th>
                             <th class="reason-col">Full Reasoning</th>
-                            <th style="width: 10%;">Reason Edit</th>
+                            <th style="width: 10%;">View Abstract</th>
                         </tr>
                     </thead>
                     <tbody id="screenTableBody">
@@ -556,10 +572,6 @@
                         </tr>
                     </tbody>
                 </table>
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn btn-primary">Batch Save Decisions</button>
-                    <button class="btn btn-secondary">Reset All Selections</button>
-                </div>
             </div>
 
             <div style="margin-top: 20px; display: flex; justify-content: space-between;">

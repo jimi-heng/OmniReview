@@ -315,6 +315,7 @@ function parseBibFile(text) {
     const journalMatch = entry.match(/journal\s*=\s*\{([^}]+)\}/i);
     const yearMatch = entry.match(/year\s*=\s*\{([0-9]+)\}/i);
     const doiMatch = entry.match(/doi\s*=\s*\{([^}]+)\}/i); // 新增：匹配 DOI
+    const abstractMatch = entry.match(/abstract\s*=\s*\{([^}]+)\}/i); // 【新增】匹配摘要
 
     if (titleMatch) {
       literatures.push({
@@ -322,7 +323,8 @@ function parseBibFile(text) {
         author: authorMatch ? authorMatch[1].trim().replace(/[\{\}]/g, '') : '',
         journal: journalMatch ? journalMatch[1].trim().replace(/[\{\}]/g, '') : '',
         year: yearMatch ? parseInt(yearMatch[1]) : null,
-        doi: doiMatch ? doiMatch[1].trim().replace(/[\{\}]/g, '') : '' // 新增：保存 DOI
+        doi: doiMatch ? doiMatch[1].trim().replace(/[\{\}]/g, '') : '', // 注意这里末尾加了逗号！
+        abstract: abstractMatch ? abstractMatch[1].trim().replace(/[\{\}]/g, '') : '' // 【新增】保存摘要
       });
     }
   });
@@ -1034,10 +1036,11 @@ window.loadAbstractScreening = async function() {
                 
                 const tr = document.createElement('tr');
                 // 真实数据库 ID 保存在 DOM 属性里
+                // 【核心修改】：绑定 abstract 数据
                 tr.setAttribute('data-id', lit.id);
                 tr.setAttribute('data-reason', lit.reasoning || '');
+                tr.setAttribute('data-abstract', lit.abstract || 'No abstract available.');
                 
-                // 新顺序：ID -> Title -> AI Decision -> User Action -> Reasoning -> Edit
                 tr.innerHTML = `
                     <td>${displayId}</td>
                     <td>${lit.title}</td>
@@ -1049,9 +1052,9 @@ window.loadAbstractScreening = async function() {
                             <option value="Exclude" ${lit.user_decision === 'Exclude' ? 'selected' : ''}>Manually Exclude</option>
                         </select>
                     </td>
-                    <td class="reason-display">${shortReason}</td>
+                    <td class="reason-display" style="cursor: pointer; color: #2c6ecb; text-decoration: underline;" onclick="openEditModal(this)" title="Click to view/edit full reasoning">${shortReason}</td>
                     <td>
-                        <button class="btn btn-primary btn-sm edit-reason-btn" onclick="openEditModal(this)">View/Edit</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openAbstractModal(this)">View Abstract</button>
                     </td>
                 `;
                 screenTableBody.appendChild(tr);
@@ -1512,3 +1515,28 @@ window.togglePdfView = function(litId, safePath) {
         btn.classList.add('btn-primary');
     }
 };
+
+
+// ====== 新增：打开查看摘要的弹窗 ======
+const abstractModal = document.getElementById('abstractModal');
+const abstractText = document.getElementById('abstractText');
+
+window.openAbstractModal = function(btnElement) {
+    const row = btnElement.closest('tr');
+    const abstractContent = row.getAttribute('data-abstract');
+    abstractText.textContent = abstractContent;
+    abstractModal.style.display = 'flex';
+};
+
+function closeAbstractModalFunc() {
+    abstractModal.style.display = 'none';
+}
+if(document.getElementById('closeAbstractModal')) {
+    document.getElementById('closeAbstractModal').addEventListener('click', closeAbstractModalFunc);
+    document.getElementById('closeAbstractBtn').addEventListener('click', closeAbstractModalFunc);
+}
+
+// 点击遮罩层关闭摘要弹窗
+abstractModal.addEventListener('click', function(e) {
+    if (e.target === abstractModal) closeAbstractModalFunc();
+});

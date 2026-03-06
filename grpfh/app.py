@@ -148,7 +148,8 @@ def upload_literature():
     # === 将获取参数和 INSERT 语句替换为以下内容 ===
     year = data.get('year')
     doi = data.get('doi', '') # 新增：提取 DOI
-    
+    abstract = data.get('abstract', '') # 【新增】：获取摘要
+
     if not project_id or not title:
         return jsonify({'success': False, 'message': 'Project ID and Literature title cannot be empty!'})
     
@@ -163,9 +164,9 @@ def upload_literature():
             
         # 新增：插入 doi 字段
         cursor.execute(
-            '''INSERT INTO literatures (project_id, title, author, journal, year, doi, ai_decision, reasoning) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            (project_id, title, author, journal, year, doi, 'Pending', 'Waiting for AI screening...')
+            '''INSERT INTO literatures (project_id, title, author, journal, year, doi, abstract, ai_decision, reasoning) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (project_id, title, author, journal, year, doi, abstract, 'Pending', 'Waiting for AI screening...')
         )
         conn.commit()
         conn.close()
@@ -217,19 +218,21 @@ def api_search_pubmed():
                 continue # 发现重复，直接跳过，不插入数据库
                 
             # === 将原来的 INSERT 语句替换为以下内容 ===
+            # 【修改】：加入 abstract 字段并保存真实摘要，而 reasoning 只是显示等待中
             cursor.execute('''
                 INSERT INTO literatures 
-                (project_id, title, author, journal, year, doi, ai_decision, reasoning) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (project_id, title, author, journal, year, doi, abstract, ai_decision, reasoning) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 project_id, 
                 paper['title'], 
                 paper['author'], 
                 paper['journal'], 
                 paper['year'], 
-                paper.get('doi', ''), # 新增：将 PubMed 抓取到的 DOI 存入数据库
+                paper.get('doi', ''), 
+                paper.get('abstract', ''), # <--- 专门保存摘要
                 'Pending', 
-                'Abstract:\n' + paper['abstract']
+                'Waiting for AI screening...' # <--- reasoning 不再充当摘要的临时仓库
             ))
             inserted_count += 1
             
@@ -272,8 +275,9 @@ def get_literatures():
         cursor = conn.cursor()
         # 核心修改：只查询当前项目下的文献
         # 核心修改：查询增加了 doi 和全文筛选阶段的新字段
+        # 【修改】：SELECT 语句中加入 abstract
         cursor.execute('''
-            SELECT id, title, author, journal, year, doi, ai_decision, user_decision, reasoning,
+            SELECT id, title, author, journal, year, doi, abstract, ai_decision, user_decision, reasoning,
                    pdf_status, pdf_path, full_text_decision, pico_evidence
             FROM literatures 
             WHERE project_id = ? 
@@ -620,7 +624,7 @@ def run_ai_screening_api():
         pico_data = json.loads(pico_row['data_content']) # 这是一个字典，包含 population, intervention 等
         
         # 2. 获取所有 Pending 状态的文献（上传时摘要暂存在了 reasoning 里）
-        cursor.execute("SELECT id, title, reasoning FROM literatures WHERE project_id = ? AND ai_decision = 'Pending'", (project_id,))
+        cursor.execute("SELECT id, title, abstract, reasoning FROM literatures WHERE project_id = ? AND ai_decision = 'Pending'", (project_id,))
         pending_rows = cursor.fetchall()
         
         if not pending_rows:
@@ -631,7 +635,8 @@ def run_ai_screening_api():
             papers_to_screen.append({
                 'id': row['id'],
                 'title': row['title'],
-                'abstract': row['reasoning'] # 提取摘要发给 AI
+                # 兼容历史数据：如果 abstract 为空，去 reasoning 里找
+                'abstract': row['abstract'] if row['abstract'] else row['reasoning'] 
             })
             
         # 3. 将 PICO 字典和文献列表传给我们的同步包装函数
@@ -818,7 +823,11 @@ def upload_pdf():
         return jsonify({'success': False, 'message': 'Paper not found'})
 
     doi = paper['doi']
-    filename = doi.replace("/", "_") + ".pdf"
+    # 兜底：如果没有 DOI，就用文献的 ID 命名，防止 replace 报错
+    if not doi:
+        filename = f"manual_upload_{paper_id}.pdf"
+    else:
+        filename = doi.replace("/", "_") + ".pdf"
 
     save_dir = os.path.join(parent_dir, "resources")
     os.makedirs(save_dir, exist_ok=True)
