@@ -791,7 +791,7 @@ def fetch_pdfs_api():
         
         return jsonify({
             'success': True, 
-            'message': f'Attempted {len(papers)} downloads. Successfully fetched {success_count} Open-Access PDFs.',
+            'message': f'Attempted {len(papers)} downloads. Successfully fetched {success_count} PDFs.',
             'count': success_count
         })
         

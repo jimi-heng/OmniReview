@@ -217,5 +217,7 @@ resources/
 data/
 resources_md/
 
+CLAUDE.md
 AGENTS.md
 .DS_Store
+.claude
