@@ -1,57 +1,47 @@
-from Bio import Entrez
-import os
-from dotenv import load_dotenv
-from langchain.agents import create_agent
-from langchain_openai import ChatOpenAI
-from langchain.tools import tool
-from langchain.agents.structured_output import ToolStrategy
-from pydantic import BaseModel, Field
-from typing import List
+import requests
 
-load_dotenv(override=True)
+def reconstruct_abstract(inv_index):
+    if not inv_index:
+        return ""
 
-Entrez.email = "erzhuzi2023@outlook.com"
-key1 = os.getenv("DMX_API_KEY_1")
+    words = []
+    for word, positions in inv_index.items():
+        for pos in positions:
+            words.append((pos, word))
 
-@tool
-def get_weather(location: str) -> str:
-    """Get weather information for a location"""
-    return f"Weather in {location}: Sunny, 72°F"
+    words.sort()
+    return " ".join(word for _, word in words)
 
-# 定义每个城市信息的数据结构
-class Weather_Base(BaseModel):
-    city: str = Field(..., description="The name of the city")
-    degree: str = Field(..., description="The degree of the city")
 
-# 定义一个列表形式的结构
-class Weather_List(BaseModel):
-    weathers: List[Weather_Base] = Field(..., description="List of weather info for cities")
+def search_openalex(query, limit=20):
 
-# 创建模型
-model1 = ChatOpenAI(
-    model="claude-sonnet-4-20250514",
-    base_url="https://www.dmxapi.cn/v1",
-    api_key=key1,
-    temperature =0
-)
+    url = "https://api.openalex.org/works"
 
-# 用 ToolStrategy 指定返回结构
-agent = create_agent(
-    model=model1,
-    tools=[get_weather],
-    response_format=ToolStrategy(Weather_List)
-)
+    params = {
+        "search": query,
+        "per-page": limit
+    }
 
-# 调用 agent
-response = agent.invoke({
-    "messages": [{"role": "user", "content": "What is the weather in London and Beijing"}]
-})
+    r = requests.get(url, params=params)
+    data = r.json()
 
-print(response)
-# 输出结构化响应
-result = response["structured_response"]
+    papers = []
 
-# 转成列表（list of dict）
-weather_list = [w.model_dump() for w in result.weathers]
+    for p in data["results"]:
 
-print(weather_list)
+        abstract = reconstruct_abstract(
+            p.get("abstract_inverted_index")
+        )
+
+        papers.append({
+            "Title": p.get("title"),
+            "Abstract": abstract,
+            "DOI": p.get("doi"),
+            "Publication_Date": p.get("publication_year")
+        })
+
+    return papers
+
+if __name__ == '__main__':
+    papers = search_openalex("honey wound")
+    print(papers)

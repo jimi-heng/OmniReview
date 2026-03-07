@@ -25,10 +25,8 @@ sys.path.insert(0, screening_dir)
 
 
 from database import get_db  # 只导入get_db，不导入init_database
-# app.py 顶部引入
-from Screening.AbstractScreening import search_pubmed
 # app.py 顶部导入区域，更新这一行
-from Screening.AbstractScreening import search_pubmed, run_ai_screening_sync
+from Screening.AbstractScreening import literature_search_all, run_ai_screening_sync
 import Screening.ThreeAgnets
 from Screening.download import ImprovedPaperDownloader
 from flask import Flask, request, jsonify, make_response, send_file # 新增 send_file
@@ -196,7 +194,7 @@ def api_search_pubmed():
     
     try:
         # 1. 调用 AbstractScreening.py 中的函数去 PubMed 抓取数据
-        papers = search_pubmed(keywords, max_papers)
+        papers = literature_search_all(keywords, max_papers)
         
         if not papers:
             return jsonify({'success': True, 'message': 'No literatures found for these keywords.', 'count': 0})

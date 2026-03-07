@@ -86,14 +86,17 @@ Conclusion:
 def extract_evidence(text):
     components = ["Population", "Intervention", "Comparison", "Outcome", "Extra"]
     evidences = {}
+
     for comp in components:
-        pattern = rf"{comp}:\s*Matched:\s*(?:Yes|No)\s*Evidence:\s*\"(.*?)\""
+        pattern = rf"{comp}:\s*Matched:\s*(?:Yes|No)\s*Evidence:\s*\"?(.*?)\"?(?=\n[A-Z][a-z]+:|\Z)"
         match = re.search(pattern, text, re.DOTALL)
         evidences[comp] = match.group(1).strip() if match else ""
+
     return evidences
 
+
 def extract_conclusion(text: str) -> str:
-    match = re.search(r'Conclusion:\s*"(.*?)"', text, re.DOTALL)
+    match = re.search(r'Conclusion:\s*\"?(.*?)\"?(?=\n[A-Z][a-z]+:|\Z)', text, re.DOTALL)
     return match.group(1).strip() if match else "No conclusion provided."
 
 def _extract_flag(text: str) -> str:
@@ -182,6 +185,8 @@ Input Data:
         evidences = extract_evidence(text)
         conclusion = extract_conclusion(text)
         decision = 'Included' if flag == '1' else 'Excluded'
+
+        print(text+"\n")
 
         # 4. 调用 TextHighlight 进行 PDF 原文高亮标注！
         hl_path_str = None

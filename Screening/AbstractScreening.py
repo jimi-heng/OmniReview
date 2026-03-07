@@ -1,3 +1,5 @@
+import random
+
 from Bio import Entrez
 from Bio import Medline
 import pandas as pd
@@ -9,6 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 import asyncio
+import requests
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
@@ -230,14 +233,6 @@ async def abstract_screening():
         "Outcome" : outcome
     }
 
-    pico1 = {
-        "Topic": "Wound Healing Rate",
-        "Population": "Adults with acute wounds or surgical incisions",
-        "Intervention": "Application of medical-grade honey dressings (e.g., Manuka honey)",
-        "Comparison": "Standard wound care (e.g., saline or silver dressings)",
-        "Outcome": "Shorter wound healing time (faster recovery)"
-    }
-
     paper_list = pd.DataFrame(whole_paper_list)
     await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, systemPromptReason, systemPromptNoReason,
                                     userPromptReason, userPromptNoReason)
@@ -294,69 +289,219 @@ def upload_to_csv():
     global whole_paper_list, topic_keywords
     file_dir = input("enter RIS file: ").strip()
 
-# Get DOI
-def extract_doi(record):
-    doi_pattern = re.compile(r"10\.\d{4,9}/[^\s\]]+", re.IGNORECASE)
-    for key in ("LID", "AID"):
-        val = record.get(key)
-        if not val:
-            continue
-        text = " ".join(val) if isinstance(val, list) else str(val)
-        match = doi_pattern.search(text)
-        if match:
-            return match.group(0)
-    return ""
-
 async def main():
     # save_dir = input("enter address: ").strip()
 
     await abstract_screening()
 
-def search_pubmed(query, max_number):
+def reconstruct_abstract(inv_index):
+    """将 OpenAlex 的 abstract_inverted_index 还原为正常 abstract"""
+    if not inv_index:
+        return ""
+
+    words = []
+    for word, positions in inv_index.items():
+        for pos in positions:
+            words.append((pos, word))
+
+    words.sort()
+    return " ".join(word for _, word in words)
+
+def search_openalex(query, max_number):
+
     try:
-        # 1. 搜索获取文献 ID 列表
-        handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
+        url = "https://api.openalex.org/works"
+
+        params = {
+            "search": query,
+            "filter": "has_abstract:true",
+            "per-page": max_number
+        }
+
+        r = requests.get(url, params=params)
+
+        if r.status_code != 200:
+            print("OpenAlex request failed:", r.status_code)
+            return []
+
+        data = r.json()
+
+        results = []
+
+        for p in data.get("results", []):
+
+            abstract = reconstruct_abstract(
+                p.get("abstract_inverted_index")
+            )
+            if not abstract:
+                continue
+
+            # authors
+            authors = []
+            for a in p.get("authorships", []):
+                author_info = a.get("author") or {}
+                name = author_info.get("display_name")
+                if name:
+                    authors.append(name)
+
+            author_str = "; ".join(authors)
+
+            # journal（防止 None）
+            primary_location = p.get("primary_location") or {}
+            source = primary_location.get("source") or {}
+            journal = source.get("display_name", "")
+
+            # year
+            year = p.get("publication_year") or ""
+
+            # doi
+            doi = p.get("doi") or ""
+            doi = doi.replace("https://doi.org/", "")
+
+            row = {
+                "title": p.get("title") or "",
+                "abstract": abstract or "",
+                "author": author_str,
+                "journal": journal,
+                "year": year,
+                "doi": doi
+            }
+
+            if not has_valid_abstract(row):
+                continue
+
+            results.append(row)
+        return results
+
+    except Exception as e:
+        print(f"OpenAlex search error: {e}")
+        return []
+
+def extract_doi(record):
+    """从 PubMed record 中提取 DOI"""
+    for a in record.get("AID", []):
+        if "[doi]" in a:
+            return a.replace(" [doi]", "")
+    return ""
+
+def search_pubmed(query, max_number):
+
+    try:
+        # 搜索 PMID
+        handle = Entrez.esearch(
+            db="pubmed",
+            term=query,
+            retmax=max_number
+        )
+
         record = Entrez.read(handle)
         handle.close()
 
         pmids = record.get("IdList", [])
-        if not pmids:
-            return []  # 没搜到就返回空列表
 
-        # 2. 根据 ID 抓取文献详细信息
-        handle = Entrez.efetch(db="pubmed", id=pmids, rettype="medline", retmode="text")
+        if not pmids:
+            return []
+
+        # 获取详细信息
+        handle = Entrez.efetch(
+            db="pubmed",
+            id=pmids,
+            rettype="medline",
+            retmode="text"
+        )
+
         records = list(Medline.parse(handle))
         handle.close()
 
-        # 3. 格式化并返回结果
         results = []
-        for record in records:
-            # 尝试提取发表年份
-            year_str = record.get('DP', '')
-            year = None
+
+        for r in records:
+
+            # year
+            year_str = r.get("DP", "")
+            year = ""
+
             if year_str:
-                # 取前 4 位作为年份
                 try:
                     year = int(year_str[:4])
-                except ValueError:
-                    year = None
+                except:
+                    year = ""
 
             row = {
-                'title': record.get('TI', ''),
-                'abstract': record.get('AB', ''),
-                'author': '; '.join(record.get('AU', [])),
-                'journal': record.get('JT', ''),
-                'year': year,
-                'doi': extract_doi(record),
-                'keywords': '; '.join(record.get('OT', record.get('MH', [])))
+                "title": r.get("TI", "") or "",
+                "abstract": r.get("AB", "") or "",
+                "author": "; ".join(r.get("AU", [])),
+                "journal": r.get("JT", "") or "",
+                "year": year,
+                "doi": extract_doi(r)
             }
+
+            if not has_valid_abstract(row):
+                continue
             results.append(row)
-            
+
         return results
+
     except Exception as e:
         print(f"PubMed search error: {e}")
         return []
-    
+
+def literature_search_all(query, N):
+
+    pubmed_papers = search_pubmed(query, N)
+    openalex_papers = search_openalex(query, N)
+
+    print(f"PubMed returned {len(pubmed_papers)} papers")
+    print(f"OpenAlex returned {len(openalex_papers)} papers")
+
+    all_papers = pubmed_papers + openalex_papers
+
+    unique = {}
+    results = []
+    duplicate_count = 0
+
+    for p in all_papers:
+
+        doi = (p.get("doi") or "").lower().strip()
+
+        # DOI 统一格式
+        doi = doi.replace("https://doi.org/", "")
+
+        if doi:
+            key = doi
+        else:
+            key = p.get("title", "").lower()
+
+        if key not in unique:
+            unique[key] = True
+            results.append(p)
+        else:
+            duplicate_count +=1
+
+    # 打乱
+    random.shuffle(results)
+
+    # 取前 N
+    results = results[:N]
+    print(f"Final paper count: {len(results)}")
+    print(f"Duplicate papers: {duplicate_count}")
+    return results
+
+def has_valid_abstract(paper):
+    abstract = paper.get("abstract")
+
+    if abstract is None:
+        return False
+
+    abstract = abstract.strip()
+
+    if abstract == "":
+        return False
+
+    if abstract.lower() in ["no abstract available", "n/a"]:
+        return False
+
+    return True
 
 # --- 新增对接接口开始 ---
 
