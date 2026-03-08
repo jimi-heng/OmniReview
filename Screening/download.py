@@ -12,8 +12,30 @@ import re
 import os
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, urljoin, urlparse
 import time
+from dotenv import load_dotenv
+from xml_to_md import parse_xml, build_md
+from md_to_pdf import md_to_pdf as convert_md_to_pdf
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+load_dotenv(SCRIPT_DIR / ".env", override=True)
+
+# Global lock for thread-safe console output
+_print_lock = threading.Lock()
+
+
+def safe_print(*args, **kwargs):
+    """Thread-safe print: ensures each line is output atomically."""
+    with _print_lock:
+        print(*args, **kwargs)
+
+
+def safe_print_block(*lines: str):
+    """Print multiple lines atomically so they are not interleaved."""
+    with _print_lock:
+        for line in lines:
+            print(line)
 
 try:
     from curl_cffi import requests as curl_requests
@@ -134,8 +156,10 @@ class ImprovedPaperDownloader:
         return response
 
     def _handle_no_pdf(self, paper_url: str) -> None:
-        print("ERROR: Could not find PDF link")
-        print(f"   Try visiting this URL in your browser: {paper_url}")
+        safe_print_block(
+            "ERROR: Could not find PDF link",
+            f"   Try visiting this URL in your browser: {paper_url}",
+        )
 
     def _is_pdf_file_valid(self, path: str, eof_tail_bytes: int = 8192) -> bool:
         """Lightweight PDF validation: must start with %PDF and contain %%EOF near the end.
@@ -176,27 +200,49 @@ class ImprovedPaperDownloader:
             if match:
                 doi = match.group(0)
             else:
-                print(f"Invalid DOI format: {doi}")
+                safe_print(f"Invalid DOI format: {doi}")
                 return False
-
-        print(f"\nProcessing DOI: {doi}")
 
         # Create output directory
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        # Skip if already downloaded (useful when rerunning large DOI lists)
-        existing_path = os.path.join(output_dir, doi.replace("/", "_") + ".pdf")
-        if os.path.exists(existing_path):
-            if self._is_pdf_file_valid(existing_path):
-                print(f"SKIP: Already exists, skipping: {existing_path}")
-                return True
+        # Create subdirectories for different file types
+        pdf_dir = os.path.join(output_dir, "pdf")
+        xml_dir = os.path.join(output_dir, "xml")
+        md_dir = os.path.join(output_dir, "md")
+        Path(pdf_dir).mkdir(parents=True, exist_ok=True)
+        Path(xml_dir).mkdir(parents=True, exist_ok=True)
+        Path(md_dir).mkdir(parents=True, exist_ok=True)
 
-            print(f"Existing file looks corrupted, re-downloading: {existing_path}")
-            try:
-                os.remove(existing_path)
-            except Exception as e:
-                print(f"ERROR: Could not remove existing file: {e}")
-                return False
+        # Skip if already downloaded in any format (PDF, XML, JSON)
+        base_name = doi.replace("/", "_")
+        ext_dir_map = {".pdf": pdf_dir, ".xml": xml_dir, ".json": xml_dir}
+        for ext, sub_dir in ext_dir_map.items():
+            existing_path = os.path.join(sub_dir, base_name + ext)
+            if not os.path.exists(existing_path):
+                continue
+
+            if ext == ".pdf":
+                if self._is_pdf_file_valid(existing_path):
+                    safe_print(f"SKIP: Already exists, skipping: {existing_path}")
+                    return True
+                safe_print(f"Existing PDF looks corrupted, re-downloading: {existing_path}")
+                try:
+                    os.remove(existing_path)
+                except Exception as e:
+                    safe_print(f"ERROR: Could not remove existing file: {e}")
+                    return False
+            else:
+                # XML/JSON: skip if file is non-empty
+                if os.path.getsize(existing_path) > 0:
+                    safe_print(f"SKIP: Already exists, skipping: {existing_path}")
+                    return True
+                safe_print(f"Existing {ext} file is empty, re-downloading: {existing_path}")
+                try:
+                    os.remove(existing_path)
+                except Exception as e:
+                    safe_print(f"ERROR: Could not remove existing file: {e}")
+                    return False
 
         # Step 1: Resolve DOI to publisher URL
         doi_url = f"https://doi.org/{doi}"
@@ -205,28 +251,66 @@ class ImprovedPaperDownloader:
             if response.status_code >= 400:
                 response = self._request("GET", doi_url, allow_redirects=True)
             paper_url = response.url
-            print(f"Paper URL: {paper_url}")
         except Exception as e:
-            print(f"Error resolving DOI: {e}")
+            safe_print(f"Error resolving DOI: {e}")
             return False
 
         # Step 2: Detect publisher and use appropriate strategy
         publisher = self._detect_publisher(paper_url)
-        print(f"Detected publisher: {publisher}")
+
+        # Print DOI resolution info as an atomic block
+        safe_print_block(
+            f"\nProcessing DOI: {doi}",
+            f"  Paper URL: {paper_url}",
+            f"  Detected publisher: {publisher}",
+        )
 
         # Step 3: Get PDF URL based on publisher
         pdf_url = self._get_pdf_url_by_publisher(paper_url, publisher, doi)
 
         if not pdf_url:
-            self._handle_no_pdf(paper_url)
-            return False
+            # Try Unpaywall before giving up on PDF
+            pdf_url = self._get_unpaywall_pdf_url(doi)
 
-        # Step 4: Download PDF
-        try:
-            if self._download_pdf(pdf_url, doi, output_dir):
+        if pdf_url:
+            # Step 4: Download PDF
+            pdf_downloaded = False
+            try:
+                pdf_downloaded = self._download_pdf(pdf_url, doi, pdf_dir)
+            except PermissionError:
+                safe_print(f"ERROR: Permission denied (HTTP 403/401) for {doi}")
+
+            if pdf_downloaded:
                 return True
-        except PermissionError:
-            print(f"ERROR: Permission denied (HTTP 403/401) for {doi}")
+
+        # Fallback: try publisher-specific XML/full-text APIs
+        if publisher == "elsevier":
+            xml_ok = self._download_elsevier_api(doi, xml_dir, md_dir, pdf_dir)
+            if xml_ok:
+                return True
+        # elif publisher == "wiley":
+        #     xml_ok = self._download_wiley_api(doi, xml_dir, md_dir, pdf_dir)
+        #     if xml_ok:
+        #         return True
+        # elif publisher in ("springer", "nature"):
+        #     xml_ok = self._download_springer_nature_api(doi, xml_dir, md_dir, pdf_dir)
+        #     if xml_ok:
+        #         return True
+
+        # Last resort: Unpaywall may have an OA PDF even when publisher strategy failed
+        if pdf_url is None:
+            # Already tried Unpaywall above for pdf_url discovery
+            pass
+        elif not pdf_downloaded:
+            # Publisher PDF failed — try Unpaywall as alternative source
+            unpaywall_url = self._get_unpaywall_pdf_url(doi)
+            if unpaywall_url and unpaywall_url != pdf_url:
+                safe_print(f"  Trying Unpaywall alternative: {unpaywall_url}")
+                try:
+                    if self._download_pdf(unpaywall_url, doi, pdf_dir):
+                        return True
+                except PermissionError:
+                    pass
 
         self._handle_no_pdf(paper_url)
         return False
@@ -255,6 +339,8 @@ class ImprovedPaperDownloader:
             return 'sage'
         elif 'tandfonline.com' in domain:
             return 'taylor'
+        elif 'cureus.com' in domain:
+            return 'cureus'
         else:
             return 'unknown'
     
@@ -271,6 +357,8 @@ class ImprovedPaperDownloader:
             return self._get_wiley_pdf(paper_url)
         elif publisher == 'nature':
             return self._get_nature_pdf(paper_url)
+        elif publisher == 'cureus':
+            return self._get_cureus_pdf(paper_url)
         else:
             # Generic fallback
             return self._get_generic_pdf(paper_url)
@@ -282,7 +370,7 @@ class ImprovedPaperDownloader:
         """
         # Method 1: Direct PDF URL construction
         pdf_url = f"https://link.springer.com/content/pdf/{doi}.pdf"
-        print(f"Trying Springer PDF URL: {pdf_url}")
+        safe_print(f"  Trying Springer PDF URL: {pdf_url}")
         
         # Test if this URL works
         response = self._request("HEAD", pdf_url, allow_redirects=True)
@@ -330,7 +418,7 @@ class ImprovedPaperDownloader:
         pii = _extract_pii(paper_url)
         if pii and "linkinghub" in paper_url:
             article_url = f"https://www.sciencedirect.com/science/article/pii/{pii}"
-            print(f"  Resolved linkinghub → {article_url}")
+            safe_print(f"  Resolved linkinghub → {article_url}")
         else:
             article_url = paper_url
 
@@ -338,15 +426,15 @@ class ImprovedPaperDownloader:
             response = self._request("GET", article_url)
             article_url = response.url  # update with final URL after any HTTP redirects
             content = response.text
-            print(f"  Elsevier article URL: {article_url}")
+            safe_print(f"  Elsevier article URL: {article_url}")
 
             # Check if the article page looks like an error page.
             if response.status_code >= 400 or "there was a problem" in content.lower():
-                print(f"  Warning: article page returned error (status {response.status_code})")
+                safe_print(f"  Warning: article page returned error (status {response.status_code})")
                 content = ""  # don't try to parse error pages
 
         except Exception as e:
-            print(f"  Elsevier page fetch failed: {e}")
+            safe_print(f"  Elsevier page fetch failed: {e}")
 
         if content:
             # Method 1: citation_pdf_url meta tag (most reliable across Elsevier sites)
@@ -357,7 +445,7 @@ class ImprovedPaperDownloader:
             if meta_match:
                 pdf_url = meta_match.group(1)
                 self._elsevier_referer = article_url
-                print(f"  Found citation_pdf_url: {pdf_url}")
+                safe_print(f"  Found citation_pdf_url: {pdf_url}")
                 return pdf_url
 
             # Method 2: Look for PDF link patterns in page source
@@ -390,7 +478,7 @@ class ImprovedPaperDownloader:
                     base = "https://www.sciencedirect.com"
                 self._elsevier_referer = f"{base}/science/article/pii/{pii}"
                 pdfft = f"{base}/science/article/pii/{pii}/pdfft?isDTMRedir=true&download=true"
-                print(f"  Constructed pdfft fallback: {pdfft}")
+                safe_print(f"  Constructed pdfft fallback: {pdfft}")
                 return pdfft
 
         return None
@@ -463,9 +551,108 @@ class ImprovedPaperDownloader:
         pdf_url = paper_url.replace('.html', '.pdf')
         if not pdf_url.endswith('.pdf'):
             pdf_url = paper_url + '.pdf'
-        
+
         return pdf_url
-    
+
+    def _get_cureus_pdf(self, paper_url):
+        """
+        Cureus PDF download (open-access journal).
+
+        Cureus article URLs look like:
+            https://www.cureus.com/articles/453946-some-title-slug
+        The PDF is typically available at:
+            https://www.cureus.com/articles/453946.pdf
+        or via the citation_pdf_url meta tag.
+        """
+        try:
+            response = self._request("GET", paper_url)
+            content = response.text
+
+            # Method 1: citation_pdf_url meta tag
+            meta_match = re.search(
+                r'<meta\s+name=["\']citation_pdf_url["\']\s+content=["\']([^"\']+)["\']',
+                content, re.IGNORECASE,
+            )
+            if meta_match:
+                pdf_url = meta_match.group(1)
+                safe_print(f"  Found Cureus citation_pdf_url: {pdf_url}")
+                return pdf_url
+
+            # Method 2: Look for explicit PDF download links
+            patterns = [
+                r'href="([^"]*\.pdf[^"]*)"',
+                r'href="([^"]*download[^"]*pdf[^"]*)"',
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    pdf_url = match.group(1)
+                    if not pdf_url.startswith('http'):
+                        pdf_url = urljoin(paper_url, pdf_url)
+                    safe_print(f"  Found Cureus PDF link: {pdf_url}")
+                    return pdf_url
+        except Exception as e:
+            safe_print(f"  Cureus page fetch failed: {e}")
+
+        # Method 3: Construct PDF URL from article ID
+        # e.g. /articles/453946-title-slug -> /articles/453946.pdf
+        match = re.search(r'/articles/(\d+)', paper_url)
+        if match:
+            article_id = match.group(1)
+            pdf_url = f"https://www.cureus.com/articles/{article_id}.pdf"
+            safe_print(f"  Constructed Cureus PDF URL: {pdf_url}")
+            return pdf_url
+
+        return None
+
+    def _get_unpaywall_pdf_url(self, doi: str) -> str | None:
+        """Query Unpaywall API for an open-access PDF URL.
+
+        Endpoint: https://api.unpaywall.org/v2/{DOI}?email={EMAIL}
+        Returns the best available OA PDF URL, or None.
+        """
+        email = os.getenv("UNPAYWALL_EMAIL")
+        if not email:
+            return None
+
+        encoded_doi = quote(doi, safe="")
+        url = f"https://api.unpaywall.org/v2/{encoded_doi}"
+        params = {"email": email}
+
+        try:
+            response = self._request("GET", url, params=params)
+        except Exception as e:
+            safe_print(f"  Unpaywall API request failed: {e}")
+            return None
+
+        if response.status_code != 200:
+            return None
+
+        try:
+            data = response.json()
+        except Exception:
+            return None
+
+        # Try best_oa_location first, then iterate all oa_locations
+        best = data.get("best_oa_location") or {}
+        pdf_url = best.get("url_for_pdf")
+        if pdf_url:
+            safe_print(f"  Unpaywall: found OA PDF: {pdf_url}")
+            return pdf_url
+
+        for loc in data.get("oa_locations") or []:
+            pdf_url = loc.get("url_for_pdf")
+            if pdf_url:
+                safe_print(f"  Unpaywall: found OA PDF (alt location): {pdf_url}")
+                return pdf_url
+
+        # No direct PDF link — try landing page URL as last resort
+        landing = best.get("url_for_landing_page")
+        if landing:
+            safe_print(f"  Unpaywall: no direct PDF, landing page: {landing}")
+
+        return None
+
     def _get_generic_pdf(self, paper_url):
         """
         Generic PDF detection for unknown publishers
@@ -545,7 +732,7 @@ class ImprovedPaperDownloader:
                     except Exception:
                         pass
 
-                print(f"Downloading from: {pdf_url} (attempt {attempt}/{max_attempts})")
+                safe_print(f"  Downloading from: {pdf_url} (attempt {attempt}/{max_attempts})")
 
                 response = self._request("GET", pdf_url, stream=True, headers=headers)
                 try:
@@ -574,7 +761,7 @@ class ImprovedPaperDownloader:
                     raise RuntimeError("Downloaded file failed PDF validation (possibly truncated)")
 
                 os.replace(part_path, filepath)
-                print(f"OK: Successfully downloaded: {filepath}")
+                safe_print(f"  OK: Successfully downloaded: {filepath}")
                 return True
 
             except PermissionError:
@@ -595,13 +782,240 @@ class ImprovedPaperDownloader:
                     pass
 
                 if attempt < max_attempts:
-                    print(f"Attempt {attempt}/{max_attempts} failed: {e}")
+                    safe_print(f"  Attempt {attempt}/{max_attempts} failed: {e}")
                     # Small retry backoff (+ jitter). DomainBackoff still handles 429/5xx globally.
                     time.sleep(0.5 * attempt + random.uniform(0.0, 0.3))
                     continue
 
-                print(f"ERROR: Download failed after {max_attempts} attempts: {e}")
+                safe_print(f"  ERROR: Download failed after {max_attempts} attempts: {e}")
                 return False
+
+    def _convert_xml_to_pdf(self, xml_path: str, md_dir: str, pdf_dir: str) -> bool:
+        """Convert downloaded XML to PDF via XML → MD → PDF pipeline.
+
+        Keeps the intermediate .md file regardless of PDF rendering success.
+        Returns True if PDF was generated successfully, False otherwise.
+        """
+        xml_p = Path(xml_path)
+        stem = xml_p.stem  # e.g. "10.1016_j.test"
+        md_p = Path(md_dir) / (stem + ".md")
+        pdf_p = Path(pdf_dir) / (stem + ".pdf")
+
+        # Step 1: XML → dict
+        try:
+            info = parse_xml(xml_p)
+        except Exception as e:
+            safe_print(f"  XML parse failed: {e}")
+            return False
+
+        if not info:
+            safe_print("  XML parse returned empty result")
+            return False
+
+        # Step 2: dict → Markdown string → write .md file
+        try:
+            md_text = build_md(info)
+            md_p.write_text(md_text, encoding="utf-8")
+            safe_print(f"  OK: Markdown generated: {md_p}")
+        except Exception as e:
+            safe_print(f"  Markdown generation failed: {e}")
+            return False
+
+        # Step 3: MD → PDF via WeasyPrint
+        try:
+            convert_md_to_pdf(md_p, pdf_p)
+        except Exception as e:
+            safe_print(f"  PDF rendering failed (MD preserved): {e}")
+            return False
+
+        if pdf_p.exists() and pdf_p.stat().st_size > 0:
+            safe_print(f"  OK: PDF rendered from XML: {pdf_p}")
+            return True
+
+        safe_print("  PDF rendering produced empty file")
+        return False
+
+    def _download_elsevier_api(self, doi: str, xml_dir: str, md_dir: str, pdf_dir: str) -> bool:
+        """Fallback: download Elsevier full text XML via Article Retrieval API."""
+        api_key = os.getenv("ELSEVIER_API_KEY")
+        if not api_key:
+            safe_print("  Elsevier API key not configured, skipping API fallback")
+            return False
+
+        filename = doi.replace("/", "_") + ".xml"
+        filepath = os.path.join(xml_dir, filename)
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            safe_print(f"  SKIP: XML already exists: {filepath}")
+            return True
+
+        encoded_doi = quote(doi, safe="")
+        url = f"https://api.elsevier.com/content/article/doi/{encoded_doi}"
+        headers = {
+            "X-ELS-APIKey": api_key,
+            "Accept": "application/xml",
+        }
+        params = {"view": "FULL"}
+
+        try:
+            response = self._request("GET", url, headers=headers, params=params)
+        except Exception as e:
+            safe_print(f"  Elsevier API request failed: {e}")
+            return False
+
+        status_code = response.status_code
+        if status_code == 200:
+            content = response.content
+            if not content:
+                safe_print("  Elsevier API returned empty XML content")
+                return False
+            try:
+                with open(filepath, "wb") as f:
+                    f.write(content)
+                safe_print(f"  OK: Elsevier XML downloaded: {filepath}")
+                self._convert_xml_to_pdf(filepath, md_dir, pdf_dir)
+                return True
+            except Exception as e:
+                safe_print(f"  Failed to save Elsevier XML: {e}")
+                return False
+
+        if status_code in (401, 403):
+            safe_print(f"  Elsevier API auth/permission error (HTTP {status_code}) for DOI {doi}")
+            return False
+
+        if status_code == 404:
+            safe_print(f"  Elsevier API: DOI not found (HTTP 404): {doi}")
+            return False
+
+        if status_code == 429:
+            remaining = response.headers.get("X-RateLimit-Remaining", "unknown")
+            safe_print(f"  Elsevier API rate limited (HTTP 429), X-RateLimit-Remaining={remaining}")
+            return False
+
+        safe_print(f"  Elsevier API request failed (HTTP {status_code})")
+        return False
+
+    def _download_wiley_api(self, doi: str, xml_dir: str, md_dir: str, pdf_dir: str) -> bool:
+        """Fallback: download Wiley full-text XML via TDM API.
+
+        Requires WILEY_TDM_TOKEN in .env.
+        Endpoint: https://api.wiley.com/onlinelibrary/tdm/v1/articles/{DOI}
+        """
+        token = os.getenv("WILEY_TDM_TOKEN")
+        if not token:
+            safe_print("  Wiley TDM token not configured, skipping API fallback")
+            return False
+
+        filename = doi.replace("/", "_") + ".xml"
+        filepath = os.path.join(xml_dir, filename)
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            safe_print(f"  SKIP: XML already exists: {filepath}")
+            return True
+
+        encoded_doi = quote(doi, safe="")
+        url = f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{encoded_doi}"
+        headers = {
+            "Wiley-TDM-Client-Token": token,
+            "Accept": "application/xml",
+        }
+
+        try:
+            response = self._request("GET", url, headers=headers)
+        except Exception as e:
+            safe_print(f"  Wiley TDM API request failed: {e}")
+            return False
+
+        status_code = response.status_code
+        if status_code == 200:
+            content = response.content
+            if not content:
+                safe_print("  Wiley TDM API returned empty content")
+                return False
+            try:
+                with open(filepath, "wb") as f:
+                    f.write(content)
+                safe_print(f"  OK: Wiley XML downloaded: {filepath}")
+                self._convert_xml_to_pdf(filepath, md_dir, pdf_dir)
+                return True
+            except Exception as e:
+                safe_print(f"  Failed to save Wiley XML: {e}")
+                return False
+
+        if status_code in (401, 403):
+            safe_print(f"  Wiley TDM API auth/permission error (HTTP {status_code}) for DOI {doi}")
+            return False
+
+        if status_code == 404:
+            safe_print(f"  Wiley TDM API: DOI not found (HTTP 404): {doi}")
+            return False
+
+        if status_code == 429:
+            safe_print(f"  Wiley TDM API rate limited (HTTP 429)")
+            return False
+
+        safe_print(f"  Wiley TDM API request failed (HTTP {status_code})")
+        return False
+
+    def _download_springer_nature_api(self, doi: str, xml_dir: str, md_dir: str, pdf_dir: str) -> bool:
+        """Fallback: download Springer/Nature full-text XML via Springer Nature API.
+
+        Requires SPRINGER_NATURE_API_KEY in .env.
+        Tries open-access JATS XML first, then metadata endpoint.
+        Endpoint: https://api.springernature.com/openaccess/jats/doi/{DOI}?api_key={key}
+        """
+        api_key = os.getenv("SPRINGER_NATURE_API_KEY")
+        if not api_key:
+            safe_print("  Springer Nature API key not configured, skipping API fallback")
+            return False
+
+        filename = doi.replace("/", "_") + ".xml"
+        filepath = os.path.join(xml_dir, filename)
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            safe_print(f"  SKIP: XML already exists: {filepath}")
+            return True
+
+        encoded_doi = quote(doi, safe="")
+
+        # Try open-access JATS XML endpoint
+        url = f"https://api.springernature.com/openaccess/jats/doi/{encoded_doi}"
+        params = {"api_key": api_key}
+
+        try:
+            response = self._request("GET", url, params=params)
+        except Exception as e:
+            safe_print(f"  Springer Nature API request failed: {e}")
+            return False
+
+        status_code = response.status_code
+        if status_code == 200:
+            content = response.content
+            if not content:
+                safe_print("  Springer Nature API returned empty content")
+                return False
+            try:
+                with open(filepath, "wb") as f:
+                    f.write(content)
+                safe_print(f"  OK: Springer/Nature XML downloaded: {filepath}")
+                self._convert_xml_to_pdf(filepath, md_dir, pdf_dir)
+                return True
+            except Exception as e:
+                safe_print(f"  Failed to save Springer/Nature XML: {e}")
+                return False
+
+        if status_code in (401, 403):
+            safe_print(f"  Springer Nature API auth/permission error (HTTP {status_code}) for DOI {doi}")
+            return False
+
+        if status_code == 404:
+            safe_print(f"  Springer Nature API: DOI not found or not open-access (HTTP 404): {doi}")
+            return False
+
+        if status_code == 429:
+            remaining = response.headers.get("X-RateLimit-Remaining", "unknown")
+            safe_print(f"  Springer Nature API rate limited (HTTP 429), X-RateLimit-Remaining={remaining}")
+            return False
+
+        safe_print(f"  Springer Nature API request failed (HTTP {status_code})")
+        return False
 
 
 # ==================== USAGE EXAMPLES ====================
@@ -703,7 +1117,7 @@ def main():
             done_count += 1
             success_count += int(ok)
             status = "OK" if ok else "FAIL"
-            print(f"[{done_count}/{len(dois)}] {status} {doi}")
+            safe_print(f"[{done_count}/{len(dois)}] {status} {doi}")
 
     print("=" * 60)
     print(f"Summary: {success_count}/{len(dois)} papers downloaded successfully")
