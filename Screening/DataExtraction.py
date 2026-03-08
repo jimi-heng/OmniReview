@@ -18,6 +18,11 @@ from dotenv import load_dotenv
 from openpyxl import Workbook, load_workbook
 
 try:
+    from TextHighlight import highlight_pdf
+except Exception:  # pragma: no cover
+    from Screening.TextHighlight import highlight_pdf
+
+try:
     import fitz  # PyMuPDF
 except Exception:  # pragma: no cover
     fitz = None
@@ -28,22 +33,28 @@ PROJECT_DIR = SCRIPT_DIR.parent
 
 
 SYSTEM_PROMPT = """
-Role:
 You are an expert medical data extractor for systematic reviews.
 
-Core Rules:
-- Extract data strictly and only from visible PDF content.
-- Output must be valid JSON only. No preamble, no explanation, no markdown fences.
-- If a field is not found, set it to "Not Reported".
-- Do not hallucinate or infer any unstated data.
-- For numerical outcomes (Mean, SD, Events, Total), extract exact reported numbers as strings.
-- For multi-arm studies, map arms correctly: Arm1 = intervention, Arm2 = comparator.
-- If multiple outcomes are reported, return a JSON array of objects (one object per outcome row).
-"""
+CRITICAL OUTPUT FORMAT — you MUST follow this exactly:
+- Return ONLY raw JSON. No markdown fences, no explanation, no preamble.
+- The JSON must be an array of objects: [ { ... }, { ... } ]
+- EVERY field MUST be a nested object with exactly two keys "value" and "evidence":
+  {"value": "<extracted data>", "evidence": "<verbatim quote from PDF>"}
+- NEVER return a flat string like "Age": "6.5". ALWAYS use the nested format:
+  "Age": {"value": "6.5", "evidence": "The median age was 6.5 years (IQR 4-8)."}
+- The "evidence" MUST be the exact sentence or phrase copied verbatim from the PDF.
+- If a field is not found: {"value": "Not Reported", "evidence": ""}
 
+Extraction rules:
+- Extract strictly from visible PDF content. Do not hallucinate or infer.
+- For numbers (Mean, SD, Events, Total): extract exact reported values as strings.
+- Multi-arm mapping: Arm1 = intervention, Arm2 = comparator/control.
+- Multiple outcomes: return one JSON object per outcome row, duplicating study metadata.
+"""
 
 USER_PROMPT_TEMPLATE = """
 Extract the following data fields from the attached PDF.
+Process systematically through these groups:
 
 == Group 1: Study Metadata ==
 Year, Study_ID, Trial_Number, Study_Name, Country, Number_of_centers
@@ -58,16 +69,54 @@ Sample_Size, Age, Gender, Follow_up
 Arm_1_Specific_Regimens, Arm1_Drugs, Arm2_Specific_Regimens, Arm2_Drugs
 
 == Group 5: Outcomes (one JSON object per outcome) ==
-Outcome_Reproted, Name_of_Outcome, Definition, Measurement_Time_,
-Arm1_Mean, Arm1_SD, Arm1_Total, Arm2_Mean, Arm2_SD, Arm2_Total,
+Outcome_Reproted, Name_of_Outcome, Definition, Measurement_Time_
+Arm1_Mean, Arm1_SD, Arm1_Total, Arm2_Mean, Arm2_SD, Arm2_Total
 Arm1_Events, Arm1_Total, Arm2_Events, Arm2_Total
 
 == Group 6: Notes ==
 Note
 
-Return ONLY a valid JSON array. Each element is one outcome row.
-Fields shared across outcomes (Groups 1-4) should be repeated in each object.
-If a field is not found, use "Not Reported". Do NOT add any text outside the JSON.
+MANDATORY OUTPUT FORMAT:
+Return a JSON array. EVERY field must use the nested {"value": "...", "evidence": "..."} format.
+The "evidence" is the verbatim sentence from the PDF that supports the value.
+
+COMPLETE EXAMPLE (showing the REQUIRED nested format for ALL fields):
+[
+  {
+    "Year": {"value": "2019", "evidence": "This randomized controlled trial was conducted between January and December 2019."},
+    "Study_ID": {"value": "Not Reported", "evidence": ""},
+    "Trial_Number": {"value": "NCT01234567", "evidence": "The trial was registered at ClinicalTrials.gov (NCT01234567)."},
+    "Study_Name": {"value": "IRON-KIDS", "evidence": "The IRON-KIDS study was a double-blind placebo-controlled trial."},
+    "Country": {"value": "Indonesia", "evidence": "The study was conducted in rural Indonesia."},
+    "Number_of_centers": {"value": "1", "evidence": "Participants were recruited from a single health center."},
+    "Study_Inclusion": {"value": "Healthy infants aged 6 months", "evidence": "Inclusion criteria were healthy singleton infants who had not passed 6 months of age."},
+    "Exclusion_Criteria": {"value": "Not Reported", "evidence": ""},
+    "Diagnosis": {"value": "Iron-replete infants", "evidence": "All enrolled infants were confirmed iron-replete at baseline."},
+    "Sample_Size": {"value": "154", "evidence": "A total of 154 infants were enrolled in the study."},
+    "Age": {"value": "6 months", "evidence": "Infants were enrolled at 6 months of age."},
+    "Gender": {"value": "56% female", "evidence": "Of the 80 infants in the iron group, 45 (56%) were girls."},
+    "Follow_up": {"value": "6 months", "evidence": "Children were followed from 6 to 12 months of age."},
+    "Arm_1_Specific_Regimens": {"value": "10 mg iron daily", "evidence": "The intervention group received a daily dose of 10 mg of iron as ferrous sulphate."},
+    "Arm1_Drugs": {"value": "Ferrous sulphate", "evidence": "Iron was provided as ferrous sulphate in sweet-tasting syrup."},
+    "Arm2_Specific_Regimens": {"value": "Placebo syrup daily", "evidence": "The control group received placebo syrup identical in appearance."},
+    "Arm2_Drugs": {"value": "Placebo", "evidence": "The control group received placebo syrup identical in appearance."},
+    "Outcome_Reproted": {"value": "Weight-for-age z-score", "evidence": "The primary outcome was weight-for-age z-score (WAZ) at 12 months."},
+    "Name_of_Outcome": {"value": "WAZ at 12 months", "evidence": "The primary outcome was weight-for-age z-score (WAZ) at 12 months."},
+    "Definition": {"value": "WAZ compared to CDC reference", "evidence": "Z-scores were calculated using the CDC 2000 growth reference."},
+    "Measurement_Time_": {"value": "12 months", "evidence": "Outcomes were measured at 12 months of age."},
+    "Arm1_Mean": {"value": "-1.99", "evidence": "The mean WAZ in the iron group was -1.99 (SD 1.02)."},
+    "Arm1_SD": {"value": "1.02", "evidence": "The mean WAZ in the iron group was -1.99 (SD 1.02)."},
+    "Arm1_Total": {"value": "80", "evidence": "80 infants were in the iron-supplemented group."},
+    "Arm2_Mean": {"value": "-1.58", "evidence": "The mean WAZ in the control group was -1.58 (SD 1.13)."},
+    "Arm2_SD": {"value": "1.13", "evidence": "The mean WAZ in the control group was -1.58 (SD 1.13)."},
+    "Arm2_Total": {"value": "74", "evidence": "74 infants were in the non-supplemented group."},
+    "Arm1_Events": {"value": "Not Reported", "evidence": ""},
+    "Arm1_Total": {"value": "80", "evidence": "80 infants were in the iron-supplemented group."},
+    "Arm2_Events": {"value": "Not Reported", "evidence": ""},
+    "Arm2_Total": {"value": "74", "evidence": "74 infants were in the non-supplemented group."},
+    "Note": {"value": "Iron-replete subgroup analysis", "evidence": "This analysis focused on the iron-replete subgroup."}
+  }
+]
 
 Paper ID: {paper_id}
 """
@@ -231,11 +280,29 @@ def _normalize_value(value: Any) -> str:
     return str(value)
 
 
-def _align_row(row: dict[str, Any], columns: list[str]) -> dict[str, str]:
-    return {col: _normalize_value(row.get(col, "Not Reported")) for col in columns}
+def _split_nested_row(
+    row: dict[str, Any], columns: list[str]
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Split a nested {col: {value, evidence}} row into (values_dict, evidences_dict)."""
+    values: dict[str, str] = {}
+    evidences: dict[str, str] = {}
+    for col in columns:
+        cell = row.get(col, "Not Reported")
+        if isinstance(cell, dict):
+            values[col] = _normalize_value(cell.get("value", "Not Reported"))
+            ev = cell.get("evidence", "")
+            if isinstance(ev, str) and ev.strip():
+                evidences[col] = ev.strip()
+            continue
+
+        # LLM fallback: flat key-value output with no nested evidence object.
+        values[col] = _normalize_value(cell)
+    return values, evidences
 
 
-def _parse_extraction_json(text: str, columns: list[str]) -> list[dict[str, str]]:
+def _parse_extraction_json(
+    text: str, columns: list[str]
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     if not text or not text.strip():
         raise ValueError("empty model output")
 
@@ -251,7 +318,9 @@ def _parse_extraction_json(text: str, columns: list[str]) -> list[dict[str, str]
         raise ValueError("no JSON end token found")
 
     candidate = text[start : end + 1]
-    parsed = json.loads(candidate)
+    # strict=False allows control characters (e.g. literal newlines) inside JSON strings,
+    # which LLMs frequently produce in long evidence quotes.
+    parsed = json.loads(candidate, strict=False)
 
     if isinstance(parsed, dict):
         rows: list[Any] = [parsed]
@@ -260,15 +329,41 @@ def _parse_extraction_json(text: str, columns: list[str]) -> list[dict[str, str]
     else:
         raise ValueError("JSON root must be object or array")
 
-    aligned_rows: list[dict[str, str]] = []
+    value_rows: list[dict[str, str]] = []
+    evidence_rows: list[dict[str, str]] = []
     for item in rows:
         if not isinstance(item, dict):
             continue
-        aligned_rows.append(_align_row(item, columns))
+        values, evidences = _split_nested_row(item, columns)
+        value_rows.append(values)
+        evidence_rows.append(evidences)
 
-    if not aligned_rows:
+    if not value_rows:
         raise ValueError("no valid row objects in JSON")
-    return aligned_rows
+    return value_rows, evidence_rows
+
+
+def _build_highlight_evidences(evidence_rows: list[dict[str, str]]) -> dict[str, str]:
+    """
+    Merge evidence dicts from all outcome rows into a single dict for highlighting.
+    Uses a single generic key prefix so all highlights share one color.
+    Deduplicates repeated evidence across rows.
+    """
+    result: dict[str, str] = {}
+    seen_texts: set[str] = set()
+    count = 0
+
+    for ev_dict in evidence_rows:
+        for field, text in ev_dict.items():
+            if not text.strip():
+                continue
+            norm = " ".join(text.lower().split())
+            if norm in seen_texts:
+                continue
+            seen_texts.add(norm)
+            count += 1
+            result[f"Evidence_{count}"] = text
+    return result
 
 
 def _blank_llm_values(columns: list[str]) -> dict[str, str]:
@@ -349,6 +444,7 @@ async def main() -> None:
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--retry-delay", type=float, default=3.0)
     parser.add_argument("--max-concurrency", type=int, default=10)
+    parser.add_argument("--no-highlight", action="store_true", help="Skip PDF highlighting")
     args = parser.parse_args()
 
     load_dotenv(SCRIPT_DIR / ".env", override=True)
@@ -386,7 +482,7 @@ async def main() -> None:
             }
             async with sem:
                 try:
-                    prompt = SYSTEM_PROMPT + "\n\n" + USER_PROMPT_TEMPLATE.format(paper_id=paper.paper_id)
+                    prompt = SYSTEM_PROMPT + "\n\n" + USER_PROMPT_TEMPLATE.replace("{paper_id}", str(paper.paper_id))
                     pdf_bytes = _load_pdf_bytes(paper.path, pages)
                     b64 = base64.b64encode(pdf_bytes).decode("ascii")
                     payload = {
@@ -431,7 +527,7 @@ async def main() -> None:
                     data = resp.json()
                     text = _extract_output_text(data)
                     try:
-                        rows = _parse_extraction_json(text, llm_columns)
+                        value_rows, evidence_rows = _parse_extraction_json(text, llm_columns)
                     except (json.JSONDecodeError, ValueError) as exc:
                         print(f"[Paper {paper.paper_id}] JSON Parse Error: {exc!r}")
                         if text:
@@ -445,7 +541,26 @@ async def main() -> None:
                         )
                         return
 
-                    for row in rows:
+                    if not args.no_highlight:
+                        merged_evidences = _build_highlight_evidences(evidence_rows)
+                        ev_count = sum(len(d) for d in evidence_rows)
+                        print(f"[Paper {paper.paper_id}] Evidences extracted: {ev_count}, unique for highlight: {len(merged_evidences)}")
+                        if merged_evidences:
+                            try:
+                                hl_dir = PROJECT_DIR / "outputs" / "highlighted_pdfs"
+                                hl_dir.mkdir(parents=True, exist_ok=True)
+                                out_pdf = hl_dir / f"HL_{paper.path.name}"
+                                loop = asyncio.get_running_loop()
+                                await loop.run_in_executor(
+                                    None, highlight_pdf, paper.path, out_pdf, merged_evidences
+                                )
+                                print(f"[Paper {paper.paper_id}] Highlighted: {out_pdf}")
+                            except Exception as exc:  # noqa: BLE001
+                                print(f"[Paper {paper.paper_id}] Highlight error (non-fatal): {exc!r}")
+                        else:
+                            print(f"[Paper {paper.paper_id}] WARNING: No evidence strings found — LLM may have returned flat values instead of nested {{value, evidence}} objects")
+
+                    for row in value_rows:
                         await queue.put({**base_row, **row, "Error": ""})
                 except Exception as exc:  # noqa: BLE001
                     print(f"[Paper {paper.paper_id}] Exception: {exc!r}")
