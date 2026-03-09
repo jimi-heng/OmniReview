@@ -747,7 +747,7 @@ async function continueProject(projectId) {
                 document.getElementById('population').value = result.data.pico.population || '';
                 document.getElementById('intervention').value = result.data.pico.intervention || '';
                 document.getElementById('comparison').value = result.data.pico.comparison || '';
-                document.getElementById('outcome').value = result.data.pico.outcome || '';
+                document.getElementById('study_design').value = result.data.pico.study_design || '';
             }
             
             // 加载 Protocol 数据
@@ -866,7 +866,7 @@ async function savePicoData() {
         population: document.getElementById('population').value,
         intervention: document.getElementById('intervention').value,
         comparison: document.getElementById('comparison').value,
-        outcome: document.getElementById('outcome').value
+        study_design: document.getElementById('study_design').value
     };
     
     try {
@@ -1132,7 +1132,7 @@ document.getElementById('saveReason').addEventListener('click', async function()
 function clearAllInputs() {
     // 1. 清空 PICO 和 Protocol 输入框
     const textInputs = [
-        'population', 'intervention', 'comparison', 'outcome',
+        'population', 'intervention', 'comparison', 'study_design',
         'research-objective', 'inclusion-criteria', 'exclusion-criteria',
         'search-keywords' // 连同搜索界面的关键字一起清空
     ];

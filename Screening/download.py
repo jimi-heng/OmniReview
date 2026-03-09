@@ -1060,7 +1060,7 @@ def main():
     parser.add_argument("--workers", type=int, default=4, help="Max concurrent downloads (default: 4).")
     args = parser.parse_args()
 
-    doi_file_path = Path(args.doi_file)
+    doi_file_path = (SCRIPT_DIR.parent / args.doi_file).resolve()
     output_dir = str(args.output_dir)
     workers = max(1, int(args.workers))
 
