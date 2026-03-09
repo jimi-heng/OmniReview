@@ -1,473 +1,592 @@
+from __future__ import annotations
+
+import argparse
 import asyncio
 import base64
+import csv
+import json
 import os
 import re
-import json
+import time
+import traceback
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
+
 import httpx
-import openpyxl
 from dotenv import load_dotenv
+from openpyxl import Workbook, load_workbook
+
+try:
+    from TextHighlight import highlight_pdf
+except Exception:  # pragma: no cover
+    from Screening.TextHighlight import highlight_pdf
+
+try:
+    import fitz  # PyMuPDF
+except Exception:  # pragma: no cover
+    fitz = None
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-load_dotenv(SCRIPT_DIR / ".env", override=True)
+PROJECT_DIR = SCRIPT_DIR.parent
 
-TEMPLATE_PATH = SCRIPT_DIR.parent / "resources" / "Templete for data extraction.xlsx"
-OUTPUT_DIR = SCRIPT_DIR.parent / "outputs"
 
-# ===========================================================================
-# Excel 模板列定义 (与 "baseline characteristics" 表头一一对应)
-# ===========================================================================
-# 38 列 A-AL，分为：
-#   A-Q  : 研究级字段（每篇论文一组值）
-#   R-U  : 干预臂信息（研究级）
-#   V-AI : 结局级字段（每个 outcome 一行，研究级字段重复）
-#   AJ-AL: 元数据
+SYSTEM_PROMPT = """
+You are an expert medical data extractor for systematic reviews.
 
-# 需要 LLM 从 PDF 中提取的研究级字段
-STUDY_FIELDS = [
-    "Study_ID",                  # E  — FirstAuthor_Year 格式
-    "Trial_Number",              # G
-    "Study_Name",                # H
-    "Country",                   # I
-    "Number_of_centers",         # J
-    "Study_Inclusion",           # K
-    "Exclusion_Criteria",        # L
-    "Diagnosis",                 # M
-    "Sample_Size",               # N
-    "Age",                       # O
-    "Gender",                    # P
-    "Follow_up",                 # Q  — 数字+单位，例如 6m, 2y
-    "Arm_1_Specific_Regimens",   # R
-    "Arm1_Drugs",                # S
-    "Arm2_Specific_Regimens",    # T
-    "Arm2_Drugs",                # U
+CRITICAL OUTPUT FORMAT — you MUST follow this exactly:
+- Return ONLY raw JSON. No markdown fences, no explanation, no preamble.
+- The JSON must be an array of objects: [ { ... }, { ... } ]
+- EVERY field MUST be a nested object with exactly two keys "value" and "evidence":
+  {"value": "<extracted data>", "evidence": "<verbatim quote from PDF>"}
+- NEVER return a flat string like "Age": "6.5". ALWAYS use the nested format:
+  "Age": {"value": "6.5", "evidence": "The median age was 6.5 years (IQR 4-8)."}
+- The "evidence" MUST be the exact sentence or phrase copied verbatim from the PDF.
+- If a field is not found: {"value": "Not Reported", "evidence": ""}
+
+Extraction rules:
+- Extract strictly from visible PDF content. Do not hallucinate or infer.
+- For numbers (Mean, SD, Events, Total): extract exact reported values as strings.
+- Multi-arm mapping: Arm1 = intervention, Arm2 = comparator/control.
+- Multiple outcomes: return one JSON object per outcome row, duplicating study metadata.
+"""
+
+USER_PROMPT_TEMPLATE = """
+Extract the following data fields from the attached PDF.
+Process systematically through these groups:
+
+== Group 1: Study Metadata ==
+Year, Study_ID, Trial_Number, Study_Name, Country, Number_of_centers
+
+== Group 2: Study Design ==
+Study_Inclusion, Exclusion_Criteria, Diagnosis
+
+== Group 3: Population ==
+Sample_Size, Age, Gender, Follow_up
+
+== Group 4: Interventions ==
+Arm_1_Specific_Regimens, Arm1_Drugs, Arm2_Specific_Regimens, Arm2_Drugs
+
+== Group 5: Outcomes (one JSON object per outcome) ==
+Outcome_Reproted, Name_of_Outcome, Definition, Measurement_Time_
+Arm1_Mean, Arm1_SD, Arm1_Total, Arm2_Mean, Arm2_SD, Arm2_Total
+Arm1_Events, Arm1_Total, Arm2_Events, Arm2_Total
+
+== Group 6: Notes ==
+Note
+
+MANDATORY OUTPUT FORMAT:
+Return a JSON array. EVERY field must use the nested {"value": "...", "evidence": "..."} format.
+The "evidence" is the verbatim sentence from the PDF that supports the value.
+
+COMPLETE EXAMPLE (showing the REQUIRED nested format for ALL fields):
+[
+  {
+    "Year": {"value": "2019", "evidence": "This randomized controlled trial was conducted between January and December 2019."},
+    "Study_ID": {"value": "Not Reported", "evidence": ""},
+    "Trial_Number": {"value": "NCT01234567", "evidence": "The trial was registered at ClinicalTrials.gov (NCT01234567)."},
+    "Study_Name": {"value": "IRON-KIDS", "evidence": "The IRON-KIDS study was a double-blind placebo-controlled trial."},
+    "Country": {"value": "Indonesia", "evidence": "The study was conducted in rural Indonesia."},
+    "Number_of_centers": {"value": "1", "evidence": "Participants were recruited from a single health center."},
+    "Study_Inclusion": {"value": "Healthy infants aged 6 months", "evidence": "Inclusion criteria were healthy singleton infants who had not passed 6 months of age."},
+    "Exclusion_Criteria": {"value": "Not Reported", "evidence": ""},
+    "Diagnosis": {"value": "Iron-replete infants", "evidence": "All enrolled infants were confirmed iron-replete at baseline."},
+    "Sample_Size": {"value": "154", "evidence": "A total of 154 infants were enrolled in the study."},
+    "Age": {"value": "6 months", "evidence": "Infants were enrolled at 6 months of age."},
+    "Gender": {"value": "56% female", "evidence": "Of the 80 infants in the iron group, 45 (56%) were girls."},
+    "Follow_up": {"value": "6 months", "evidence": "Children were followed from 6 to 12 months of age."},
+    "Arm_1_Specific_Regimens": {"value": "10 mg iron daily", "evidence": "The intervention group received a daily dose of 10 mg of iron as ferrous sulphate."},
+    "Arm1_Drugs": {"value": "Ferrous sulphate", "evidence": "Iron was provided as ferrous sulphate in sweet-tasting syrup."},
+    "Arm2_Specific_Regimens": {"value": "Placebo syrup daily", "evidence": "The control group received placebo syrup identical in appearance."},
+    "Arm2_Drugs": {"value": "Placebo", "evidence": "The control group received placebo syrup identical in appearance."},
+    "Outcome_Reproted": {"value": "Weight-for-age z-score", "evidence": "The primary outcome was weight-for-age z-score (WAZ) at 12 months."},
+    "Name_of_Outcome": {"value": "WAZ at 12 months", "evidence": "The primary outcome was weight-for-age z-score (WAZ) at 12 months."},
+    "Definition": {"value": "WAZ compared to CDC reference", "evidence": "Z-scores were calculated using the CDC 2000 growth reference."},
+    "Measurement_Time_": {"value": "12 months", "evidence": "Outcomes were measured at 12 months of age."},
+    "Arm1_Mean": {"value": "-1.99", "evidence": "The mean WAZ in the iron group was -1.99 (SD 1.02)."},
+    "Arm1_SD": {"value": "1.02", "evidence": "The mean WAZ in the iron group was -1.99 (SD 1.02)."},
+    "Arm1_Total": {"value": "80", "evidence": "80 infants were in the iron-supplemented group."},
+    "Arm2_Mean": {"value": "-1.58", "evidence": "The mean WAZ in the control group was -1.58 (SD 1.13)."},
+    "Arm2_SD": {"value": "1.13", "evidence": "The mean WAZ in the control group was -1.58 (SD 1.13)."},
+    "Arm2_Total": {"value": "74", "evidence": "74 infants were in the non-supplemented group."},
+    "Arm1_Events": {"value": "Not Reported", "evidence": ""},
+    "Arm1_Total": {"value": "80", "evidence": "80 infants were in the iron-supplemented group."},
+    "Arm2_Events": {"value": "Not Reported", "evidence": ""},
+    "Arm2_Total": {"value": "74", "evidence": "74 infants were in the non-supplemented group."},
+    "Note": {"value": "Iron-replete subgroup analysis", "evidence": "This analysis focused on the iron-replete subgroup."}
+  }
 ]
 
-# 结局级字段 — 每个 outcome 一组
-OUTCOME_FIELDS = [
-    "Outcome_Reported",          # V  — Y or N
-    "Name_of_Outcome",           # W
-    "Definition",                # X
-    "Measurement_Time",          # Y  — 数字+单位，例如 12w, 6m
-    # 连续型结局数据 (Mean / SD / N)
-    "Arm1_Mean",                 # Z
-    "Arm1_SD",                   # AA
-    "Arm1_Total_Continuous",     # AB — 连续型的 Arm1 总人数
-    "Arm2_Mean",                 # AC
-    "Arm2_SD",                   # AD
-    "Arm2_Total_Continuous",     # AE — 连续型的 Arm2 总人数
-    # 二分类结局数据 (Events / N)
-    "Arm1_Events",               # AF
-    "Arm1_Total_Dichotomous",    # AG — 二分类的 Arm1 总人数
-    "Arm2_Events",               # AH
-    "Arm2_Total_Dichotomous",    # AI — 二分类的 Arm2 总人数
-    "Note",                      # AJ
-]
-
-
-# ===========================================================================
-# 读取 Excel 模板
-# ===========================================================================
-
-def load_template_info(template_path: Path | str) -> tuple[list[str], list[str]]:
-    """读取模板表头和 intervention 列表"""
-    wb = openpyxl.load_workbook(template_path)
-
-    ws = wb["baseline characteristics"]
-    headers = []
-    for col in range(1, ws.max_column + 1):
-        headers.append(ws.cell(row=1, column=col).value or "")
-
-    interventions = []
-    if "intervention" in wb.sheetnames:
-        ws_int = wb["intervention"]
-        for row in range(1, ws_int.max_row + 1):
-            v = ws_int.cell(row=row, column=1).value
-            if v:
-                interventions.append(v)
-
-    wb.close()
-    return headers, interventions
-
-
-# ===========================================================================
-# System Prompt — 根据模板列动态构建
-# ===========================================================================
-
-def build_system_prompt(interventions: list[str]) -> str:
-    intervention_list = "\n".join(f"  - {v}" for v in interventions) if interventions else "  (not specified)"
-
-    return f"""Role:
-You are an expert in biomedical data extraction for systematic reviews.
-
-Core Directives:
-- You will receive ONLY PDF page images of a research paper.
-- You MUST extract data strictly from visible content in the images. Tables, figures, and text are all valid sources.
-- Do NOT assume or infer missing data. If a field cannot be found in the paper, use "NR" (Not Reported).
-- Evidence text must be copied verbatim — do NOT paraphrase, summarize, or rewrite.
-
-Formatting Rules:
-- Study_ID format: FirstAuthor_Year (e.g., Smith_2020). If multiple studies share the same ID, append lowercase letters a, b, c.
-- Time durations: number directly followed by unit abbreviation — d (day), w (week), m (month), y (year). Example: 6m, 12w, 2y.
-- Use underscore (_) instead of spaces in Arm/Drug regimen fields.
-- Numbers and symbols should have a space between them (e.g., p < 0.05).
-
-Known Intervention Categories for this Review:
-{intervention_list}
-Classify Arm1 and Arm2 drugs into the categories above when possible.
-
-=== STUDY-LEVEL FIELDS (extract ONE set per paper) ===
-{chr(10).join(f"- {f}" for f in STUDY_FIELDS)}
-
-=== OUTCOME-LEVEL FIELDS (extract ONE set per outcome; a paper may report MULTIPLE outcomes) ===
-For each outcome, determine if it is a continuous outcome (report Mean, SD, Total) or a dichotomous outcome (report Events, Total).
-- For continuous outcomes: fill Arm1_Mean, Arm1_SD, Arm1_Total_Continuous, Arm2_Mean, Arm2_SD, Arm2_Total_Continuous. Leave dichotomous fields as "NR".
-- For dichotomous outcomes: fill Arm1_Events, Arm1_Total_Dichotomous, Arm2_Events, Arm2_Total_Dichotomous. Leave continuous fields as "NR".
-Fields:
-{chr(10).join(f"- {f}" for f in OUTCOME_FIELDS)}
-
-STRICT OUTPUT TEMPLATE — follow this format exactly:
-
-[STUDY_INFO]
-{chr(10).join(f"{f}: <value or NR>" for f in STUDY_FIELDS)}
-[/STUDY_INFO]
-
-[OUTCOME_1]
-{chr(10).join(f"{f}: <value or NR>" for f in OUTCOME_FIELDS)}
-[/OUTCOME_1]
-
-[OUTCOME_2]
-...
-[/OUTCOME_2]
-
-(repeat [OUTCOME_N] for every outcome reported in the paper)
+Paper ID: {paper_id}
 """
 
 
-# ===========================================================================
-# 解析 LLM 输出
-# ===========================================================================
+def _read_template_columns(template_path: Path) -> tuple[list[str], list[str]]:
+    wb = load_workbook(template_path, read_only=True)
+    try:
+        if "baseline characteristics" not in wb.sheetnames:
+            raise KeyError("Missing sheet: baseline characteristics")
+        ws = wb["baseline characteristics"]
+        header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
+        if not header_row:
+            raise ValueError("Template header row is empty")
 
-def _parse_kv_block(text: str, fields: list[str]) -> dict:
-    """从文本块中按字段名提取 key: value"""
-    result = {}
-    for field in fields:
-        pattern = rf"{re.escape(field)}:\s*(.+?)(?:\n|$)"
-        match = re.search(pattern, text)
-        result[field] = match.group(1).strip() if match else "NR"
-    return result
+        all_columns = []
+        for value in header_row:
+            if value is None:
+                continue
+            col = str(value).strip()
+            if col:
+                all_columns.append(col)
 
-
-def parse_extraction_output(text: str) -> tuple[dict, list[dict]]:
-    """解析完整的 LLM 输出，返回 (study_info, [outcome_dicts])"""
-    # 解析 [STUDY_INFO] 块
-    study_match = re.search(r"\[STUDY_INFO\](.*?)\[/STUDY_INFO\]", text, re.DOTALL)
-    study_info = _parse_kv_block(study_match.group(1), STUDY_FIELDS) if study_match else {f: "NR" for f in STUDY_FIELDS}
-
-    # 解析所有 [OUTCOME_N] 块
-    outcome_blocks = re.findall(r"\[OUTCOME_\d+\](.*?)\[/OUTCOME_\d+\]", text, re.DOTALL)
-    outcomes = []
-    for block in outcome_blocks:
-        outcomes.append(_parse_kv_block(block, OUTCOME_FIELDS))
-
-    # 回退：如果没有标签块，尝试直接解析
-    if not outcomes and not study_match:
-        study_info = _parse_kv_block(text, STUDY_FIELDS)
-        outcome = _parse_kv_block(text, OUTCOME_FIELDS)
-        if any(v != "NR" for k, v in outcome.items() if k != "Note"):
-            outcomes.append(outcome)
-
-    return study_info, outcomes
+        # Auto-filled or non-LLM metadata fields.
+        metadata_fields = {"Rayyan_ID", "Title", "Abstract", "Full_Text", "Extractor", "Checker"}
+        llm_columns = [c for c in all_columns if c not in metadata_fields]
+        return all_columns, llm_columns
+    finally:
+        wb.close()
 
 
-# ===========================================================================
-# DMX API 工具（复用自 WebFullText.py）
-# ===========================================================================
+def _parse_pages_spec(spec: str) -> Optional[list[int]]:
+    s = (spec or "").strip().lower()
+    if s in {"all", "*"}:
+        return None
+
+    pages: set[int] = set()
+    for part in s.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            a, b = part.split("-", 1)
+            start = int(a.strip())
+            end = int(b.strip())
+            if start <= 0 or end <= 0:
+                continue
+            if start > end:
+                start, end = end, start
+            pages.update(range(start, end + 1))
+        else:
+            p = int(part)
+            if p > 0:
+                pages.add(p)
+    return sorted(pages)
+
+
+def _load_pdf_bytes(pdf_path: Path, pages: Optional[list[int]]) -> bytes:
+    data = pdf_path.read_bytes()
+    if pages is None:
+        return data
+
+    if fitz is None:
+        raise RuntimeError("PyMuPDF is required for --pdf-pages. Install `pymupdf`.")
+
+    with fitz.open(stream=data, filetype="pdf") as src:
+        page_count = src.page_count
+        selected = [p for p in pages if 1 <= p <= page_count]
+        if not selected:
+            return data
+
+        out = fitz.open()
+        for p in selected:
+            out.insert_pdf(src, from_page=p - 1, to_page=p - 1)
+        return out.tobytes()
+
 
 def _extract_output_text(resp_json: dict[str, Any]) -> str:
-    out_parts = []
+    out_parts: list[str] = []
     for item in resp_json.get("output", []) or []:
-        if not isinstance(item, dict) or item.get("type") != "message":
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") != "message":
             continue
         for block in item.get("content", []) or []:
             if isinstance(block, dict) and block.get("type") == "output_text":
-                t = block.get("text")
-                if isinstance(t, str) and t.strip():
-                    out_parts.append(t)
+                text = block.get("text")
+                if isinstance(text, str) and text.strip():
+                    out_parts.append(text)
     if out_parts:
         return "\n".join(out_parts)
-    return resp_json.get("output_text", resp_json.get("text", ""))
+
+    for key in ("output_text", "text"):
+        value = resp_json.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    return ""
 
 
-async def _call_with_retry(coro_func, *args, retries=3, delay_s=3.0):
-    last_exc = None
-    for _ in range(retries):
-        try:
-            return await coro_func(*args)
-        except Exception as e:
-            last_exc = e
-            await asyncio.sleep(delay_s)
-    raise last_exc
-
-
-async def _post_with_auth_fallback(client, url, api_key, payload, timeout_s):
+async def _post_with_auth_fallback(
+    client: httpx.AsyncClient,
+    url: str,
+    api_key: str,
+    payload: dict[str, Any],
+    timeout_s: float,
+) -> httpx.Response:
     headers1 = {"Authorization": api_key, "Content-Type": "application/json"}
     r1 = await client.post(url, headers=headers1, json=payload, timeout=timeout_s)
     if r1.status_code not in (401, 403):
         return r1
+
     headers2 = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     return await client.post(url, headers=headers2, json=payload, timeout=timeout_s)
 
 
-# ===========================================================================
-# 核心处理 — 单篇论文
-# ===========================================================================
+async def _call_with_retry(coro_func, *args, retries: int, delay_s: float):
+    last_exc: Exception | None = None
+    for _ in range(retries):
+        try:
+            return await coro_func(*args)
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            await asyncio.sleep(delay_s)
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("retry failed")  # pragma: no cover
 
-async def extract_single_paper(client, endpoint, api_key, model_name, paper, system_prompt):
-    """从单篇论文 PDF 中提取结构化数据，返回 study_info + outcomes 列表"""
-    user_prompt = f"""Extract all data from the paper below according to the STUDY-LEVEL and OUTCOME-LEVEL fields defined in your system instructions.
 
-Input Data:
-[Paper ID: {paper['id']}]
-[Paper Title: {paper.get('title', '')}]
-[PDF Page Images Provided Below]
-"""
-    prompt = system_prompt + "\n\n" + user_prompt
+@dataclass(frozen=True)
+class Paper:
+    paper_id: int
+    path: Path
+    title: str
 
-    pdf_path = Path(paper["pdf_path"])
-    if not pdf_path.exists():
-        print(f"[DataExtraction] PDF not found for ID {paper['id']}: {pdf_path}")
-        return {"id": paper["id"], "study_info": None, "outcomes": [], "error": "PDF not found"}
 
+def _discover_pdfs(resources_dir: Path) -> list[Paper]:
+    pdfs = sorted([p for p in resources_dir.rglob("*.pdf") if p.is_file()], key=lambda p: str(p).lower())
+    out: list[Paper] = []
+    for i, path in enumerate(pdfs, start=1):
+        out.append(Paper(paper_id=i, path=path.resolve(), title=path.stem))
+    return out
+
+
+def _safe_relative(path: Path, base: Path) -> str:
     try:
-        pdf_bytes = pdf_path.read_bytes()
-        b64 = base64.b64encode(pdf_bytes).decode("ascii")
-    except Exception as e:
-        print(f"[DataExtraction] Failed to read PDF for ID {paper['id']}: {e}")
-        return {"id": paper["id"], "study_info": None, "outcomes": [], "error": str(e)}
-
-    payload = {
-        "model": model_name,
-        "input": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "input_file", "filename": pdf_path.name,
-                     "file_data": f"data:application/pdf;base64,{b64}"},
-                    {"type": "input_text", "text": prompt},
-                ],
-            }
-        ],
-    }
-
-    try:
-        resp = await _call_with_retry(
-            _post_with_auth_fallback, client, endpoint, api_key, payload, 300.0
-        )
-        if resp.status_code != 200:
-            print(f"[DataExtraction] API returned {resp.status_code} for ID {paper['id']}")
-            return {"id": paper["id"], "study_info": None, "outcomes": [], "error": f"HTTP {resp.status_code}"}
-
-        text = _extract_output_text(resp.json())
-        study_info, outcomes = parse_extraction_output(text)
-        return {"id": paper["id"], "study_info": study_info, "outcomes": outcomes, "error": None}
-
-    except Exception as e:
-        print(f"[DataExtraction] Error for ID {paper['id']}: {e}")
-        return {"id": paper["id"], "study_info": None, "outcomes": [], "error": str(e)}
+        return str(path.relative_to(base))
+    except Exception:
+        return str(path)
 
 
-# ===========================================================================
-# 异步执行器
-# ===========================================================================
-
-async def _run_data_extraction(papers, system_prompt):
-    api_key = os.getenv("DMX_API_KEY_1")
-    model_name = "gpt-4.1"
-    endpoint = "https://www.dmxapi.cn/v1/responses"
-
-    sem = asyncio.Semaphore(5)
-    async with httpx.AsyncClient(timeout=300.0) as client:
-        async def _bounded(p):
-            async with sem:
-                return await extract_single_paper(client, endpoint, api_key, model_name, p, system_prompt)
-
-        tasks = [_bounded(p) for p in papers]
-        return await asyncio.gather(*tasks)
+def _normalize_value(value: Any) -> str:
+    if value is None:
+        return "Not Reported"
+    if isinstance(value, str):
+        stripped = value.strip()
+        return stripped if stripped else "Not Reported"
+    if isinstance(value, (int, float, bool)):
+        return str(value)
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
 
 
-# ===========================================================================
-# 将结果写回 Excel
-# ===========================================================================
-
-# Excel 列号 (1-based) 到字段的映射
-# A=1 ... AL=38
-_COL_MAP: dict[int, str] = {
-    # --- 研究级（从 DB 预填） ---
-    1:  "_Rayyan_ID",
-    2:  "_Title",
-    3:  "_Abstract",
-    4:  "_Year",
-    # --- 研究级（LLM 提取） ---
-    5:  "Study_ID",
-    6:  "_Full_Text",          # 固定值 "Yes"
-    7:  "Trial_Number",
-    8:  "Study_Name",
-    9:  "Country",
-    10: "Number_of_centers",
-    11: "Study_Inclusion",
-    12: "Exclusion_Criteria",
-    13: "Diagnosis",
-    14: "Sample_Size",
-    15: "Age",
-    16: "Gender",
-    17: "Follow_up",
-    18: "Arm_1_Specific_Regimens",
-    19: "Arm1_Drugs",
-    20: "Arm2_Specific_Regimens",
-    21: "Arm2_Drugs",
-    # --- 结局级（LLM 提取） ---
-    22: "Outcome_Reported",
-    23: "Name_of_Outcome",
-    24: "Definition",
-    25: "Measurement_Time",
-    26: "Arm1_Mean",
-    27: "Arm1_SD",
-    28: "Arm1_Total_Continuous",
-    29: "Arm2_Mean",
-    30: "Arm2_SD",
-    31: "Arm2_Total_Continuous",
-    32: "Arm1_Events",
-    33: "Arm1_Total_Dichotomous",
-    34: "Arm2_Events",
-    35: "Arm2_Total_Dichotomous",
-    36: "Note",
-    # --- 元数据 ---
-    37: "_Extractor",           # 固定值 "AI"
-    38: "_Checker",             # 留空
-}
-
-
-def _build_row(paper: dict, study_info: dict | None, outcome: dict | None) -> dict[int, str]:
-    """构建一行 Excel 数据，key 为列号 (1-based)"""
-    row: dict[int, str] = {}
-
-    # 预填字段（来自数据库 / 固定值）
-    row[1] = str(paper.get("id", ""))
-    row[2] = paper.get("title", "")
-    row[3] = paper.get("abstract", "")
-    row[4] = str(paper.get("year", ""))
-    row[6] = "Yes"
-    row[37] = "AI"
-    row[38] = ""
-
-    # 研究级字段
-    if study_info:
-        for col_num, field_name in _COL_MAP.items():
-            if field_name.startswith("_"):
-                continue
-            if field_name in STUDY_FIELDS and field_name in study_info:
-                row[col_num] = study_info[field_name]
-
-    # 结局级字段
-    if outcome:
-        for col_num, field_name in _COL_MAP.items():
-            if field_name in OUTCOME_FIELDS and field_name in outcome:
-                row[col_num] = outcome[field_name]
-
-    return row
-
-
-def write_results_to_excel(
-    template_path: Path | str,
-    output_path: Path | str,
-    papers: list[dict],
-    extraction_results: list[dict],
-):
-    """将提取结果写入 Excel，每个 outcome 一行"""
-    wb = openpyxl.load_workbook(template_path)
-    ws = wb["baseline characteristics"]
-
-    current_row = 2  # 第 1 行是表头
-
-    for paper, result in zip(papers, extraction_results):
-        study_info = result.get("study_info")
-        outcomes = result.get("outcomes", [])
-
-        if result.get("error") and not study_info:
-            # 提取失败，仍写一行标记错误
-            row_data = _build_row(paper, None, None)
-            row_data[36] = f"EXTRACTION ERROR: {result['error']}"  # Note 列
-            for col_num, value in row_data.items():
-                ws.cell(row=current_row, column=col_num, value=value)
-            current_row += 1
+def _split_nested_row(
+    row: dict[str, Any], columns: list[str]
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Split a nested {col: {value, evidence}} row into (values_dict, evidences_dict)."""
+    values: dict[str, str] = {}
+    evidences: dict[str, str] = {}
+    for col in columns:
+        cell = row.get(col, "Not Reported")
+        if isinstance(cell, dict):
+            values[col] = _normalize_value(cell.get("value", "Not Reported"))
+            ev = cell.get("evidence", "")
+            if isinstance(ev, str) and ev.strip():
+                evidences[col] = ev.strip()
             continue
 
-        if not outcomes:
-            # 没有提取到 outcome，写一行只含研究级信息
-            row_data = _build_row(paper, study_info, None)
-            for col_num, value in row_data.items():
-                ws.cell(row=current_row, column=col_num, value=value)
-            current_row += 1
-        else:
-            # 每个 outcome 一行，研究级字段重复
-            for outcome in outcomes:
-                row_data = _build_row(paper, study_info, outcome)
-                for col_num, value in row_data.items():
-                    ws.cell(row=current_row, column=col_num, value=value)
-                current_row += 1
-
-    wb.save(output_path)
-    wb.close()
-    print(f"[DataExtraction] Results saved to {output_path} ({current_row - 2} rows)")
+        # LLM fallback: flat key-value output with no nested evidence object.
+        values[col] = _normalize_value(cell)
+    return values, evidences
 
 
-# ===========================================================================
-# 对外接口 — 同步包装
-# ===========================================================================
+def _parse_extraction_json(
+    text: str, columns: list[str]
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    if not text or not text.strip():
+        raise ValueError("empty model output")
 
-def run_data_extraction_sync(
-    papers: list[dict],
-    template_path: str | Path | None = None,
-    output_path: str | Path | None = None,
-) -> dict:
+    start_match = re.search(r"[\[{]", text)
+    if not start_match:
+        raise ValueError("no JSON start token found")
+    start = start_match.start()
+
+    end_arr = text.rfind("]")
+    end_obj = text.rfind("}")
+    end = max(end_arr, end_obj)
+    if end < start:
+        raise ValueError("no JSON end token found")
+
+    candidate = text[start : end + 1]
+    # strict=False allows control characters (e.g. literal newlines) inside JSON strings,
+    # which LLMs frequently produce in long evidence quotes.
+    parsed = json.loads(candidate, strict=False)
+
+    if isinstance(parsed, dict):
+        rows: list[Any] = [parsed]
+    elif isinstance(parsed, list):
+        rows = parsed
+    else:
+        raise ValueError("JSON root must be object or array")
+
+    value_rows: list[dict[str, str]] = []
+    evidence_rows: list[dict[str, str]] = []
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        values, evidences = _split_nested_row(item, columns)
+        value_rows.append(values)
+        evidence_rows.append(evidences)
+
+    if not value_rows:
+        raise ValueError("no valid row objects in JSON")
+    return value_rows, evidence_rows
+
+
+def _build_highlight_evidences(evidence_rows: list[dict[str, str]]) -> dict[str, str]:
     """
-    主入口，供 Flask 或脚本调用。
-
-    papers: [{'id', 'title', 'pdf_path', 'abstract'(可选), 'year'(可选), ...}]
-    template_path: Excel 模板路径，默认 resources/Templete for data extraction.xlsx
-    output_path:   输出 Excel 路径，默认 outputs/data_extraction_result.xlsx
-
-    返回: {'output_path': str, 'total_rows': int, 'results': [...]}
+    Merge evidence dicts from all outcome rows into a single dict for highlighting.
+    Uses a single generic key prefix so all highlights share one color.
+    Deduplicates repeated evidence across rows.
     """
-    if template_path is None:
-        template_path = TEMPLATE_PATH
-    template_path = Path(template_path)
+    result: dict[str, str] = {}
+    seen_texts: set[str] = set()
+    count = 0
 
-    if output_path is None:
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = OUTPUT_DIR / "data_extraction_result.xlsx"
-    output_path = Path(output_path)
+    for ev_dict in evidence_rows:
+        for field, text in ev_dict.items():
+            if not text.strip():
+                continue
+            norm = " ".join(text.lower().split())
+            if norm in seen_texts:
+                continue
+            seen_texts.add(norm)
+            count += 1
+            result[f"Evidence_{count}"] = text
+    return result
 
-    # 1. 读取模板
-    _headers, interventions = load_template_info(template_path)
-    system_prompt = build_system_prompt(interventions)
 
-    # 2. 异步提取
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+def _blank_llm_values(columns: list[str]) -> dict[str, str]:
+    return {col: "" for col in columns}
+
+
+async def _csv_writer(
+    queue: "asyncio.Queue[dict[str, Any] | None]",
+    output_csv: Path,
+    columns: list[str],
+) -> None:
+    fieldnames = ["ID", "Title", "RelativePath"] + columns + ["Error"]
+    with open(output_csv, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore", restval="")
+        writer.writeheader()
+        f.flush()
+
+        while True:
+            item = await queue.get()
+            try:
+                if item is None:
+                    return
+                writer.writerow(item)
+                f.flush()
+            finally:
+                queue.task_done()
+
+
+def _csv_to_excel(csv_path: Path, xlsx_path: Path, template_path: Path) -> None:
+    template_columns, _ = _read_template_columns(template_path)
+    metadata_fields = {"Rayyan_ID", "Title", "Abstract", "Full_Text", "Extractor", "Checker"}
+    preferred = ["ID", "Title", "RelativePath"] + [c for c in template_columns if c not in metadata_fields] + ["Error"]
+
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        csv_headers = list(reader.fieldnames or [])
+        ordered_headers = [h for h in preferred if h in csv_headers]
+        ordered_headers.extend([h for h in csv_headers if h not in ordered_headers])
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "baseline characteristics"
+        ws.append(ordered_headers)
+        for row in reader:
+            ws.append([row.get(col, "") for col in ordered_headers])
+
+    xlsx_path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(xlsx_path)
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(description="Extract structured data from PDFs via DMX Responses API")
+    parser.add_argument(
+        "--template",
+        type=Path,
+        default=PROJECT_DIR / "resources" / "Templete for data extraction.xlsx",
+    )
+    parser.add_argument(
+        "--resources-dir",
+        type=Path,
+        default=PROJECT_DIR / "resources" / "included_papers",
+    )
+    parser.add_argument(
+        "--output-csv",
+        type=Path,
+        default=PROJECT_DIR / "outputs" / "extracted_data.csv",
+    )
+    parser.add_argument(
+        "--output-xlsx",
+        type=Path,
+        default=PROJECT_DIR / "outputs" / "Extracted_Data.xlsx",
+    )
+    parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1")
+    parser.add_argument("--model", type=str, default="gpt-5-mini")
+    parser.add_argument("--api-key-env", type=str, default="DMX_API_KEY_1")
+    parser.add_argument("--pdf-pages", type=str, default="all", help="e.g. all or 1-3,5 (requires pymupdf)")
+    parser.add_argument("--timeout", type=float, default=300.0)
+    parser.add_argument("--retries", type=int, default=3)
+    parser.add_argument("--retry-delay", type=float, default=3.0)
+    parser.add_argument("--max-concurrency", type=int, default=10)
+    parser.add_argument("--no-highlight", action="store_true", help="Skip PDF highlighting")
+    args = parser.parse_args()
+
+    load_dotenv(SCRIPT_DIR / ".env", override=True)
+    api_key = os.getenv(args.api_key_env)
+    if not api_key:
+        raise RuntimeError(f"Missing env var in Screening/.env: {args.api_key_env}")
+
+    template_path = args.template.resolve()
+    if not template_path.exists():
+        raise FileNotFoundError(f"template not found: {template_path}")
+    _, llm_columns = _read_template_columns(template_path)
+
+    endpoint = args.base_url.rstrip("/") + "/responses"
+    resources_dir = args.resources_dir.resolve()
+    if not resources_dir.exists():
+        raise FileNotFoundError(f"resources-dir not found: {resources_dir}")
+
+    papers = _discover_pdfs(resources_dir)
+    if not papers:
+        print(f"No PDF files found under: {resources_dir}")
+
+    args.output_csv.parent.mkdir(parents=True, exist_ok=True)
+    pages = _parse_pages_spec(str(args.pdf_pages))
+    sem = asyncio.Semaphore(max(1, int(args.max_concurrency)))
+
+    queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
+    async with httpx.AsyncClient() as client:
+        writer_task = asyncio.create_task(_csv_writer(queue, args.output_csv, llm_columns))
+
+        async def handle(paper: Paper) -> None:
+            base_row = {
+                "ID": paper.paper_id,
+                "Title": paper.title,
+                "RelativePath": _safe_relative(paper.path, PROJECT_DIR),
+            }
+            async with sem:
+                try:
+                    prompt = SYSTEM_PROMPT + "\n\n" + USER_PROMPT_TEMPLATE.replace("{paper_id}", str(paper.paper_id))
+                    pdf_bytes = _load_pdf_bytes(paper.path, pages)
+                    b64 = base64.b64encode(pdf_bytes).decode("ascii")
+                    payload = {
+                        "model": args.model,
+                        "input": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "input_file",
+                                        "filename": paper.path.name,
+                                        "file_data": f"data:application/pdf;base64,{b64}",
+                                    },
+                                    {"type": "input_text", "text": prompt},
+                                ],
+                            }
+                        ],
+                    }
+
+                    resp = await _call_with_retry(
+                        _post_with_auth_fallback,
+                        client,
+                        endpoint,
+                        api_key,
+                        payload,
+                        float(args.timeout),
+                        retries=int(args.retries),
+                        delay_s=float(args.retry_delay),
+                    )
+
+                    if resp.status_code != 200:
+                        print(f"[Paper {paper.paper_id}] HTTP {resp.status_code}: {resp.text[:200]}")
+                        await queue.put(
+                            {
+                                **base_row,
+                                **_blank_llm_values(llm_columns),
+                                "Error": f"HTTP {resp.status_code}",
+                            }
+                        )
+                        return
+
+                    data = resp.json()
+                    text = _extract_output_text(data)
+                    try:
+                        value_rows, evidence_rows = _parse_extraction_json(text, llm_columns)
+                    except (json.JSONDecodeError, ValueError) as exc:
+                        print(f"[Paper {paper.paper_id}] JSON Parse Error: {exc!r}")
+                        if text:
+                            print(f"[Paper {paper.paper_id}] Raw output snippet: {text[:500]}")
+                        await queue.put(
+                            {
+                                **base_row,
+                                **_blank_llm_values(llm_columns),
+                                "Error": "JSON Parse Error",
+                            }
+                        )
+                        return
+
+                    if not args.no_highlight:
+                        merged_evidences = _build_highlight_evidences(evidence_rows)
+                        ev_count = sum(len(d) for d in evidence_rows)
+                        print(f"[Paper {paper.paper_id}] Evidences extracted: {ev_count}, unique for highlight: {len(merged_evidences)}")
+                        if merged_evidences:
+                            try:
+                                hl_dir = PROJECT_DIR / "outputs" / "highlighted_pdfs"
+                                hl_dir.mkdir(parents=True, exist_ok=True)
+                                out_pdf = hl_dir / f"HL_{paper.path.name}"
+                                loop = asyncio.get_running_loop()
+                                await loop.run_in_executor(
+                                    None, highlight_pdf, paper.path, out_pdf, merged_evidences
+                                )
+                                print(f"[Paper {paper.paper_id}] Highlighted: {out_pdf}")
+                            except Exception as exc:  # noqa: BLE001
+                                print(f"[Paper {paper.paper_id}] Highlight error (non-fatal): {exc!r}")
+                        else:
+                            print(f"[Paper {paper.paper_id}] WARNING: No evidence strings found — LLM may have returned flat values instead of nested {{value, evidence}} objects")
+
+                    for row in value_rows:
+                        await queue.put({**base_row, **row, "Error": ""})
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[Paper {paper.paper_id}] Exception: {exc!r}")
+                    traceback.print_exc()
+                    await queue.put(
+                        {
+                            **base_row,
+                            **_blank_llm_values(llm_columns),
+                            "Error": repr(exc),
+                        }
+                    )
+
+        try:
+            await asyncio.gather(*(handle(paper) for paper in papers))
+        finally:
+            await queue.put(None)
+            await writer_task
+
+    _csv_to_excel(args.output_csv, args.output_xlsx, template_path)
+    print(f"Saved CSV: {args.output_csv}")
+    print(f"Saved XLSX: {args.output_xlsx}")
+
+
+if __name__ == "__main__":
+    start = time.perf_counter()
     try:
-        results = loop.run_until_complete(_run_data_extraction(papers, system_prompt))
+        asyncio.run(main())
     finally:
-        loop.close()
-
-    # 3. 写回 Excel
-    write_results_to_excel(template_path, output_path, papers, results)
-
-    total_rows = sum(max(len(r.get("outcomes", [])), 1) for r in results)
-    return {
-        "output_path": str(output_path),
-        "total_rows": total_rows,
-        "results": results,
-    }
+        print(f"Elapsed: {time.perf_counter() - start:.2f}s")

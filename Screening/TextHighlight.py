@@ -23,6 +23,61 @@ def normalize(text: str) -> str:
     return text
 
 
+def _find_best_match(
+    full_text: str, norm_evidence: str, threshold: int
+) -> tuple[int, tuple[int, int] | None]:
+    """Find best fuzzy match position using fast methods first, fuzzy as fallback.
+
+    Returns (score, (start, end)) or (score, None) if no match above threshold.
+    """
+    ev_len = len(norm_evidence)
+    if ev_len == 0:
+        return 0, None
+
+    # Phase 1: exact substring match — O(N), instant
+    idx = full_text.find(norm_evidence)
+    if idx >= 0:
+        return 100, (idx, idx + ev_len)
+
+    text_len = len(full_text)
+    if ev_len > text_len:
+        return 0, None
+
+    # Phase 2: coarse scan — check every step positions to find approximate location
+    step = max(1, ev_len // 4)
+    best_score = 0
+    best_pos = 0
+    search_range = text_len - ev_len + 1
+
+    for i in range(0, search_range, step):
+        window = full_text[i : i + ev_len]
+        score = fuzz.ratio(window, norm_evidence)
+        if score > best_score:
+            best_score = score
+            best_pos = i
+        if best_score == 100:
+            return 100, (best_pos, best_pos + ev_len)
+
+    if best_score < threshold:
+        return best_score, None
+
+    # Phase 3: fine-grained search around best coarse position
+    fine_start = max(0, best_pos - step)
+    fine_end = min(search_range, best_pos + step + 1)
+    for i in range(fine_start, fine_end):
+        window = full_text[i : i + ev_len]
+        score = fuzz.ratio(window, norm_evidence)
+        if score > best_score:
+            best_score = score
+            best_pos = i
+        if best_score == 100:
+            break
+
+    if best_score >= threshold:
+        return best_score, (best_pos, best_pos + ev_len)
+    return best_score, None
+
+
 def highlight_pdf(
     input_pdf: Path,
     output_pdf: Path,
@@ -60,7 +115,7 @@ def highlight_pdf(
                         full_text += norm_c
                         char_boxes.append(char["bbox"])
 
-        # 遍历五项证据
+        # 遍历证据
         for component, evidence in evidences.items():
 
             if not evidence.strip():
@@ -68,24 +123,10 @@ def highlight_pdf(
 
             norm_evidence = normalize(evidence)
 
-            best_score = 0
-            best_range = None
-
-            for i in range(len(full_text) - len(norm_evidence) + 1):
-                window = full_text[i:i + len(norm_evidence)]
-                score = fuzz.ratio(window, norm_evidence)
-
-                if score > best_score:
-                    best_score = score
-                    best_range = (i, i + len(norm_evidence))
-
-                if best_score == 100:
-                    break
+            best_score, best_range = _find_best_match(full_text, norm_evidence, threshold)
 
             if best_score >= threshold and best_range:
                 start, end = best_range
-
-                highlight_rects = []
 
                 # 先收集字符 rect
                 line_rects = []
@@ -117,7 +158,7 @@ def highlight_pdf(
 
                     annot = page.add_highlight_annot(merged)
 
-                    color = COLORS.get(component, (1, 0, 0))
+                    color = next((v for k, v in COLORS.items() if component.startswith(k)), (1, 0, 0))
                     annot.set_colors(stroke=color)
                     annot.set_opacity(0.3)
                     annot.update()
