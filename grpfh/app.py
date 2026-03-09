@@ -780,7 +780,7 @@ def fetch_pdfs_api():
             # 调用你们的强力下载器
             ok = downloader.download_paper(doi, output_dir=output_dir)
             if ok:
-                filepath = os.path.join(output_dir, doi.replace("/", "_") + ".pdf")
+                filepath = os.path.join(output_dir, "pdf", doi.replace("/", "_") + ".pdf")
                 cursor.execute("UPDATE literatures SET pdf_status = 'Downloaded', pdf_path = ? WHERE id = ?", (filepath, paper['id']))
                 success_count += 1
             else:
