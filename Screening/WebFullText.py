@@ -34,16 +34,16 @@ Component Evaluation Rules:
 1. Population (P): Matched ONLY if explicit textual evidence supports the target population.
 2. Intervention (I): Matched ONLY if the specific intervention therapy is explicitly described.
 3. Comparison (C): Matched ONLY if a comparator group is explicitly described.
-4. Outcome (O): Matched ONLY if at least one required outcome is explicitly reported.
+4. Study Design (S): Matched ONLY if the study design (e.g., randomized controlled trial, cohort study, case-control study) is explicitly described.
 5. Extra Requirements: Matched ONLY if the study design explicitly satisfies the requirements.
 
 Final Inclusion Rule:
-- Count the matched components among P, I, C, O, and Extra.
+- Count the matched components among P, I, C, S, and Extra.
 - If ≥4 components are Matched → Flag = 1.
 - If <4 components are Matched → Flag = 0.
 
 CRITICAL Evidence Extraction Rule (STRICT):
-For EVERY component (P, I, C, O, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
+For EVERY component (P, I, C, S, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
 - If Matched = Yes: Extract exact original text that directly supports why it satisfies the requirement.
 - If Matched = No: Extract exact contradictory text, OR text showing a different parameter.
 - If completely not mentioned: Evidence MUST be an empty string ("").
@@ -54,7 +54,7 @@ Global Summary Requirement:
 Regardless of Flag = 0 or 1, you MUST provide a short overall summary in the Conclusion section explaining why the paper is included or excluded based strictly on the matched component count.
 
 STRICT OUTPUT TEMPLATE:
-ID: <Paper ID>
+DOI : the doi of this paper
 Flag: <0 or 1>
 
 Reason:
@@ -71,7 +71,7 @@ Comparison:
 Matched: <Yes/No>
 Evidence: "<exact copied text or empty string>"
 
-Outcome:
+Study Design:
 Matched: <Yes/No>
 Evidence: "<exact copied text or empty string>"
 
@@ -208,7 +208,7 @@ Input Data:
 
 async def _run_web_fulltext(papers, pico_dict):
     api_key = os.getenv("DMX_API_KEY_1")
-    model_name = "gpt-4.1-mini" 
+    model_name = "gpt-4.1"
     endpoint = "https://www.dmxapi.cn/v1/responses"
 
     sem = asyncio.Semaphore(5) # 并发量控制
