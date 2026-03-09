@@ -827,7 +827,7 @@ def upload_pdf():
     else:
         filename = doi.replace("/", "_") + ".pdf"
 
-    save_dir = os.path.join(parent_dir, "resources")
+    save_dir = os.path.join(parent_dir, "resources", "pdf")
     os.makedirs(save_dir, exist_ok=True)
 
     filepath = os.path.join(save_dir, filename)
