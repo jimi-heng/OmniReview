@@ -26,36 +26,74 @@ function updateProgressStep(activeStepId) {
 
 // 2. 通用页面切换函数（所有按钮跳转核心）
 // 2. 通用页面切换函数（所有按钮跳转核心）
+// 2. 通用页面切换函数（所有按钮跳转核心）
 function showPage(pageId) {
-    // 【核心修改】：加入了 'full-text-screen-page'
+    // ========== 新增：导航路由守卫 (Navigation Guards) ==========
+    
+    // 规则 1: 用户未登录时，绝对不能跳转到除登录/注册外的任何页面
+    if (!currentUser && pageId !== 'login-page' && pageId !== 'register-page') {
+        alert('Access denied. Please log in first.');
+        return; // 拦截执行，拒绝跳转
+    }
+    
+    // 规则 2: 用户已登录时，不能通过点击导航栏强行回到登录页 
+    // (注：如果是点击 Logout 按钮，currentUser 会先被设为 null，所以不受此规则限制)
+    if (currentUser && (pageId === 'login-page' || pageId === 'register-page')) {
+        return; // 静默拦截
+    }
+    
+    // 规则 3: 用户如果在 Project Home 界面（未进入具体项目），不能点击导航栏直接往后跳
+    const projectPages = ['pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
+    if (currentUser && !currentProject && projectPages.includes(pageId)) {
+        alert('Please select "Continue" or "Create New Project" from the Home dashboard first.');
+        return; // 拦截执行，拒绝跳转
+    }
+    // =========================================================
+
+    // 隐藏所有页面
     const allPages = ['login-page', 'register-page', 'home-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
     allPages.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.style.display = 'none';
     });
     
+    // 显示目标页面
     const targetEl = document.getElementById(pageId);
     if(targetEl) targetEl.style.display = 'block';
     
+    // 根据页面执行对应的初始化和导航高亮
     switch (pageId) {
         case 'login-page':
-        case 'register-page': updateProgressStep('step-login'); break;
+        case 'register-page': 
+            updateProgressStep('step-login'); 
+            break;
         case 'home-page':
             updateProgressStep('step-home');
-            if (currentUser) loadUserProjects();
+            // 【神来之笔】：如果用户主动点击导航栏回到 Home 页，立刻清空当前项目状态
+            // 这样既防止了数据串号，也完美配合了上面的“规则3”
+            currentProject = null;
+            sessionStorage.removeItem('currentProject');
+            if (currentUser) {
+                loadUserProjects();
+            }
             break;
-        case 'pico-page': updateProgressStep('step-pico'); break;
+        case 'pico-page': 
+            updateProgressStep('step-pico'); 
+            break;
         case 'import-search-page':
             updateProgressStep('step-import');
             setTimeout(loadLiteratureList, 100);
             break;
-        case 'abstract-screen-page': updateProgressStep('step-abstract'); break;
-        // 【新增】：当跳转到 Full-Text 时更新导航栏
+        case 'abstract-screen-page': 
+            updateProgressStep('step-abstract'); 
+            break;
         case 'full-text-screen-page': 
             updateProgressStep('step-fulltext'); 
-            setTimeout(loadFullTextScreening, 100); // 留好坑位，后续接入后端用
+            setTimeout(loadFullTextScreening, 100);
             break;
-        case 'data-extraction-page': updateProgressStep('step-data'); break;
+        case 'data-extraction-page': 
+            updateProgressStep('step-data'); 
+            break;
     }
 }
 
@@ -250,51 +288,15 @@ function switchDataTab(type) {
     }
 }
 
-// 6. 核心功能：AI推理查看/编辑（实现Figure13的edit reasoning需求）
-const reasonModal = document.getElementById('reasonModal');
-const reasonText = document.getElementById('reasonText');
-const closeModal = document.getElementById('closeModal');
-const cancelEdit = document.getElementById('cancelEdit');
-const saveReason = document.getElementById('saveReason');
-
-// 点击View/Edit按钮打开弹窗，加载当前行的推理内容
-document.querySelectorAll('.edit-reason-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        currentEditRow = this.closest('tr'); // 获取当前点击的行
-        const originalReason = currentEditRow.getAttribute('data-reason'); // 获取原始推理内容
-        reasonText.value = originalReason; // 加载到编辑框
-        reasonModal.style.display = 'flex'; // 打开弹窗
-    });
-});
-
-// 关闭弹窗（取消/叉号）
+// 6. 核心功能：AI推理查看/编辑弹窗控制（仅保留关闭逻辑，保存和打开逻辑已移至底部）
 function closeReasonModal() {
-    reasonModal.style.display = 'none';
-    currentEditRow = null; // 清空当前编辑行
+    document.getElementById('reasonModal').style.display = 'none';
+    currentEditRow = null; 
 }
-closeModal.addEventListener('click', closeReasonModal);
-cancelEdit.addEventListener('click', closeReasonModal);
-
-// 保存编辑后的推理内容
-saveReason.addEventListener('click', function() {
-    if (!currentEditRow) return;
-    const newReason = reasonText.value.trim();
-    if (newReason) {
-        // 更新行的data-reason属性和表格显示内容
-        currentEditRow.setAttribute('data-reason', newReason);
-        // 表格内显示截取的短内容（完整内容在弹窗）
-        const shortReason = newReason.length > 80 ? newReason.substring(0, 80) + '...' : newReason;
-        currentEditRow.cells[3].textContent = shortReason;
-        closeReasonModal(); // 保存后关闭弹窗
-        alert('Reasoning updated successfully!'); // 提示保存成功
-    } else {
-        alert('Reasoning content cannot be empty!');
-    }
-});
-
-// 点击遮罩层关闭弹窗（优化体验）
-reasonModal.addEventListener('click', function(e) {
-    if (e.target === reasonModal) closeReasonModal();
+document.getElementById('closeModal').addEventListener('click', closeReasonModal);
+document.getElementById('cancelEdit').addEventListener('click', closeReasonModal);
+document.getElementById('reasonModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReasonModal();
 });
 
 
@@ -504,13 +506,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.showPage = function(pageId) {
     originalShowPage(pageId);
     
-    // 进入文献导入页时加载列表
     if (pageId === 'import-search-page') {
       setTimeout(loadLiteratureList, 100); 
-    }
-    // 进入摘要筛选页面时加载筛查列表
-    else if (pageId === 'abstract-screen-page') {
+    } else if (pageId === 'abstract-screen-page') {
       setTimeout(loadAbstractScreening, 100);
+    } else if (pageId === 'data-extraction-page') {
+      // 新增：进入数据提取页面时加载统计数据
+      setTimeout(window.loadDataExtraction, 100);
     }
   };
 
@@ -680,12 +682,7 @@ function renderProjects(projects) {
     if (createBtn) {
         createBtn.replaceWith(createBtn.cloneNode(true));
         const newCreateBtn = document.getElementById('create-project-btn');
-        newCreateBtn.addEventListener('click', () => {
-            const projectName = prompt('Enter project name:');
-            if (projectName && projectName.trim()) {
-                createNewProject(projectName.trim());
-            }
-        });
+        newCreateBtn.addEventListener('click', openCreateProjectModal);
     }
 }
 
@@ -977,34 +974,6 @@ function addNavigationListeners() {
             showPage('data-extraction-page');
         };
     }
-    // ========== 调试代码 ==========
-console.log('=== 调试信息开始 ===');
-console.log('1. currentUser:', currentUser);
-console.log('2. sessionStorage currentUser:', sessionStorage.getItem('currentUser'));
-console.log('3. currentProject:', currentProject);
-
-// 检查 create-project-btn 按钮
-setTimeout(() => {
-    const btn = document.getElementById('create-project-btn');
-    console.log('4. create-project-btn 元素:', btn);
-    
-    if (btn) {
-        console.log('5. 按钮文本:', btn.textContent);
-        console.log('6. 按钮事件监听器:', btn.onclick);
-        
-        // 临时添加点击测试
-        btn.addEventListener('click', function(e) {
-            console.log('7. 按钮被点击了！');
-            alert('按钮点击测试成功！');
-        });
-    } else {
-        console.log('5. 未找到 create-project-btn 按钮！');
-    }
-}, 3000);
-
-// 检查是否调用了 addNavigationListeners
-console.log('8. addNavigationListeners 函数是否存在:', typeof addNavigationListeners);
-console.log('=== 调试信息结束 ===');
 }
 
 // ========== Abstract Screening 动态渲染与保存逻辑 ==========
@@ -1035,22 +1004,36 @@ window.loadAbstractScreening = async function() {
                 let shortReason = lit.reasoning && lit.reasoning.length > 80 ? lit.reasoning.substring(0, 80) + '...' : (lit.reasoning || 'No reasoning provided yet');
                 
                 const tr = document.createElement('tr');
-                // 真实数据库 ID 保存在 DOM 属性里
-                // 【核心修改】：绑定 abstract 数据
                 tr.setAttribute('data-id', lit.id);
                 tr.setAttribute('data-reason', lit.reasoning || '');
                 tr.setAttribute('data-abstract', lit.abstract || 'No abstract available.');
                 
+                // 【新增】：根据当前状态计算苹果风按钮的初始外观
+                let currentAction = lit.user_decision || 'Keep';
+                let btnText = 'Keep AI';
+                let btnBg = '#f2f2f7';
+                let btnColor = '#1d1d1f';
+                
+                if (currentAction === 'Include') {
+                    btnText = 'Included';
+                    btnBg = '#34c759';
+                    btnColor = '#ffffff';
+                } else if (currentAction === 'Exclude') {
+                    btnText = 'Excluded';
+                    btnBg = '#ff3b30';
+                    btnColor = '#ffffff';
+                }
+
                 tr.innerHTML = `
                     <td>${displayId}</td>
                     <td>${lit.title}</td>
                     <td style="color: ${aiColor}; font-weight: 600;">${lit.ai_decision}</td>
                     <td>
-                        <select class="user-decision-select" style="font-size: 12px; padding: 6px;" onchange="updateDecision(${lit.id}, this.value)">
-                            <option value="Keep" ${lit.user_decision === 'Keep' ? 'selected' : ''}>Keep AI Decision</option>
-                            <option value="Include" ${lit.user_decision === 'Include' ? 'selected' : ''}>Manually Include</option>
-                            <option value="Exclude" ${lit.user_decision === 'Exclude' ? 'selected' : ''}>Manually Exclude</option>
-                        </select>
+                        <button class="btn" 
+                            style="font-size: 12px; padding: 6px 14px; border-radius: 14px; font-weight: 600; border: none; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); background-color: ${btnBg}; color: ${btnColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.06);" 
+                            onclick="toggleUserDecision(this, ${lit.id}, '${currentAction}', '${lit.ai_decision}')">
+                            ${btnText}
+                        </button>
                     </td>
                     <td class="reason-display" style="cursor: pointer; color: #2c6ecb; text-decoration: underline;" onclick="openEditModal(this)" title="Click to view/edit full reasoning">${shortReason}</td>
                     <td>
@@ -1333,8 +1316,16 @@ window.loadFullTextScreening = async function() {
             tbody.innerHTML = '';
             includedPapers.forEach((lit, index) => {
                 let statusColor = '#6c757d'; 
-                if (lit.pdf_status === 'Downloaded') statusColor = 'green';
-                if (lit.pdf_status && lit.pdf_status.includes('Failed')) statusColor = 'red';
+                let displayStatus = lit.pdf_status || 'Pending';
+                
+                if (displayStatus === 'Downloaded') {
+                    statusColor = 'green';
+                } else if (displayStatus.includes('Failed')) {
+                    statusColor = 'red';
+                    // 【神来之笔】：把 "Failed (Paywalled)" 变成两行："Failed" 加粗，原因变细变小换行显示！
+                    displayStatus = displayStatus.replace(' (', '<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8;">(') + '</span>';
+                }
+
                 
                 let evidenceText = 'Waiting for AI Analysis...';
                 if (lit.pico_evidence && lit.pico_evidence !== '{}') {
@@ -1369,7 +1360,7 @@ window.loadFullTextScreening = async function() {
                 mainTr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${lit.title}</td>
-                    <td style="color: ${statusColor}; font-weight: bold; font-size: 13px;">${lit.pdf_status || 'Pending'}</td>
+                    <td style="color: ${statusColor}; font-weight: bold; font-size: 13px; line-height: 1.4;">${displayStatus}</td>
                     <td style="color: ${decisionColor}; font-weight: bold;">${lit.full_text_decision || 'Pending'}</td>
                     <td style="font-size: 13px; color: #555;">${evidenceText}</td>
                     <td style="vertical-align: top; ">
@@ -1384,7 +1375,7 @@ window.loadFullTextScreening = async function() {
                             Upload PDF
                         </button>
                     </td>
-                    <td id="action-cell-${lit.id}" style="vertical-align: top; background-color: #fff; border-left: 1px solid #eee;">${pdfBtn}</td>
+                    <td id="action-cell-${lit.id}" style="vertical-align: top;">${pdfBtn}</td>
                 `;
                 tbody.appendChild(mainTr);
 
@@ -1539,4 +1530,215 @@ if(document.getElementById('closeAbstractModal')) {
 // 点击遮罩层关闭摘要弹窗
 abstractModal.addEventListener('click', function(e) {
     if (e.target === abstractModal) closeAbstractModalFunc();
+});
+
+// ==========================================
+// Data Extraction 专属逻辑
+// ==========================================
+
+// 1. 进入页面时，自动加载要提取的文献数量
+window.loadDataExtraction = async function() {
+    if (!currentProject || !currentProject.id) return;
+    
+    try {
+        const response = await fetch('http://localhost:3000/api/get-literatures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: currentProject.id })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // 核心：统计最终在全文阶段被判定为 Included 的文献数量
+            const finalPapers = result.data.filter(lit => lit.full_text_decision === 'Included');
+            document.getElementById('extract-paper-count').textContent = finalPapers.length;
+            
+            const btn = document.getElementById('run-extraction-btn');
+            if (finalPapers.length === 0) {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#6c757d';
+                btn.innerHTML = 'No Papers Ready';
+            } else {
+                btn.disabled = false;
+                btn.style.backgroundColor = '#0071e3';
+                btn.innerHTML = '✨ Start AI Data Extraction';
+            }
+            
+            // 重置状态UI
+            document.getElementById('download-center').style.display = 'none';
+            document.getElementById('extraction-status-icon').textContent = '📑';
+            document.getElementById('extraction-status-icon').style.animation = 'none';
+            document.getElementById('extraction-status-title').textContent = 'Ready to Extract';
+        }
+    } catch (e) {
+        console.error("Failed to load extraction stats:", e);
+    }
+};
+
+// 2. 点击开始提取按钮的事件与后端交互
+document.addEventListener('DOMContentLoaded', () => {
+    const runExtBtn = document.getElementById('run-extraction-btn');
+    if (runExtBtn) {
+        runExtBtn.addEventListener('click', async () => {
+            if (!currentProject || !currentProject.id) return;
+            
+            // UI变为处理中：齿轮旋转
+            const icon = document.getElementById('extraction-status-icon');
+            icon.textContent = '⚙️';
+            icon.style.animation = 'spin 2s linear infinite';
+            
+            document.getElementById('extraction-status-title').textContent = 'AI is Extracting Data...';
+            document.getElementById('extraction-status-desc').textContent = 'Deep reading multiple full-text PDFs. This may take several minutes.';
+            
+            runExtBtn.disabled = true;
+            runExtBtn.innerHTML = 'Processing...';
+            runExtBtn.style.backgroundColor = '#86868b';
+            document.getElementById('download-center').style.display = 'none';
+            
+            try {
+                // 等待下一阶段我们在 app.py 中写这个接口
+                const response = await fetch('http://localhost:3000/api/run-data-extraction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: currentProject.id })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    icon.textContent = '✅';
+                    icon.style.animation = 'none';
+                    document.getElementById('extraction-status-title').textContent = 'Extraction Complete';
+                    document.getElementById('extraction-status-desc').textContent = result.message;
+                    
+                    // 显示下载区域，隐藏提取按钮
+                    document.getElementById('download-center').style.display = 'block';
+                    runExtBtn.style.display = 'none'; 
+                } else {
+                    icon.textContent = '❌';
+                    icon.style.animation = 'none';
+                    document.getElementById('extraction-status-title').textContent = 'Extraction Failed';
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network error while running data extraction.');
+                icon.textContent = '⚠️';
+                icon.style.animation = 'none';
+                document.getElementById('extraction-status-title').textContent = 'Connection Error';
+            } finally {
+                // 恢复按钮（以便失败时重试）
+                runExtBtn.disabled = false;
+                runExtBtn.innerHTML = '✨ Try Extraction Again';
+                runExtBtn.style.backgroundColor = '#0071e3';
+                if(document.getElementById('download-center').style.display !== 'block') {
+                    runExtBtn.style.display = 'inline-flex';
+                }
+            }
+        });
+    }
+
+    // 下载按钮绑定 (后续接入后端下载路由)
+    const dlXlsxBtn = document.getElementById('download-xlsx-btn');
+    if (dlXlsxBtn) {
+        dlXlsxBtn.addEventListener('click', () => {
+            window.open(`http://localhost:3000/api/download-extraction?project_id=${currentProject.id}&type=xlsx`, '_blank');
+        });
+    }
+
+    const dlCsvBtn = document.getElementById('download-csv-btn');
+    if (dlCsvBtn) {
+        dlCsvBtn.addEventListener('click', () => {
+            window.open(`http://localhost:3000/api/download-extraction?project_id=${currentProject.id}&type=csv`, '_blank');
+        });
+    }
+});
+
+// ====== 新增：处理 Abstract Screening 一键智能切换按钮逻辑 ======
+window.toggleUserDecision = async function(btn, litId, currentAction, aiDecision) {
+    let nextAction = 'Keep';
+    
+    // 智能推断下一个状态：如果是Keep，则切换为与AI相反的操作；如果是其他，则切回Keep
+    if (currentAction === 'Keep' || !currentAction) {
+        nextAction = (aiDecision === 'Included') ? 'Exclude' : 'Include';
+    } else {
+        nextAction = 'Keep';
+    }
+
+    // 提前在前端计算出 Apple 风格的外观并瞬间更新（极其丝滑）
+    let btnText = 'Keep AI';
+    let btnBg = '#f2f2f7';
+    let btnColor = '#1d1d1f';
+
+    if (nextAction === 'Include') {
+        btnText = 'Included';
+        btnBg = '#34c759';
+        btnColor = '#ffffff';
+    } else if (nextAction === 'Exclude') {
+        btnText = 'Excluded';
+        btnBg = '#ff3b30';
+        btnColor = '#ffffff';
+    }
+
+    // 更新按钮 UI 和 点击事件里的参数
+    btn.textContent = btnText;
+    btn.style.backgroundColor = btnBg;
+    btn.style.color = btnColor;
+    // 添加一点点击的微动效反馈
+    btn.style.transform = 'scale(0.92)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+    
+    btn.setAttribute('onclick', `toggleUserDecision(this, ${litId}, '${nextAction}', '${aiDecision}')`);
+
+    // 后台静默发送请求保存结果
+    try {
+        await fetch('http://localhost:3000/api/update-literature-decision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                literature_id: litId,
+                user_decision: nextAction
+            })
+        });
+    } catch (error) {
+        console.error('Failed to update decision:', error);
+        alert("Network error, decision might not be saved!");
+    }
+};
+
+// ====== 新增：Apple 风格“新建项目”弹窗交互逻辑 ======
+const createProjectModal = document.getElementById('createProjectModal');
+const newProjectNameInput = document.getElementById('newProjectNameInput');
+
+window.openCreateProjectModal = function() {
+    newProjectNameInput.value = ''; // 每次打开清空上一次的输入
+    createProjectModal.style.display = 'flex';
+    newProjectNameInput.focus(); // 自动聚焦输入框，方便用户直接打字
+};
+
+function closeCreateProjectModal() {
+    createProjectModal.style.display = 'none';
+}
+
+document.getElementById('cancelCreateProjectBtn')?.addEventListener('click', closeCreateProjectModal);
+
+document.getElementById('confirmCreateProjectBtn')?.addEventListener('click', () => {
+    const projectName = newProjectNameInput.value.trim();
+    if (projectName) {
+        createNewProject(projectName);
+        closeCreateProjectModal();
+    } else {
+        alert('Project name cannot be empty!');
+    }
+});
+
+// 贴心小细节：允许用户打完字后直接按回车键 (Enter) 确认创建
+newProjectNameInput?.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        document.getElementById('confirmCreateProjectBtn').click();
+    }
+});
+
+// 点击弹窗外的暗色遮罩层也可以关闭弹窗
+createProjectModal?.addEventListener('click', function(e) {
+    if (e.target === createProjectModal) closeCreateProjectModal();
 });

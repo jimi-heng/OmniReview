@@ -12,6 +12,8 @@ import asyncio
 import csv
 from io import StringIO
 from flask import make_response
+import shutil      # 【新增】用于复制需要提取的 PDF 文件
+import subprocess  # 【新增】用于独立安全地运行数据提取脚本
 
 # === 路径注入核心代码 开始 ===
 # 1. 获取上一级根目录 (GRP-MULTIAGENT)
@@ -471,6 +473,8 @@ def get_project_data():
     try:
         conn = get_db()
         cursor = conn.cursor()
+        cursor.execute('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?', (project_id,))
+        conn.commit()
         
         if data_type:
             cursor.execute('''
@@ -706,6 +710,19 @@ def export_csv():
         
         # 写入数据
         for row in rows:
+            # 判断用户的最终真实决定
+            user_dec = row['user_decision']
+            ai_dec = row['ai_decision']
+            
+            if user_dec == 'Keep' or not user_dec:
+                final_decision = ai_dec
+            elif user_dec == 'Include':
+                final_decision = 'Included'
+            elif user_dec == 'Exclude':
+                final_decision = 'Excluded'
+            else:
+                final_decision = user_dec
+
             cw.writerow([
                 row['id'], 
                 row['title'], 
@@ -713,7 +730,7 @@ def export_csv():
                 row['journal'], 
                 row['year'], 
                 row['ai_decision'], 
-                row['user_decision'], 
+                final_decision,  # <--- 输出覆盖后的真实决定
                 row['reasoning']
             ])
 
@@ -918,7 +935,119 @@ def view_pdf():
         return send_file(pdf_path, mimetype='application/pdf')
     return "PDF not found on server", 404
 
+# ==========================================
+# 触发 AI 数据提取接口 (对接 DataExtraction.py)
+# ==========================================
+@app.route('/api/run-data-extraction', methods=['POST', 'OPTIONS'])
+def run_data_extraction():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+        
+    data = request.json
+    project_id = data.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+        
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 1. 找出当前项目下所有被判定为 Included 的文献
+        cursor.execute('''
+            SELECT id, title, pdf_path 
+            FROM literatures 
+            WHERE project_id = ? AND full_text_decision = 'Included'
+        ''', (project_id,))
+        papers = cursor.fetchall()
+        conn.close()
+        
+        if not papers:
+            return jsonify({'success': False, 'message': 'No included papers found for extraction.'})
+            
+        # 2. 为当前项目创建一个专属的临时 PDF 文件夹，防止与其他项目混淆
+        extract_dir = os.path.join(parent_dir, 'resources', f'proj_{project_id}_extract')
+        os.makedirs(extract_dir, exist_ok=True)
+        
+        # 清空该文件夹里的历史残留文件
+        for f in os.listdir(extract_dir):
+            os.remove(os.path.join(extract_dir, f))
+            
+        # 3. 将 Included 的 PDF 复制到这个专属提取目录中
+        valid_count = 0
+        for p in papers:
+            src_path = p['pdf_path']
+            if src_path and os.path.exists(src_path):
+                file_name = os.path.basename(src_path)
+                dst_path = os.path.join(extract_dir, file_name)
+                shutil.copy2(src_path, dst_path)
+                valid_count += 1
+                
+        if valid_count == 0:
+            return jsonify({'success': False, 'message': 'Found included papers, but their PDF files are physically missing.'})
+            
+        # 4. 设置输出的 CSV 和 Excel 路径
+        out_dir = os.path.join(parent_dir, 'outputs')
+        os.makedirs(out_dir, exist_ok=True)
+        out_csv = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
+        out_xlsx = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
+        
+        # 5. 使用 subprocess 调用 DataExtraction.py，完美避开 async 事件循环冲突
+        script_path = os.path.join(parent_dir, 'Screening', 'DataExtraction.py')
+        cmd = [
+            sys.executable, script_path,
+            '--resources-dir', extract_dir,
+            '--output-csv', out_csv,
+            '--output-xlsx', out_xlsx
+        ]
+        
+        print(f"\n🚀 [Project {project_id}] Starting AI Data Extraction for {valid_count} papers... (Please wait, about 30s per paper)")
+        
+        # 【核心修改】：去掉 capture_output=True，让进度直接在终端中实时打印！
+        process = subprocess.run(cmd)
+        
+        if process.returncode != 0:
+            return jsonify({'success': False, 'message': 'Extraction script failed. Please check backend terminal for details.'})
+            
+        return jsonify({'success': True, 'message': f'Successfully extracted nested data from {valid_count} papers!'})
+    
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
+
+# ==========================================
+# 提取结果下载接口 (分发 Excel 和 CSV)
+# ==========================================
+@app.route('/api/download-extraction', methods=['GET'])
+def download_extraction():
+    project_id = request.args.get('project_id')
+    file_type = request.args.get('type', 'xlsx')
+    
+    if not project_id:
+        return "Project ID missing", 400
+        
+    out_dir = os.path.join(parent_dir, 'outputs')
+    
+    # 动态匹配请求的文件类型
+    if file_type == 'csv':
+        file_path = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
+        mimetype = 'text/csv'
+    else:
+        file_path = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
+        # Excel 的标准 MIME 类型
+        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True, mimetype=mimetype)
+    else:
+        return "File not found. Please run extraction first.", 404
+    
+
+    
 if __name__ == '__main__':
     print('=' * 50)
     print('Python后端服务器启动在 http://localhost:3000')
