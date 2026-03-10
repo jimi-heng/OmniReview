@@ -57,9 +57,15 @@ function showPage(pageId) {
         if(el) el.style.display = 'none';
     });
     
-    // 显示目标页面
+    // 显示目标页面 (智能识别弹性布局)
     const targetEl = document.getElementById(pageId);
-    if(targetEl) targetEl.style.display = 'block';
+    if(targetEl) {
+        if (pageId === 'login-page' || pageId === 'register-page') {
+            targetEl.style.display = 'flex'; // 登录和注册页必须使用 flex 才能左右完美居中对齐
+        } else {
+            targetEl.style.display = 'block'; // 其他页面保持默认的 block
+        }
+    }
     
     // 根据页面执行对应的初始化和导航高亮
     switch (pageId) {
