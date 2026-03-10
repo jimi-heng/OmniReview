@@ -341,9 +341,69 @@
         .spin-btn.down { border-radius: 0 0 14px 0; }
         .spin-btn:hover { background: rgba(0,0,0,0.06); color: #1d1d1f; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* 苹果风入场动画与底图样式 */
+        .login-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 换回了你原本那套更深沉、更具质感的经典渐变！ */
+            background: linear-gradient(135deg, #e4efe9 0%, #93a5ce 100%);
+            background-size: cover;
+            z-index: -1; 
+            opacity: 1;
+        }
+
+        /* 定义苹果风入场关键帧 (Slide-up + Fade-in + Blur-out) */
+        @keyframes appleInEffect {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(1.02);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px);
+            }
+        }
+
+        /* 定义背景淡入关键帧 */
+        @keyframes fadeInBackground {
+            0% { opacity: 0; filter: blur(20px); }
+            100% { opacity: 1; filter: blur(0px); }
+        }
+
+        /* 统一的动画应用类 */
+        .animate-item {
+            animation-name: appleInEffect;
+            animation-duration: 0.6s;
+            animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+            animation-fill-mode: both;
+            opacity: 0;
+        }
+
+        .login-background.play-animation {
+            animation-name: fadeInBackground;
+            animation-duration: 0.8s;
+            animation-timing-function: ease-out;
+            animation-fill-mode: both;
+            animation-delay: 0.0s;
+        }
+
+        /* ====== 设置错落有致的延迟 (Staggered Delays) ====== */
+        #login-title.play-animation { animation-delay: 0.2s; }
+        #login-subtitle.play-animation { animation-delay: 0.3s; }
+        #feature-1.play-animation { animation-delay: 0.4s; }
+        #feature-2.play-animation { animation-delay: 0.5s; }
+        #feature-3.play-animation { animation-delay: 0.6s; }
+        #login-card.play-animation { animation-delay: 0.8s; animation-duration: 0.7s; }
     </style>
 </head>
 <body>
+    <div class="login-background"></div>
+
     <!-- 顶部轻量进度导航（替换左侧大导航，核心精简） -->
     <div class="progress-header">
         <div class="title">Systematic Review Progress</div>
@@ -396,30 +456,30 @@
         <div id="login-page" class="container" style="display: flex; align-items: center; justify-content: center; gap: 80px; min-height: 75vh; flex-wrap: wrap; padding: 20px;">
             
             <div style="max-width: 480px;">
-                <h1 style="font-size: 52px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; color: #1d1d1f;">
+                <h1 id="login-title" style="font-size: 52px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; color: #1d1d1f;">
                     Next-Gen<br>
                     <span style="background: linear-gradient(135deg, #0071e3 0%, #4facfe 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Systematic Review.</span>
                 </h1>
-                <p style="font-size: 18px; color: #86868b; line-height: 1.5; margin-bottom: 40px;">
+                <p id="login-subtitle" style="font-size: 18px; color: #86868b; line-height: 1.5; margin-bottom: 40px;">
                     Accelerate your evidence synthesis with Multi-Agent AI. From PubMed screening to automated data extraction, experience the workflow of the future.
                 </p>
                 
                 <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
+                    <div id="feature-1" style="display: flex; align-items: center; gap: 16px;">
                         <div style="width: 48px; height: 48px; background: rgba(0, 113, 227, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🤖</div>
                         <div>
                             <div style="font-size: 16px; font-weight: 600; color: #1d1d1f;">Automated PICO Screening</div>
                             <div style="font-size: 13px; color: #86868b;">Multi-Agent cross-validation for abstract triage.</div>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 16px;">
+                    <div id="feature-2" style="display: flex; align-items: center; gap: 16px;">
                         <div style="width: 48px; height: 48px; background: rgba(52, 199, 89, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📄</div>
                         <div>
                             <div style="font-size: 16px; font-weight: 600; color: #1d1d1f;">Multimodal PDF Analysis</div>
                             <div style="font-size: 13px; color: #86868b;">Read full-texts and highlight evidence automatically.</div>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 16px;">
+                    <div id="feature-3" style="display: flex; align-items: center; gap: 16px;">
                         <div style="width: 48px; height: 48px; background: rgba(255, 149, 0, 0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📊</div>
                         <div>
                             <div style="font-size: 16px; font-weight: 600; color: #1d1d1f;">One-Click Data Extraction</div>
@@ -429,7 +489,7 @@
                 </div>
             </div>
 
-            <div class="card" style="width: 100%; max-width: 400px; margin: 0; padding: 40px 32px;">
+            <div id="login-card" class="card" style="width: 100%; max-width: 400px; margin: 0; padding: 40px 32px;">
                 <h2 style="text-align: center; margin-bottom: 8px; font-size: 24px;">Welcome Back</h2>
                 <p style="text-align: center; color: #86868b; font-size: 14px; margin-bottom: 30px;">Sign in to your workspace</p>
                 <div class="form-group">

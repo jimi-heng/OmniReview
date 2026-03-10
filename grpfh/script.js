@@ -3,6 +3,34 @@ let currentEditRow = null;
 // 在文件开头添加全局变量
 let currentUser = null; // 存储当前登录用户信息
 let currentProject = null; // 存储当前正在进行的项目
+// ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
+function playLoginEntranceAnimation() {
+    // 隐藏导航栏，直到登录成功 (确保和 showPage 守卫同步)
+    const navbar = document.querySelector('.navbar');
+    if (navbar) navbar.style.display = 'none';
+
+    // 1. 给背景和动画元素加上基础的动画准备类
+    document.querySelector('.login-background')?.classList.add('animate-item');
+    document.getElementById('login-title')?.classList.add('animate-item');
+    document.getElementById('login-subtitle')?.classList.add('animate-item');
+    document.getElementById('feature-1')?.classList.add('animate-item');
+    document.getElementById('feature-2')?.classList.add('animate-item');
+    document.getElementById('feature-3')?.classList.add('animate-item');
+    document.getElementById('login-card')?.classList.add('animate-item');
+
+    // 2. 瞬间清除，触发重新计算 (Triggers reflow)
+    // 这是让 CSS 重新认识该元素，从而能够再次播放动画的神奇一步
+    void document.querySelector('.login-background')?.offsetWidth;
+
+    // 3. 加上触发关键帧播放的类
+    document.querySelector('.login-background')?.classList.add('play-animation');
+    document.getElementById('login-title')?.classList.add('play-animation');
+    document.getElementById('login-subtitle')?.classList.add('play-animation');
+    document.getElementById('feature-1')?.classList.add('play-animation');
+    document.getElementById('feature-2')?.classList.add('play-animation');
+    document.getElementById('feature-3')?.classList.add('play-animation');
+    document.getElementById('login-card')?.classList.add('play-animation');
+}
 
 
 // 1. 更新顶部进度导航激活状态
@@ -171,6 +199,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   sessionStorage.removeItem('currentProject');
   
   showPage('login-page');
+  playLoginEntranceAnimation(); // 【核心新增】：点击退出登录回到主页时，也播放一次入场动画
 });
 
 
@@ -185,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 如果是在登录状态，直接显示首页并加载项目
     showPage('home-page');
     loadUserProjects();
+  } else {
+    // 【核心新增】：如果没有登录，确保显示登录页，并瞬间触发绝美的开场动画
+    showPage('login-page');
+    playLoginEntranceAnimation();
   }
 });
 
