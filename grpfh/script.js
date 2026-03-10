@@ -293,7 +293,7 @@ function closeReasonModal() {
     document.getElementById('reasonModal').style.display = 'none';
     currentEditRow = null; 
 }
-document.getElementById('closeModal').addEventListener('click', closeReasonModal);
+// 删掉了绑定 closeModal 的那行
 document.getElementById('cancelEdit').addEventListener('click', closeReasonModal);
 document.getElementById('reasonModal').addEventListener('click', function(e) {
     if (e.target === this) closeReasonModal();
@@ -642,7 +642,6 @@ function renderProjects(projects) {
             </div>
             <div style="margin-top: 20px;">
                 <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
-                <button class="btn btn-secondary" style="margin-left: 10px;">Browse All Projects</button>
             </div>
         `;
     } else {
@@ -670,7 +669,6 @@ function renderProjects(projects) {
         projectsHtml += `
             <div style="margin-top: 20px;">
                 <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
-                <button class="btn btn-secondary" style="margin-left: 10px;">Browse All Projects</button>
             </div>
         `;
         
@@ -821,12 +819,34 @@ async function editProjectName(projectId, buttonElement) {
     }
 }
 
-// 新增：删除项目逻辑
-async function deleteProject(projectId, projectName) {
-    // 增加二次确认，防止用户误删
-    if (!confirm(`Are you sure you want to permanently delete the project "${projectName}"?\nThis will erase all PICO data, imported literatures, and AI reasoning. This action cannot be undone.`)) {
-        return; 
-    }
+// ====== 重构：Apple 风格删除项目逻辑 ======
+let projectToDeleteId = null; // 临时存储要删除的项目 ID
+
+// 1. 点击 Delete 按钮时，只打开弹窗，不直接删
+function deleteProject(projectId, projectName) {
+    projectToDeleteId = projectId;
+    document.getElementById('deleteProjectNameDisplay').textContent = `"${projectName}"`;
+    document.getElementById('deleteProjectModal').style.display = 'flex';
+}
+
+// 2. 关闭弹窗逻辑
+function closeDeleteModal() {
+    document.getElementById('deleteProjectModal').style.display = 'none';
+    projectToDeleteId = null;
+}
+
+document.getElementById('cancelDeleteBtn')?.addEventListener('click', closeDeleteModal);
+document.getElementById('deleteProjectModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
+
+// 3. 点击弹窗里的红色 Delete 按钮时，真正执行删除
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () => {
+    if (!projectToDeleteId) return;
+    const projectId = projectToDeleteId;
+    
+    // 先立刻关闭弹窗
+    closeDeleteModal();
 
     try {
         const response = await fetch('http://localhost:3000/api/delete-project', {
@@ -853,7 +873,7 @@ async function deleteProject(projectId, projectName) {
         console.error('Failed to delete project:', error);
         alert('Network error occurred while trying to delete the project.');
     }
-}
+});
 
 // 保存PICO数据
 async function savePicoData() {
@@ -1035,7 +1055,14 @@ window.loadAbstractScreening = async function() {
                             ${btnText}
                         </button>
                     </td>
-                    <td class="reason-display" style="cursor: pointer; color: #2c6ecb; text-decoration: underline;" onclick="openEditModal(this)" title="Click to view/edit full reasoning">${shortReason}</td>
+                    <td class="reason-display" 
+                        style="cursor: pointer; color: #555; text-decoration: none; transition: color 0.2s ease; line-height: 1.5;" 
+                        onmouseover="this.style.color='#0071e3'" 
+                        onmouseout="this.style.color='#555'" 
+                        onclick="openEditModal(this)" 
+                        title="Click to view/edit full reasoning">
+                        ${shortReason}
+                    </td>
                     <td>
                         <button class="btn btn-secondary btn-sm" onclick="openAbstractModal(this)">View Abstract</button>
                     </td>
@@ -1337,24 +1364,67 @@ window.loadFullTextScreening = async function() {
                     }
                 }
                 
-                // 给灰色不可点按钮也加上相同的 div 占位和 width: 100% 样式
-                let pdfBtn = `
-                    <div style="position: sticky; top: 120px; z-index: 10;">
-                        <button class="btn btn-sm btn-secondary" disabled style="width: 100%; font-weight: bold;">View PDF</button>
-                    </div>
-                `;
-                if (lit.pdf_path) {
+                let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
+                
+                let actionContent = '';
+                const rawStatus = lit.pdf_status || 'Pending';
+
+                // 【核心逻辑】：根据下载状态，动态决定 Action 列显示什么
+                if (rawStatus === 'Downloaded' && lit.pdf_path) {
                     const safePath = encodeURIComponent(lit.pdf_path);
-                    pdfBtn = `
-                        <div style="position: sticky; top: 120px; z-index: 10;">
-                            <button id="view-pdf-btn-${lit.id}" class="btn btn-sm btn-primary" onclick="togglePdfView(${lit.id}, '${safePath}')" style="width: 100%; font-weight: bold; transition: all 0.3s;">View PDF</button>
+                    actionContent = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 120px; z-index: 10;">
+                            <button id="view-pdf-btn-${lit.id}" class="btn btn-primary" onclick="togglePdfView(${lit.id}, '${safePath}')" 
+                                style="font-size: 13px; padding: 8px 20px; border-radius: 20px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,113,227,0.3); border: none;">
+                                View PDF
+                            </button>
+                            <label style="font-size: 11px; color: #86868b; text-align: center; cursor: pointer; margin: 0; transition: color 0.2s;" onmouseover="this.style.color='#0071e3'" onmouseout="this.style.color='#86868b'">
+                                <input type="file" accept="application/pdf" style="display: none;" onchange="autoUploadPDF(${lit.id}, this)">
+                                Replace file
+                            </label>
+                        </div>
+                    `;
+                } else if (rawStatus.includes('Failed')) {
+                    actionContent = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 120px; z-index: 10;">
+                            <label class="btn" style="font-size: 13px; padding: 8px 18px; border-radius: 20px; font-weight: 600; background-color: #ff3b30; color: white; border: none; cursor: pointer; text-align: center; margin: 0; box-shadow: 0 4px 12px rgba(255,59,48,0.3); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                                <input type="file" accept="application/pdf" style="display: none;" onchange="autoUploadPDF(${lit.id}, this)">
+                                ⇧ Upload
+                            </label>
+                        </div>
+                    `;
+                } else {
+                    actionContent = `
+                        <div style="display: flex; flex-direction: column; align-items: center; position: sticky; top: 120px; z-index: 10;">
+                            <button class="btn btn-secondary" disabled style="font-size: 13px; padding: 8px 20px; border-radius: 20px; font-weight: 600; border: none;">Waiting...</button>
                         </div>
                     `;
                 }
-                
-                let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
 
-                // 1. 生成主信息行
+                // 【新增】：全文筛选的 User Action 苹果风按钮逻辑
+                let fullTextUserAction = lit.full_text_user_decision || 'Keep';
+                let btnText = 'Keep AI';
+                let btnBg = '#f2f2f7';
+                let btnColor = '#1d1d1f';
+                
+                if (fullTextUserAction === 'Include') {
+                    btnText = 'Included';
+                    btnBg = '#34c759';
+                    btnColor = '#ffffff';
+                } else if (fullTextUserAction === 'Exclude') {
+                    btnText = 'Excluded';
+                    btnBg = '#ff3b30';
+                    btnColor = '#ffffff';
+                }
+
+                let userActionContent = `
+                    <button class="btn" 
+                        style="font-size: 12px; padding: 6px 14px; border-radius: 14px; font-weight: 600; border: none; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); background-color: ${btnBg}; color: ${btnColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.06);" 
+                        onclick="toggleFullTextUserDecision(this, ${lit.id}, '${fullTextUserAction}', '${lit.full_text_decision || 'Pending'}')">
+                        ${btnText}
+                    </button>
+                `;
+                // 1. 生成主信息行 (彻底去掉了那丑陋的独立 Upload 列，现在只有 6 列)
                 const mainTr = document.createElement('tr');
                 mainTr.id = `main-row-${lit.id}`;
                 mainTr.innerHTML = `
@@ -1362,20 +1432,8 @@ window.loadFullTextScreening = async function() {
                     <td>${lit.title}</td>
                     <td style="color: ${statusColor}; font-weight: bold; font-size: 13px; line-height: 1.4;">${displayStatus}</td>
                     <td style="color: ${decisionColor}; font-weight: bold;">${lit.full_text_decision || 'Pending'}</td>
-                    <td style="font-size: 13px; color: #555;">${evidenceText}</td>
-                    <td style="vertical-align: top; ">
-                        <input type="file"
-                            id="upload-${lit.id}"
-                            accept="application/pdf"
-                            style="font-size:12px; margin-bottom:4px;">
-                    
-                        <button class="btn btn-sm btn-warning"
-                            onclick="uploadPDF(${lit.id})"
-                            style="font-weight:bold;">
-                            Upload PDF
-                        </button>
-                    </td>
-                    <td id="action-cell-${lit.id}" style="vertical-align: top;">${pdfBtn}</td>
+                    <td>${userActionContent}</td> <td style="font-size: 13px; color: #555;">${evidenceText}</td>
+                    <td id="action-cell-${lit.id}" style="vertical-align: top;">${actionContent}</td>
                 `;
                 tbody.appendChild(mainTr);
 
@@ -1384,7 +1442,7 @@ window.loadFullTextScreening = async function() {
                     const pdfTr = document.createElement('tr');
                     pdfTr.id = `pdf-row-${lit.id}`;
                     pdfTr.style.display = 'none'; // 初始隐藏
-                    // 【核心魔法2】注意这里 colspan 是 6！因为第6列(Action列)会被上面的主行通过 rowspan 霸占下来
+                    // 【修改为 colspan=6】因为加了 User Action 列，下面需要横跨 6 列
                     pdfTr.innerHTML = `
                         <td colspan="6" style="padding: 0; border-bottom: 3px solid #17a2b8;">
                             <div id="pdf-container-${lit.id}" style="width: 100%; background: #e9ecef; position: relative;">
@@ -1400,15 +1458,16 @@ window.loadFullTextScreening = async function() {
     }
 };
 
-window.uploadPDF = function(paperId) {
+// 极客感拉满的“即选即传”无缝上传函数
+window.autoUploadPDF = function(paperId, inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
 
-    const fileInput = document.getElementById(`upload-${paperId}`);
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert("Please select a PDF first.");
-        return;
-    }
+    // 获取到包裹着 input 的按钮(label)，将它的文字变为 Loading 状态
+    const label = inputElement.parentElement;
+    const originalHtml = label.innerHTML;
+    label.innerHTML = '⏳ Uploading...';
+    label.style.pointerEvents = 'none'; // 防止用户连续狂点
 
     const formData = new FormData();
     formData.append("paper_id", paperId);
@@ -1421,15 +1480,19 @@ window.uploadPDF = function(paperId) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert("Upload successful!");
-            loadFullTextScreening();   // 重新加载表格
+            // 上传成功后，不再弹窗打断用户，直接丝滑刷新表格！
+            loadFullTextScreening();   
         } else {
             alert(data.message);
+            label.innerHTML = originalHtml;
+            label.style.pointerEvents = 'auto';
         }
     })
     .catch(err => {
         console.error(err);
-        alert("Upload failed");
+        alert("Upload failed. Please check network.");
+        label.innerHTML = originalHtml;
+        label.style.pointerEvents = 'auto';
     });
 };
 
@@ -1522,8 +1585,8 @@ window.openAbstractModal = function(btnElement) {
 function closeAbstractModalFunc() {
     abstractModal.style.display = 'none';
 }
-if(document.getElementById('closeAbstractModal')) {
-    document.getElementById('closeAbstractModal').addEventListener('click', closeAbstractModalFunc);
+if(document.getElementById('closeAbstractBtn')) {
+    // 删掉了绑定 closeAbstractModal 的那行
     document.getElementById('closeAbstractBtn').addEventListener('click', closeAbstractModalFunc);
 }
 
@@ -1549,8 +1612,11 @@ window.loadDataExtraction = async function() {
         const result = await response.json();
         
         if (result.success) {
-            // 核心：统计最终在全文阶段被判定为 Included 的文献数量
-            const finalPapers = result.data.filter(lit => lit.full_text_decision === 'Included');
+            // 核心：统计最终在全文阶段被判定为 Included 的文献数量 (结合手动决定)
+            const finalPapers = result.data.filter(lit => {
+                return lit.full_text_user_decision === 'Include' || 
+                       ((!lit.full_text_user_decision || lit.full_text_user_decision === 'Keep') && lit.full_text_decision === 'Included');
+            });
             document.getElementById('extract-paper-count').textContent = finalPapers.length;
             
             const btn = document.getElementById('run-extraction-btn');
@@ -1742,3 +1808,52 @@ newProjectNameInput?.addEventListener('keypress', function (e) {
 createProjectModal?.addEventListener('click', function(e) {
     if (e.target === createProjectModal) closeCreateProjectModal();
 });
+
+// ====== 新增：处理 Full-Text Screening 一键智能切换按钮逻辑 ======
+window.toggleFullTextUserDecision = async function(btn, litId, currentAction, aiDecision) {
+    let nextAction = 'Keep';
+    
+    // 智能推断下一个状态
+    if (currentAction === 'Keep' || !currentAction) {
+        nextAction = (aiDecision === 'Included') ? 'Exclude' : 'Include';
+    } else {
+        nextAction = 'Keep';
+    }
+
+    let btnText = 'Keep AI';
+    let btnBg = '#f2f2f7';
+    let btnColor = '#1d1d1f';
+
+    if (nextAction === 'Include') {
+        btnText = 'Included';
+        btnBg = '#34c759';
+        btnColor = '#ffffff';
+    } else if (nextAction === 'Exclude') {
+        btnText = 'Excluded';
+        btnBg = '#ff3b30';
+        btnColor = '#ffffff';
+    }
+
+    // 瞬间更新UI
+    btn.textContent = btnText;
+    btn.style.backgroundColor = btnBg;
+    btn.style.color = btnColor;
+    btn.style.transform = 'scale(0.92)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+    
+    btn.setAttribute('onclick', `toggleFullTextUserDecision(this, ${litId}, '${nextAction}', '${aiDecision}')`);
+
+    // 后台静默发送请求保存结果到新的全文字段
+    try {
+        await fetch('http://localhost:3000/api/update-literature-decision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                literature_id: litId,
+                full_text_user_decision: nextAction
+            })
+        });
+    } catch (error) {
+        console.error('Failed to update full-text decision:', error);
+    }
+};

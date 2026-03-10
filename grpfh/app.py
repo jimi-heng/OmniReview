@@ -273,12 +273,18 @@ def get_literatures():
     try:
         conn = get_db()
         cursor = conn.cursor()
-        # 核心修改：只查询当前项目下的文献
-        # 核心修改：查询增加了 doi 和全文筛选阶段的新字段
-        # 【修改】：SELECT 语句中加入 abstract
+        
+        # 【自动添加新字段：全文人工决定】
+        try:
+            cursor.execute("ALTER TABLE literatures ADD COLUMN full_text_user_decision TEXT DEFAULT 'Keep'")
+            conn.commit()
+        except:
+            pass
+            
+        # 【修改】：SELECT 语句中加入 full_text_user_decision
         cursor.execute('''
             SELECT id, title, author, journal, year, doi, abstract, ai_decision, user_decision, reasoning,
-                   pdf_status, pdf_path, full_text_decision, pico_evidence
+                   pdf_status, pdf_path, full_text_decision, full_text_user_decision, pico_evidence
             FROM literatures 
             WHERE project_id = ? 
             ORDER BY id ASC
@@ -322,6 +328,12 @@ def update_literature_decision():
         if reasoning is not None:
             updates.append("reasoning = ?")
             params.append(reasoning)
+            
+        # 【新增】：接收全文阶段的人工决定
+        full_text_user_decision = data.get('full_text_user_decision')
+        if full_text_user_decision is not None:
+            updates.append("full_text_user_decision = ?")
+            params.append(full_text_user_decision)
             
         if not updates:
             return jsonify({'success': False, 'message': 'Nothing to update'})
@@ -956,11 +968,12 @@ def run_data_extraction():
         conn = get_db()
         cursor = conn.cursor()
         
-        # 1. 找出当前项目下所有被判定为 Included 的文献
+        # 1. 找出判定为 Included 的文献 (优先听人工决定，如果是 Keep 才听 AI 的)
         cursor.execute('''
             SELECT id, title, pdf_path 
             FROM literatures 
-            WHERE project_id = ? AND full_text_decision = 'Included'
+            WHERE project_id = ? 
+            AND (full_text_user_decision = 'Include' OR (COALESCE(full_text_user_decision, 'Keep') = 'Keep' AND full_text_decision = 'Included'))
         ''', (project_id,))
         papers = cursor.fetchall()
         conn.close()
