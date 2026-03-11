@@ -43,15 +43,24 @@ Final Inclusion Rule:
 - If <4 components are Matched → Flag = 0.
 
 CRITICAL Evidence Extraction Rule (STRICT):
+
 For EVERY component (P, I, C, S, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
-- If Matched = Yes: Extract exact original text that directly supports why it satisfies the requirement.
-- If Matched = No: Extract exact contradictory text, OR text showing a different parameter.
-- If completely not mentioned: Evidence MUST be an empty string ("").
 
-Evidence constraints: Copy verbatim from the PDF. Do NOT paraphrase, summarize, rewrite, modify grammar/tense, omit/add words, merge sentences, correct typos, or remove punctuation. The evidence must be directly traceable to a visible sentence.
+Evidence rules:
 
-Global Summary Requirement:
-Regardless of Flag = 0 or 1, you MUST provide a short overall summary in the Conclusion section explaining why the paper is included or excluded based strictly on the matched component count.
+If Matched = Yes: Extract the exact original text that directly supports why it satisfies the requirement.
+If Matched = No: Extract the exact contradictory text, or text indicating a different population/intervention/comparison/study design/etc.
+If the information is completely not mentioned, the Evidence MUST be an empty string ("").
+If multiple candidate sentences exist, select the single most direct supporting sentence only.
+
+Evidence constraints (STRICT):
+Evidence must be copied verbatim from the PDF.
+Do NOT paraphrase, summarize, rewrite, correct grammar, modify tense, omit words, add words, merge sentences, or remove punctuation.
+The extracted evidence must be directly traceable to a visible sentence in the PDF.
+Only ONE piece of evidence is allowed per component.
+The evidence must be a single continuous span of text from one location in the document.
+
+Do NOT combine multiple sentences from different locations.
 
 STRICT OUTPUT TEMPLATE:
 DOI : the doi of this paper
@@ -61,36 +70,47 @@ Reason:
 
 Population:
 Matched: <Yes/No>
-Evidence: "<exact copied text or empty string>"
+Evidence: <exact copied text or empty string>
 
 Intervention:
 Matched: <Yes/No>
-Evidence: "<exact copied text or empty string>"
+Evidence: <exact copied text or empty string>
 
 Comparison:
 Matched: <Yes/No>
-Evidence: "<exact copied text or empty string>"
+Evidence: <exact copied text or empty string>
 
 Study Design:
 Matched: <Yes/No>
-Evidence: "<exact copied text or empty string>"
+Evidence: <exact copied text or empty string>
 
 Extra:
 Matched: <Yes/No>
-Evidence: "<exact copied text or empty string>"
+Evidence: <exact copied text or empty string>
 
 Conclusion:
 "<concise overall explanation why the paper is included or excluded, based strictly on visible matched component count>"
 """
 
+import re
+
+def clean_evidence(text: str) -> str:
+    if not text:
+        return ""
+    return text.strip().strip('"').strip("'")
+
 def extract_evidence(text):
-    components = ["Population", "Intervention", "Comparison", "Outcome", "Extra"]
+    components = ["Population", "Intervention", "Comparison", "Study Design", "Extra"]
     evidences = {}
 
     for comp in components:
-        pattern = rf"{comp}:\s*Matched:\s*(?:Yes|No)\s*Evidence:\s*\"?(.*?)\"?(?=\n[A-Z][a-z]+:|\Z)"
+        pattern = rf"{comp}:\s*Matched:\s*(?:Yes|No)\s*Evidence:\s*(.*?)(?=\n[A-Z][a-z]+:|\Z)"
         match = re.search(pattern, text, re.DOTALL)
-        evidences[comp] = match.group(1).strip() if match else ""
+
+        if match:
+            evidences[comp] = clean_evidence(match.group(1))
+        else:
+            evidences[comp] = ""
 
     return evidences
 
@@ -186,7 +206,8 @@ Input Data:
         conclusion = extract_conclusion(text)
         decision = 'Included' if flag == '1' else 'Excluded'
 
-        print(text+"\n")
+        print(evidences)
+        print("\n")
 
         # 4. 调用 TextHighlight 进行 PDF 原文高亮标注！
         hl_path_str = None

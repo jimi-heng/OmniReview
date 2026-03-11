@@ -7,7 +7,7 @@ COLORS = {
     "Population": (1, 0, 0),  #红
     "Intervention": (0, 0, 1), #蓝
     "Comparison": (0, 0.6, 0), #绿
-    "Outcome": (1, 0.5, 0), #橙
+    "Study Design": (1, 0.5, 0), #橙
     "Extra": (0.6, 0, 0.6) #紫
 }
 
@@ -82,7 +82,7 @@ def highlight_pdf(
     input_pdf: Path,
     output_pdf: Path,
     evidences: dict[str, str],
-    threshold: int = 90
+    threshold: int = 85
 ) -> None:
     """
     input_pdf: 原始PDF路径
