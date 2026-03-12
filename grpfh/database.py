@@ -2,7 +2,8 @@
 import sqlite3
 import os
 
-DB_PATH = 'ai_screening.db'
+BASE_DIR = os.path.dirname(__file__)
+DB_PATH = os.path.join(BASE_DIR, "ai_screening.db")
 
 def init_database():
     """初始化数据库，创建所有表"""

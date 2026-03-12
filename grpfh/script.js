@@ -147,7 +147,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
 
   try {
     // 3. 调用后端登录接口
-    const response = await fetch('http://localhost:3000/api/login', {
+    const response = await fetch('http://47.102.222.252:3000/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,20 +156,20 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     });
 
     const result = await response.json();
-    
+
     // 4. 根据后端结果处理
     if (result.success) {
       errorTip.style.display = 'none';
-      
+
       // 保存用户信息（现在后端会返回user_id）
       currentUser = {
         id: result.user_id,
         email: inputEmail
       };
-      
+
       // 保存到sessionStorage以便页面刷新后保留
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-      
+
       showPage('home-page');
       loadUserProjects(); // 加载用户的项目
     } else {
@@ -191,13 +191,13 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   document.getElementById('email').value = '';
   document.getElementById('password').value = '';
   document.getElementById('login-error').style.display = 'none';
-  
+
   // 清空用户信息
   currentUser = null;
   currentProject = null;
   sessionStorage.removeItem('currentUser');
   sessionStorage.removeItem('currentProject');
-  
+
   showPage('login-page');
   playLoginEntranceAnimation(); // 【核心新增】：点击退出登录回到主页时，也播放一次入场动画
 });
@@ -206,7 +206,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', () => {
   // 添加导航监听器
   addNavigationListeners();
-  
+
   // 检查是否有保存的用户信息
   const savedUser = sessionStorage.getItem('currentUser');
   if (savedUser) {
@@ -264,7 +264,7 @@ document.getElementById('register-btn').addEventListener('click', async () => {
 
     try {
         // 3. 调用后端注册接口
-        const response = await fetch('http://localhost:3000/api/register', {
+        const response = await fetch('http://47.102.222.252:3000/api/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -330,7 +330,7 @@ function switchDataTab(type) {
 // 6. 核心功能：AI推理查看/编辑弹窗控制（仅保留关闭逻辑，保存和打开逻辑已移至底部）
 function closeReasonModal() {
     document.getElementById('reasonModal').style.display = 'none';
-    currentEditRow = null; 
+    currentEditRow = null;
 }
 // 删掉了绑定 closeModal 的那行
 document.getElementById('cancelEdit').addEventListener('click', closeReasonModal);
@@ -436,17 +436,17 @@ document.addEventListener('DOMContentLoaded', () => {
              alert('Error: No active project found. Please select or create a project first.');
              return;
           }
-          
+
           for (let lit of literatures) {
             lit.project_id = currentProject.id;
-            
-            const response = await fetch('http://localhost:3000/api/upload-literature', {
+
+            const response = await fetch('http://47.102.222.252:3000/api/upload-literature', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(lit)
             });
             const result = await response.json();
-            
+
             // 根据后端的 inserted 标志判断是成功插入还是重复跳过
             if (result.success) {
                 if (result.inserted) {
@@ -490,11 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.loadLiteratureList = async function() {
     const tableBody = document.getElementById('literature-table-body');
     if (!tableBody) return;
-    
+
     if (!currentProject || !currentProject.id) return;
 
     try {
-      const response = await fetch('http://localhost:3000/api/get-literatures', {
+      const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: currentProject.id })
@@ -504,11 +504,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result.success && result.data.length > 0) {
         // 有数据，渲染表格
         tableBody.innerHTML = '';
-        
+
         // 【核心修复】：加上 index 参数，用于生成独立的显示序号
         result.data.forEach((lit, index) => {
           const displayId = index + 1; // 生成 1, 2, 3... 的独立序号
-          
+
           const tr = document.createElement('tr');
           // 注意：我们在标签上保存真实的数据库ID (data-id)，但页面上显示的是 displayId
           tr.setAttribute('data-id', lit.id);
@@ -544,9 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const originalShowPage = window.showPage;
   window.showPage = function(pageId) {
     originalShowPage(pageId);
-    
+
     if (pageId === 'import-search-page') {
-      setTimeout(loadLiteratureList, 100); 
+      setTimeout(loadLiteratureList, 100);
     } else if (pageId === 'abstract-screen-page') {
       setTimeout(loadAbstractScreening, 100);
     } else if (pageId === 'data-extraction-page') {
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchPubmedBtn.addEventListener('click', async () => {
             const keywords = document.getElementById('search-keywords').value.trim();
             const maxPapers = document.getElementById('max-papers').value;
-            
+
             if (!keywords) {
                 alert('Please enter search keywords!');
                 return;
@@ -606,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // 3. 发送请求给后端
-                const response = await fetch('http://localhost:3000/api/search-pubmed', {
+                const response = await fetch('http://47.102.222.252:3000/api/search-pubmed', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -615,13 +615,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         max_papers: parseInt(maxPapers)
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert(result.message);
                     // 4. 搜索成功后，重新从数据库拉取该项目的最新文献列表并覆盖表格
-                    loadLiteratureList(); 
+                    loadLiteratureList();
                 } else {
                     alert('Search Error: ' + result.message);
                     // 如果失败了，恢复空状态或者显示原来的文献
@@ -644,18 +644,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // 加载用户的项目列表
 async function loadUserProjects() {
     if (!currentUser) return;
-    
+
     try {
-        const response = await fetch('http://localhost:3000/api/get-projects', {
+        const response = await fetch('http://47.102.222.252:3000/api/get-projects', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ user_id: currentUser.id })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             renderProjects(result.data);
         }
@@ -669,9 +669,9 @@ async function loadUserProjects() {
 function renderProjects(projects) {
     const homePage = document.getElementById('home-page');
     const projectsContainer = homePage.querySelector('.card');
-    
+
     if (!projectsContainer) return;
-    
+
     if (projects.length === 0) {
         // 没有项目时显示空状态
         projectsContainer.innerHTML = `
@@ -686,7 +686,7 @@ function renderProjects(projects) {
     } else {
         // 有项目时渲染列表
         let projectsHtml = '<h3>Recent Projects</h3>';
-        
+
         projects.forEach(project => {
             projectsHtml += `
                 <div class="project-item" data-project-id="${project.id}">
@@ -704,16 +704,16 @@ function renderProjects(projects) {
                 </div>
             `;
         });
-        
+
         projectsHtml += `
             <div style="margin-top: 20px;">
                 <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
             </div>
         `;
-        
+
         projectsContainer.innerHTML = projectsHtml;
     }
-    
+
     // 重新绑定创建项目按钮事件
     const createBtn = document.getElementById('create-project-btn');
     if (createBtn) {
@@ -726,9 +726,9 @@ function renderProjects(projects) {
 // 创建新项目
 async function createNewProject(projectName) {
     if (!currentUser) return;
-    
+
     try {
-        const response = await fetch('http://localhost:3000/api/create-project', {
+        const response = await fetch('http://47.102.222.252:3000/api/create-project', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -736,9 +736,9 @@ async function createNewProject(projectName) {
                 project_name: projectName
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             currentProject = {
                 id: result.project_id,
@@ -746,10 +746,10 @@ async function createNewProject(projectName) {
                 status: 'PICO Setup'
             };
             sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
-            
+
             // 【核心修复】：新建项目时，先清空上一个项目遗留的输入！
             clearAllInputs();
-            
+
             showPage('pico-page');
         } else {
             alert('Failed to create project: ' + result.message);
@@ -765,17 +765,17 @@ async function continueProject(projectId) {
         // 【核心修复】：加载项目前，先清空面板，防止上一个项目的数据串号！
         clearAllInputs();
 
-        const response = await fetch('http://localhost:3000/api/get-project-data', {
+        const response = await fetch('http://47.102.222.252:3000/api/get-project-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: projectId })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             currentProject = { id: projectId };
-            
+
             // 加载 PICO 数据
             if (result.data.pico) {
                 document.getElementById('population').value = result.data.pico.population || '';
@@ -783,7 +783,7 @@ async function continueProject(projectId) {
                 document.getElementById('comparison').value = result.data.pico.comparison || '';
                 document.getElementById('study_design').value = result.data.pico.study_design || '';
             }
-            
+
             // 加载 Protocol 数据
             if (result.data.protocol) {
                 document.getElementById('research-objective').value = result.data.protocol.objective || '';
@@ -796,20 +796,20 @@ async function continueProject(projectId) {
                 document.getElementById('search-keywords').value = result.data.search_params.keywords || '';
                 document.getElementById('max-papers').value = result.data.search_params.maxPapers || 200;
             }
-            
-            const projectResponse = await fetch('http://localhost:3000/api/get-projects', {
+
+            const projectResponse = await fetch('http://47.102.222.252:3000/api/get-projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: currentUser.id })
             });
-            
+
             const projectResult = await projectResponse.json();
             const project = projectResult.data.find(p => p.id === projectId);
-            
+
             if (project) {
                 currentProject.name = project.project_name;
                 sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
-                
+
                 switch(project.status) {
                     case 'PICO Setup': showPage('pico-page'); break;
                     case 'Import/Search': showPage('import-search-page'); break;
@@ -830,11 +830,11 @@ async function editProjectName(projectId, buttonElement) {
     const projectItem = buttonElement.closest('.project-item');
     const nameElement = projectItem.querySelector('.project-name');
     const oldName = nameElement.textContent;
-    
+
     const newName = prompt('Edit project name:', oldName);
     if (newName && newName.trim() && newName.trim() !== oldName) {
         try {
-            const response = await fetch('http://localhost:3000/api/update-project-name', {
+            const response = await fetch('http://47.102.222.252:3000/api/update-project-name', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -844,9 +844,9 @@ async function editProjectName(projectId, buttonElement) {
                     project_name: newName.trim()
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 nameElement.textContent = newName.trim();
             } else {
@@ -883,19 +883,19 @@ document.getElementById('deleteProjectModal')?.addEventListener('click', functio
 document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () => {
     if (!projectToDeleteId) return;
     const projectId = projectToDeleteId;
-    
+
     // 先立刻关闭弹窗
     closeDeleteModal();
 
     try {
-        const response = await fetch('http://localhost:3000/api/delete-project', {
+        const response = await fetch('http://47.102.222.252:3000/api/delete-project', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: projectId })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             // 如果用户删除的正好是他们当前正在操作的项目，清空当前项目缓存防干扰
             if (currentProject && currentProject.id === projectId) {
@@ -917,16 +917,16 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
 // 保存PICO数据
 async function savePicoData() {
     if (!currentProject || !currentProject.id) return;
-    
+
     const picoData = {
         population: document.getElementById('population').value,
         intervention: document.getElementById('intervention').value,
         comparison: document.getElementById('comparison').value,
         study_design: document.getElementById('study_design').value
     };
-    
+
     try {
-        await fetch('http://localhost:3000/api/save-project-data', {
+        await fetch('http://47.102.222.252:3000/api/save-project-data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -945,15 +945,15 @@ async function savePicoData() {
 // 保存Protocol数据
 async function saveProtocolData() {
     if (!currentProject || !currentProject.id) return;
-    
+
     const protocolData = {
         objective: document.getElementById('research-objective').value,
         inclusion: document.getElementById('inclusion-criteria').value,
         exclusion: document.getElementById('exclusion-criteria').value
     };
-    
+
     try {
-        await fetch('http://localhost:3000/api/save-project-data', {
+        await fetch('http://47.102.222.252:3000/api/save-project-data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -972,9 +972,9 @@ async function saveProtocolData() {
 // 更新项目状态
 async function updateProjectStatus(status) {
     if (!currentProject || !currentProject.id) return;
-    
+
     try {
-        await fetch('http://localhost:3000/api/update-project-status', {
+        await fetch('http://47.102.222.252:3000/api/update-project-status', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1001,7 +1001,7 @@ function addNavigationListeners() {
             showPage('import-search-page');
         };
     }
-    
+
     // Import/Search页面的 Proceed to Abstract Screening 按钮
     // Import/Search页面的 Proceed to Abstract Screening 按钮
     const proceedBtn = document.getElementById('proceed-to-abstract-btn');
@@ -1009,12 +1009,12 @@ function addNavigationListeners() {
         proceedBtn.onclick = async () => {
             // 【核心修复】：离开搜索界面前，将关键词等输入内容保存进该项目的数据库中
             await saveSearchData();
-            
+
             await updateProjectStatus('Abstract Screening');
             showPage('abstract-screen-page');
         };
     }
-    
+
     // Abstract Screening页面的 Proceed to Full-Text Screening 按钮
     // Abstract Screening页面的 Proceed 按钮
     const abstractProceedBtn = document.getElementById('proceed-to-data-btn');
@@ -1024,7 +1024,7 @@ function addNavigationListeners() {
             showPage('full-text-screen-page'); // 【修改】：现在跳到全文筛选页
         };
     }
-    
+
     // 【新增】：Full-Text Screening 页面跳往 Data Extraction 的按钮
     const fulltextProceedBtn = document.getElementById('proceed-to-data-from-fulltext-btn');
     if (fulltextProceedBtn) {
@@ -1044,7 +1044,7 @@ window.loadAbstractScreening = async function() {
     if (!screenTableBody || !currentProject || !currentProject.id) return;
 
     try {
-        const response = await fetch('http://localhost:3000/api/get-literatures', {
+        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: currentProject.id })
@@ -1053,26 +1053,26 @@ window.loadAbstractScreening = async function() {
 
         if (result.success && result.data.length > 0) {
             screenTableBody.innerHTML = '';
-            
+
             // 【核心修改】：在 forEach 中加入 index，用来生成显示的序号
             result.data.forEach((lit, index) => {
                 const displayId = index + 1; // 生成从 1 开始的显示序号
-                
+
                 // 根据 AI 决定设置颜色
                 let aiColor = lit.ai_decision === 'Included' ? 'green' : (lit.ai_decision === 'Excluded' ? 'red' : '#6c757d');
                 let shortReason = lit.reasoning && lit.reasoning.length > 80 ? lit.reasoning.substring(0, 80) + '...' : (lit.reasoning || 'No reasoning provided yet');
-                
+
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-id', lit.id);
                 tr.setAttribute('data-reason', lit.reasoning || '');
                 tr.setAttribute('data-abstract', lit.abstract || 'No abstract available.');
-                
+
                 // 【新增】：根据当前状态计算苹果风按钮的初始外观
                 let currentAction = lit.user_decision || 'Keep';
                 let btnText = 'Keep AI';
                 let btnBg = '#f2f2f7';
                 let btnColor = '#1d1d1f';
-                
+
                 if (currentAction === 'Include') {
                     btnText = 'Included';
                     btnBg = '#34c759';
@@ -1120,7 +1120,7 @@ window.loadAbstractScreening = async function() {
 // 更新用户的Include/Exclude决定
 window.updateDecision = async function(literatureId, decision) {
     try {
-        await fetch('http://localhost:3000/api/update-literature-decision', {
+        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1146,11 +1146,11 @@ document.getElementById('saveReason').addEventListener('click', async function()
     if (!currentEditRow) return;
     const newReason = document.getElementById('reasonText').value.trim();
     const litId = currentEditRow.getAttribute('data-id'); // 获取文献ID
-    
+
     if (newReason) {
         try {
             // 调用我们刚才在 app.py 里写的接口保存到数据库
-            const response = await fetch('http://localhost:3000/api/update-literature-decision', {
+            const response = await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1159,7 +1159,7 @@ document.getElementById('saveReason').addEventListener('click', async function()
                 })
             });
             const result = await response.json();
-            
+
             if (result.success) {
                 // 更新前端 DOM
                 currentEditRow.setAttribute('data-reason', newReason);
@@ -1203,14 +1203,14 @@ function clearAllInputs() {
 // ====== 新增：保存 Search 界面的数据 ======
 async function saveSearchData() {
     if (!currentProject || !currentProject.id) return;
-    
+
     const searchData = {
         keywords: document.getElementById('search-keywords').value,
         maxPapers: document.getElementById('max-papers').value
     };
-    
+
     try {
-        await fetch('http://localhost:3000/api/save-project-data', {
+        await fetch('http://47.102.222.252:3000/api/save-project-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1241,18 +1241,18 @@ document.addEventListener('DOMContentLoaded', () => {
             runAiBtn.style.backgroundColor = '#6c757d';
 
             try {
-                const response = await fetch('http://localhost:3000/api/run-ai-screening', {
+                const response = await fetch('http://47.102.222.252:3000/api/run-ai-screening', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert(result.message);
                     // 运行完毕，重新加载带有全新 Include/Exclude 状态的表格
-                    loadAbstractScreening(); 
+                    loadAbstractScreening();
                 } else {
                     alert('Screening Error: ' + result.message);
                 }
@@ -1278,9 +1278,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Error: No active project found.');
                 return;
             }
-            
+
             // 对于文件下载，最简单的方式是直接让浏览器打开带有参数的 GET 请求 URL
-            const downloadUrl = `http://localhost:3000/api/export-csv?project_id=${currentProject.id}`;
+            const downloadUrl = `http://47.102.222.252:3000/api/export-csv?project_id=${currentProject.id}`;
             window.open(downloadUrl, '_blank');
         });
     }
@@ -1291,10 +1291,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxPapersInput = document.getElementById('max-papers');
     const btnUp = document.getElementById('max-papers-up');
     const btnDown = document.getElementById('max-papers-down');
-    
+
     // 你要求的预设档位
     const steps = [10, 30, 50, 100, 200];
-    
+
     if (maxPapersInput && btnUp && btnDown) {
         btnUp.addEventListener('click', () => {
             let currentVal = parseInt(maxPapersInput.value) || 0;
@@ -1302,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let nextVal = steps.find(s => s > currentVal) || steps[steps.length - 1];
             maxPapersInput.value = nextVal;
         });
-        
+
         btnDown.addEventListener('click', () => {
             let currentVal = parseInt(maxPapersInput.value) || 0;
             // 把数组反转，找第一个小于当前值的数，如果都比它大，就取最小值 10
@@ -1322,20 +1322,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fetchPdfsBtn) {
         fetchPdfsBtn.addEventListener('click', async () => {
             if (!currentProject || !currentProject.id) return;
-            
+
             const originalText = fetchPdfsBtn.innerHTML;
             fetchPdfsBtn.innerHTML = '⏳ Crawler is downloading PDFs... Please wait...';
             fetchPdfsBtn.disabled = true;
             fetchPdfsBtn.style.backgroundColor = '#6c757d';
-            
+
             try {
-                const response = await fetch('http://localhost:3000/api/fetch-pdfs', {
+                const response = await fetch('http://47.102.222.252:3000/api/fetch-pdfs', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
                 });
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert(result.message);
                     loadFullTextScreening(); // 刷新表格，显示已下载/失败状态
@@ -1358,32 +1358,32 @@ document.addEventListener('DOMContentLoaded', () => {
 window.loadFullTextScreening = async function() {
     const tbody = document.getElementById('fulltextTableBody');
     if (!tbody || !currentProject) return;
-    
+
     try {
-        const response = await fetch('http://localhost:3000/api/get-literatures', {
+        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: currentProject.id })
         });
         const result = await response.json();
-        
+
         if (result.success) {
             // 核心逻辑：只挑出被判定为 Included 的文献进入全文筛选！
             const includedPapers = result.data.filter(lit => {
-                return lit.user_decision === 'Include' || 
+                return lit.user_decision === 'Include' ||
                        ((!lit.user_decision || lit.user_decision === 'Keep') && lit.ai_decision === 'Included');
             });
-            
+
             if (includedPapers.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="empty-data">No included papers found. Please review Abstract Screening first.</td></tr>`;
                 return;
             }
-            
+
             tbody.innerHTML = '';
             includedPapers.forEach((lit, index) => {
-                let statusColor = '#6c757d'; 
+                let statusColor = '#6c757d';
                 let displayStatus = lit.pdf_status || 'Pending';
-                
+
                 if (displayStatus === 'Downloaded') {
                     statusColor = 'green';
                 } else if (displayStatus.includes('Failed')) {
@@ -1392,7 +1392,7 @@ window.loadFullTextScreening = async function() {
                     displayStatus = displayStatus.replace(' (', '<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8;">(') + '</span>';
                 }
 
-                
+
                 let evidenceText = 'Waiting for AI Analysis...';
                 if (lit.pico_evidence && lit.pico_evidence !== '{}') {
                     try {
@@ -1402,9 +1402,9 @@ window.loadFullTextScreening = async function() {
                         evidenceText = '✅ Extracted by AI';
                     }
                 }
-                
+
                 let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
-                
+
                 let actionContent = '';
                 const rawStatus = lit.pdf_status || 'Pending';
 
@@ -1445,7 +1445,7 @@ window.loadFullTextScreening = async function() {
                 let btnText = 'Keep AI';
                 let btnBg = '#f2f2f7';
                 let btnColor = '#1d1d1f';
-                
+
                 if (fullTextUserAction === 'Include') {
                     btnText = 'Included';
                     btnBg = '#34c759';
@@ -1512,7 +1512,7 @@ window.autoUploadPDF = function(paperId, inputElement) {
     formData.append("paper_id", paperId);
     formData.append("file", file);
 
-    fetch("http://localhost:3000/api/upload-pdf", {
+    fetch("http://47.102.222.252:3000/api/upload-pdf", {
         method: "POST",
         body: formData
     })
@@ -1520,7 +1520,7 @@ window.autoUploadPDF = function(paperId, inputElement) {
     .then(data => {
         if (data.success) {
             // 上传成功后，不再弹窗打断用户，直接丝滑刷新表格！
-            loadFullTextScreening();   
+            loadFullTextScreening();
         } else {
             alert(data.message);
             label.innerHTML = originalHtml;
@@ -1541,23 +1541,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (runAiBtn) {
         runAiBtn.addEventListener('click', async () => {
             if (!currentProject || !currentProject.id) return;
-            
+
             const originalText = runAiBtn.innerHTML;
             runAiBtn.innerHTML = '⏳ Multimodal AI is reading and highlighting PDFs...';
             runAiBtn.disabled = true;
             runAiBtn.style.backgroundColor = '#6c757d';
-            
+
             try {
-                const response = await fetch('http://localhost:3000/api/run-fulltext-ai', {
+                const response = await fetch('http://47.102.222.252:3000/api/run-fulltext-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
                 });
                 const result = await response.json();
-                
+
                 if (result.success) {
                     alert(result.message);
-                    loadFullTextScreening(); 
+                    loadFullTextScreening();
                 } else {
                     alert('AI Error: ' + result.message);
                 }
@@ -1585,13 +1585,13 @@ window.togglePdfView = function(litId, safePath) {
         // 【展开逻辑】
         pdfRow.style.display = 'table-row';
         // 让 Action 列动态跨越两行，包裹住上方摘要和下方巨幅 PDF
-        actionCell.rowSpan = 2; 
-        
+        actionCell.rowSpan = 2;
+
         // 懒加载：只有第一次点击才生成 iframe 获取文件，避免页面加载时同时请求几十个PDF卡死服务器
         if (!pdfContainer.innerHTML.trim()) {
-            pdfContainer.innerHTML = `<iframe src="http://localhost:3000/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
+            pdfContainer.innerHTML = `<iframe src="http://47.102.222.252:3000/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
         }
-        
+
         // 按钮变红，文字变为关闭
         btn.innerHTML = 'Close PDF';
         btn.classList.remove('btn-primary');
@@ -1600,8 +1600,8 @@ window.togglePdfView = function(litId, safePath) {
         // 【关闭逻辑】
         pdfRow.style.display = 'none';
         // Action 列恢复单行模式
-        actionCell.rowSpan = 1; 
-        
+        actionCell.rowSpan = 1;
+
         // 按钮变蓝，文字恢复
         btn.innerHTML = 'View PDF';
         btn.classList.remove('btn-danger');
@@ -1641,23 +1641,23 @@ abstractModal.addEventListener('click', function(e) {
 // 1. 进入页面时，自动加载要提取的文献数量
 window.loadDataExtraction = async function() {
     if (!currentProject || !currentProject.id) return;
-    
+
     try {
-        const response = await fetch('http://localhost:3000/api/get-literatures', {
+        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: currentProject.id })
         });
         const result = await response.json();
-        
+
         if (result.success) {
             // 核心：统计最终在全文阶段被判定为 Included 的文献数量 (结合手动决定)
             const finalPapers = result.data.filter(lit => {
-                return lit.full_text_user_decision === 'Include' || 
+                return lit.full_text_user_decision === 'Include' ||
                        ((!lit.full_text_user_decision || lit.full_text_user_decision === 'Keep') && lit.full_text_decision === 'Included');
             });
             document.getElementById('extract-paper-count').textContent = finalPapers.length;
-            
+
             const btn = document.getElementById('run-extraction-btn');
             if (finalPapers.length === 0) {
                 btn.disabled = true;
@@ -1668,7 +1668,7 @@ window.loadDataExtraction = async function() {
                 btn.style.backgroundColor = '#0071e3';
                 btn.innerHTML = '✨ Start AI Data Extraction';
             }
-            
+
             // 重置状态UI
             document.getElementById('download-center').style.display = 'none';
             document.getElementById('extraction-status-icon').textContent = '📑';
@@ -1686,38 +1686,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (runExtBtn) {
         runExtBtn.addEventListener('click', async () => {
             if (!currentProject || !currentProject.id) return;
-            
+
             // UI变为处理中：齿轮旋转
             const icon = document.getElementById('extraction-status-icon');
             icon.textContent = '⚙️';
             icon.style.animation = 'spin 2s linear infinite';
-            
+
             document.getElementById('extraction-status-title').textContent = 'AI is Extracting Data...';
             document.getElementById('extraction-status-desc').textContent = 'Deep reading multiple full-text PDFs. This may take several minutes.';
-            
+
             runExtBtn.disabled = true;
             runExtBtn.innerHTML = 'Processing...';
             runExtBtn.style.backgroundColor = '#86868b';
             document.getElementById('download-center').style.display = 'none';
-            
+
             try {
                 // 等待下一阶段我们在 app.py 中写这个接口
-                const response = await fetch('http://localhost:3000/api/run-data-extraction', {
+                const response = await fetch('http://47.102.222.252:3000/api/run-data-extraction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
                 });
                 const result = await response.json();
-                
+
                 if (result.success) {
                     icon.textContent = '✅';
                     icon.style.animation = 'none';
                     document.getElementById('extraction-status-title').textContent = 'Extraction Complete';
                     document.getElementById('extraction-status-desc').textContent = result.message;
-                    
+
                     // 显示下载区域，隐藏提取按钮
                     document.getElementById('download-center').style.display = 'block';
-                    runExtBtn.style.display = 'none'; 
+                    runExtBtn.style.display = 'none';
                 } else {
                     icon.textContent = '❌';
                     icon.style.animation = 'none';
@@ -1746,14 +1746,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dlXlsxBtn = document.getElementById('download-xlsx-btn');
     if (dlXlsxBtn) {
         dlXlsxBtn.addEventListener('click', () => {
-            window.open(`http://localhost:3000/api/download-extraction?project_id=${currentProject.id}&type=xlsx`, '_blank');
+            window.open(`http://47.102.222.252:3000/api/download-extraction?project_id=${currentProject.id}&type=xlsx`, '_blank');
         });
     }
 
     const dlCsvBtn = document.getElementById('download-csv-btn');
     if (dlCsvBtn) {
         dlCsvBtn.addEventListener('click', () => {
-            window.open(`http://localhost:3000/api/download-extraction?project_id=${currentProject.id}&type=csv`, '_blank');
+            window.open(`http://47.102.222.252:3000/api/download-extraction?project_id=${currentProject.id}&type=csv`, '_blank');
         });
     }
 });
@@ -1761,7 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ====== 新增：处理 Abstract Screening 一键智能切换按钮逻辑 ======
 window.toggleUserDecision = async function(btn, litId, currentAction, aiDecision) {
     let nextAction = 'Keep';
-    
+
     // 智能推断下一个状态：如果是Keep，则切换为与AI相反的操作；如果是其他，则切回Keep
     if (currentAction === 'Keep' || !currentAction) {
         nextAction = (aiDecision === 'Included') ? 'Exclude' : 'Include';
@@ -1791,12 +1791,12 @@ window.toggleUserDecision = async function(btn, litId, currentAction, aiDecision
     // 添加一点点击的微动效反馈
     btn.style.transform = 'scale(0.92)';
     setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
-    
+
     btn.setAttribute('onclick', `toggleUserDecision(this, ${litId}, '${nextAction}', '${aiDecision}')`);
 
     // 后台静默发送请求保存结果
     try {
-        await fetch('http://localhost:3000/api/update-literature-decision', {
+        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1851,7 +1851,7 @@ createProjectModal?.addEventListener('click', function(e) {
 // ====== 新增：处理 Full-Text Screening 一键智能切换按钮逻辑 ======
 window.toggleFullTextUserDecision = async function(btn, litId, currentAction, aiDecision) {
     let nextAction = 'Keep';
-    
+
     // 智能推断下一个状态
     if (currentAction === 'Keep' || !currentAction) {
         nextAction = (aiDecision === 'Included') ? 'Exclude' : 'Include';
@@ -1879,12 +1879,12 @@ window.toggleFullTextUserDecision = async function(btn, litId, currentAction, ai
     btn.style.color = btnColor;
     btn.style.transform = 'scale(0.92)';
     setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
-    
+
     btn.setAttribute('onclick', `toggleFullTextUserDecision(this, ${litId}, '${nextAction}', '${aiDecision}')`);
 
     // 后台静默发送请求保存结果到新的全文字段
     try {
-        await fetch('http://localhost:3000/api/update-literature-decision', {
+        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
