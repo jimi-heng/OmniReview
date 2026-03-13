@@ -657,9 +657,9 @@ def run_ai_screening_api():
 
         pico_data = json.loads(pico_row['data_content'])  # 这是一个字典，包含 population, intervention 等
 
-        # 2. 获取所有 Pending 状态的文献（上传时摘要暂存在了 reasoning 里）
+        # 2. 获取所有 Pending 和 Error 状态的文献（允许重新跑失败的）
         cursor.execute(
-            "SELECT id, title, abstract, reasoning FROM literatures WHERE project_id = ? AND ai_decision = 'Pending'",
+            "SELECT id, title, abstract, reasoning FROM literatures WHERE project_id = ? AND ai_decision IN ('Pending', 'Error')",
             (project_id,))
         pending_rows = cursor.fetchall()
 
@@ -678,13 +678,21 @@ def run_ai_screening_api():
         # 3. 将 PICO 字典和文献列表传给我们的同步包装函数
         screen_results = run_ai_screening_sync(pico_data, papers_to_screen)
 
-        # 4. 将 AI 智能体跑出的结果批量覆盖写回数据库
+        # 4. 将 AI 智能体跑出的结果批量覆盖写回数据库 (新增容错拦截)
         for res in screen_results:
+            final_decision = res['ai_decision']
+            final_reasoning = res['reasoning']
+            
+            # 【智能拦截】：如果发现大模型返回了默认的空洞话术，或者没给结果，说明 API 彻底熔断了
+            if "did not output detailed reasoning" in final_reasoning or not final_decision:
+                final_decision = 'Error'
+                final_reasoning = '⚠️ API connection failed or token limits reached. Please click the run button again to retry.'
+
             cursor.execute('''
                 UPDATE literatures 
                 SET ai_decision = ?, reasoning = ? 
                 WHERE id = ?
-            ''', (res['ai_decision'], res['reasoning'], res['id']))
+            ''', (final_decision, final_reasoning, res['id']))
 
         conn.commit()
         conn.close()
@@ -1043,8 +1051,15 @@ def run_data_extraction():
 
         # 5. 使用 subprocess 调用 DataExtraction.py，完美避开 async 事件循环冲突
         script_path = os.path.join(parent_dir, 'Screening', 'DataExtraction.py')
+        
+        # 【核心修复】：解决宝塔 uWSGI 部署环境下 sys.executable 指向错乱的问题
+        python_exe = sys.executable
+        if 'uwsgi' in python_exe:
+            # 顺藤摸瓜，找到 uwsgi 同目录下的真正 python 解释器
+            python_exe = os.path.join(os.path.dirname(python_exe), 'python')
+            
         cmd = [
-            sys.executable, script_path,
+            python_exe, script_path,
             '--resources-dir', extract_dir,
             '--output-csv', out_csv,
             '--output-xlsx', out_xlsx
@@ -1094,6 +1109,31 @@ def download_extraction():
     else:
         return "File not found. Please run extraction first.", 404
 
+# ==========================================
+# 提取结果预览接口 (读取 CSV 返回 JSON)
+# ==========================================
+@app.route('/api/get-extraction-preview', methods=['GET'])
+def get_extraction_preview():
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Missing project ID'})
+
+    out_dir = os.path.join(parent_dir, 'outputs')
+    csv_path = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
+
+    if not os.path.exists(csv_path):
+        return jsonify({'success': False, 'message': 'Not extracted yet'})
+
+    try:
+        # 读取 CSV 并处理 NaN 空值，防止 JSON 序列化崩溃
+        df = pd.read_csv(csv_path)
+        df = df.fillna("")
+        records = df.to_dict(orient='records')
+        columns = df.columns.tolist()
+        return jsonify({'success': True, 'data': records, 'columns': columns})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    
 
 if __name__ == '__main__':
     print('=' * 50)

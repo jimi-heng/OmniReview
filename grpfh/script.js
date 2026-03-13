@@ -3,6 +3,12 @@ let currentEditRow = null;
 // 在文件开头添加全局变量
 let currentUser = null; // 存储当前登录用户信息
 let currentProject = null; // 存储当前正在进行的项目
+// ====== 核心配置：自动环境识别 ======
+// 如果当前网址是 localhost，就请求本地后端的 3000 端口；否则请求云服务器的后端
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3000'
+    : 'http://47.102.222.252:3000';
+    
 // ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
 function playLoginEntranceAnimation() {
     // 隐藏导航栏，直到登录成功 (确保和 showPage 守卫同步)
@@ -94,6 +100,12 @@ function showPage(pageId) {
             targetEl.style.display = 'block'; // 其他页面保持默认的 block
         }
     }
+
+    // 【核心新增】：如果用户切换到了数据提取页面，静默检查是否已有提取结果
+    if (pageId === 'data-extraction-page' && currentProject) {
+        checkExtractionStatus();
+    }
+
     
     // 根据页面执行对应的初始化和导航高亮
     switch (pageId) {
@@ -147,7 +159,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
 
   try {
     // 3. 调用后端登录接口
-    const response = await fetch('http://47.102.222.252:3000/api/login', {
+    const response = await fetch(`${API_BASE_URL}/api/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -264,7 +276,7 @@ document.getElementById('register-btn').addEventListener('click', async () => {
 
     try {
         // 3. 调用后端注册接口
-        const response = await fetch('http://47.102.222.252:3000/api/register', {
+        const response = await fetch(`${API_BASE_URL}/api/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -440,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
           for (let lit of literatures) {
             lit.project_id = currentProject.id;
 
-            const response = await fetch('http://47.102.222.252:3000/api/upload-literature', {
+            const response = await fetch(`${API_BASE_URL}/api/upload-literature`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(lit)
@@ -494,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentProject || !currentProject.id) return;
 
     try {
-      const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
+      const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: currentProject.id })
@@ -606,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // 3. 发送请求给后端
-                const response = await fetch('http://47.102.222.252:3000/api/search-pubmed', {
+                const response = await fetch(`${API_BASE_URL}/api/search-pubmed`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -646,7 +658,7 @@ async function loadUserProjects() {
     if (!currentUser) return;
 
     try {
-        const response = await fetch('http://47.102.222.252:3000/api/get-projects', {
+        const response = await fetch(`${API_BASE_URL}/api/get-projects`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -728,7 +740,7 @@ async function createNewProject(projectName) {
     if (!currentUser) return;
 
     try {
-        const response = await fetch('http://47.102.222.252:3000/api/create-project', {
+        const response = await fetch(`${API_BASE_URL}/api/create-project`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -765,7 +777,7 @@ async function continueProject(projectId) {
         // 【核心修复】：加载项目前，先清空面板，防止上一个项目的数据串号！
         clearAllInputs();
 
-        const response = await fetch('http://47.102.222.252:3000/api/get-project-data', {
+        const response = await fetch(`${API_BASE_URL}/api/get-project-data`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: projectId })
@@ -777,18 +789,28 @@ async function continueProject(projectId) {
             currentProject = { id: projectId };
 
             // 加载 PICO 数据
+            // 加载 SPICO 数据
             if (result.data.pico) {
+                document.getElementById('study_design').value = result.data.pico.study_design || '';
                 document.getElementById('population').value = result.data.pico.population || '';
                 document.getElementById('intervention').value = result.data.pico.intervention || '';
                 document.getElementById('comparison').value = result.data.pico.comparison || '';
-                document.getElementById('study_design').value = result.data.pico.study_design || '';
+                document.getElementById('outcome').value = result.data.pico.outcome || '';
             }
 
             // 加载 Protocol 数据
             if (result.data.protocol) {
                 document.getElementById('research-objective').value = result.data.protocol.objective || '';
-                document.getElementById('inclusion-criteria').value = result.data.protocol.inclusion || '';
-                document.getElementById('exclusion-criteria').value = result.data.protocol.exclusion || '';
+                
+                // 兼容旧版本数据的平滑过渡：如果旧项目有 inclusion/exclusion，合并显示
+                if (result.data.protocol.criteria !== undefined) {
+                    document.getElementById('additional-criteria').value = result.data.protocol.criteria;
+                } else {
+                    let oldCriteria = [];
+                    if (result.data.protocol.inclusion) oldCriteria.push("Inclusion:\n" + result.data.protocol.inclusion);
+                    if (result.data.protocol.exclusion) oldCriteria.push("Exclusion:\n" + result.data.protocol.exclusion);
+                    document.getElementById('additional-criteria').value = oldCriteria.join('\n\n');
+                }
             }
 
             // 【核心修复】：加载 Search 阶段的数据（隔离各项目的搜索参数）
@@ -797,7 +819,7 @@ async function continueProject(projectId) {
                 document.getElementById('max-papers').value = result.data.search_params.maxPapers || 200;
             }
 
-            const projectResponse = await fetch('http://47.102.222.252:3000/api/get-projects', {
+            const projectResponse = await fetch(`${API_BASE_URL}/api/get-projects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: currentUser.id })
@@ -834,7 +856,7 @@ async function editProjectName(projectId, buttonElement) {
     const newName = prompt('Edit project name:', oldName);
     if (newName && newName.trim() && newName.trim() !== oldName) {
         try {
-            const response = await fetch('http://47.102.222.252:3000/api/update-project-name', {
+            const response = await fetch(`${API_BASE_URL}/api/update-project-name`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -888,7 +910,7 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
     closeDeleteModal();
 
     try {
-        const response = await fetch('http://47.102.222.252:3000/api/delete-project', {
+        const response = await fetch(`${API_BASE_URL}/api/delete-project`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: projectId })
@@ -915,22 +937,22 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
 });
 
 // 保存PICO数据
+// 保存PICO数据 (更新为 SPICO 结构)
 async function savePicoData() {
     if (!currentProject || !currentProject.id) return;
 
     const picoData = {
+        study_design: document.getElementById('study_design').value,
         population: document.getElementById('population').value,
         intervention: document.getElementById('intervention').value,
         comparison: document.getElementById('comparison').value,
-        study_design: document.getElementById('study_design').value
+        outcome: document.getElementById('outcome').value // 新增 Outcome
     };
 
     try {
-        await fetch('http://47.102.222.252:3000/api/save-project-data', {
+        await fetch(`${API_BASE_URL}/api/save-project-data`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 project_id: currentProject.id,
                 data_type: 'pico',
@@ -942,22 +964,19 @@ async function savePicoData() {
     }
 }
 
-// 保存Protocol数据
+// 保存Protocol数据 (合并纳排标准)
 async function saveProtocolData() {
     if (!currentProject || !currentProject.id) return;
 
     const protocolData = {
         objective: document.getElementById('research-objective').value,
-        inclusion: document.getElementById('inclusion-criteria').value,
-        exclusion: document.getElementById('exclusion-criteria').value
+        criteria: document.getElementById('additional-criteria').value // 统一合并为 criteria
     };
 
     try {
-        await fetch('http://47.102.222.252:3000/api/save-project-data', {
+        await fetch(`${API_BASE_URL}/api/save-project-data`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 project_id: currentProject.id,
                 data_type: 'protocol',
@@ -974,7 +993,7 @@ async function updateProjectStatus(status) {
     if (!currentProject || !currentProject.id) return;
 
     try {
-        await fetch('http://47.102.222.252:3000/api/update-project-status', {
+        await fetch(`${API_BASE_URL}/api/update-project-status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1044,7 +1063,7 @@ window.loadAbstractScreening = async function() {
     if (!screenTableBody || !currentProject || !currentProject.id) return;
 
     try {
-        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
+        const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: currentProject.id })
@@ -1058,8 +1077,11 @@ window.loadAbstractScreening = async function() {
             result.data.forEach((lit, index) => {
                 const displayId = index + 1; // 生成从 1 开始的显示序号
 
-                // 根据 AI 决定设置颜色
-                let aiColor = lit.ai_decision === 'Included' ? 'green' : (lit.ai_decision === 'Excluded' ? 'red' : '#6c757d');
+                // 根据 AI 决定设置颜色 (新增 Error 状态的苹果风色彩支持)
+                let aiColor = '#6c757d'; // 默认灰
+                if (lit.ai_decision === 'Included') aiColor = '#34c759'; // 苹果绿
+                else if (lit.ai_decision === 'Excluded') aiColor = '#ff3b30'; // 苹果红
+                else if (lit.ai_decision === 'Error') aiColor = '#ff9500'; // 苹果警告橙
                 let shortReason = lit.reasoning && lit.reasoning.length > 80 ? lit.reasoning.substring(0, 80) + '...' : (lit.reasoning || 'No reasoning provided yet');
 
                 const tr = document.createElement('tr');
@@ -1120,7 +1142,7 @@ window.loadAbstractScreening = async function() {
 // 更新用户的Include/Exclude决定
 window.updateDecision = async function(literatureId, decision) {
     try {
-        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
+        await fetch(`${API_BASE_URL}/api/update-literature-decision`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1150,7 +1172,7 @@ document.getElementById('saveReason').addEventListener('click', async function()
     if (newReason) {
         try {
             // 调用我们刚才在 app.py 里写的接口保存到数据库
-            const response = await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
+            const response = await fetch(`${API_BASE_URL}/api/update-literature-decision`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1179,10 +1201,10 @@ document.getElementById('saveReason').addEventListener('click', async function()
 });
 
 function clearAllInputs() {
-    // 1. 清空 PICO 和 Protocol 输入框
+    // 1. 清空 SPICO 和 Protocol 输入框
     const textInputs = [
-        'population', 'intervention', 'comparison', 'study_design',
-        'research-objective', 'inclusion-criteria', 'exclusion-criteria',
+        'study_design', 'population', 'intervention', 'comparison', 'outcome',
+        'research-objective', 'additional-criteria',
         'search-keywords' // 连同搜索界面的关键字一起清空
     ];
     textInputs.forEach(id => {
@@ -1199,7 +1221,6 @@ function clearAllInputs() {
     if (fileUpload) fileUpload.value = '';
 }
 
-
 // ====== 新增：保存 Search 界面的数据 ======
 async function saveSearchData() {
     if (!currentProject || !currentProject.id) return;
@@ -1210,7 +1231,7 @@ async function saveSearchData() {
     };
 
     try {
-        await fetch('http://47.102.222.252:3000/api/save-project-data', {
+        await fetch(`${API_BASE_URL}/api/save-project-data`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1241,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
             runAiBtn.style.backgroundColor = '#6c757d';
 
             try {
-                const response = await fetch('http://47.102.222.252:3000/api/run-ai-screening', {
+                const response = await fetch(`${API_BASE_URL}/api/run-ai-screening`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
@@ -1280,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 对于文件下载，最简单的方式是直接让浏览器打开带有参数的 GET 请求 URL
-            const downloadUrl = `http://47.102.222.252:3000/api/export-csv?project_id=${currentProject.id}`;
+            const downloadUrl = `${API_BASE_URL}/api/export-csv?project_id=${currentProject.id}`;
             window.open(downloadUrl, '_blank');
         });
     }
@@ -1329,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchPdfsBtn.style.backgroundColor = '#6c757d';
 
             try {
-                const response = await fetch('http://47.102.222.252:3000/api/fetch-pdfs', {
+                const response = await fetch(`${API_BASE_URL}/api/fetch-pdfs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
@@ -1360,7 +1381,7 @@ window.loadFullTextScreening = async function() {
     if (!tbody || !currentProject) return;
 
     try {
-        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
+        const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: currentProject.id })
@@ -1381,17 +1402,17 @@ window.loadFullTextScreening = async function() {
 
             tbody.innerHTML = '';
             includedPapers.forEach((lit, index) => {
-                let statusColor = '#6c757d';
+                // 【全量果化】1. PDF 下载状态颜色升级
+                let statusColor = '#86868b'; // 苹果默认灰
                 let displayStatus = lit.pdf_status || 'Pending';
 
                 if (displayStatus === 'Downloaded') {
-                    statusColor = 'green';
+                    statusColor = '#34c759'; // 苹果系统绿
                 } else if (displayStatus.includes('Failed')) {
-                    statusColor = 'red';
+                    statusColor = '#ff3b30'; // 苹果系统红
                     // 【神来之笔】：把 "Failed (Paywalled)" 变成两行："Failed" 加粗，原因变细变小换行显示！
                     displayStatus = displayStatus.replace(' (', '<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8;">(') + '</span>';
                 }
-
 
                 let evidenceText = 'Waiting for AI Analysis...';
                 if (lit.pico_evidence && lit.pico_evidence !== '{}') {
@@ -1403,7 +1424,11 @@ window.loadFullTextScreening = async function() {
                     }
                 }
 
-                let decisionColor = lit.full_text_decision === 'Included' ? 'green' : (lit.full_text_decision === 'Excluded' ? 'red' : '#333');
+                // 【全量果化】2. AI 全文判决状态颜色升级 (同步加入 Error 的橙色预警)
+                let decisionColor = '#86868b'; // 苹果默认灰
+                if (lit.full_text_decision === 'Included') decisionColor = '#34c759'; // 苹果系统绿
+                else if (lit.full_text_decision === 'Excluded') decisionColor = '#ff3b30'; // 苹果系统红
+                else if (lit.full_text_decision === 'Error') decisionColor = '#ff9500'; // 苹果警告橙
 
                 let actionContent = '';
                 const rawStatus = lit.pdf_status || 'Pending';
@@ -1424,12 +1449,31 @@ window.loadFullTextScreening = async function() {
                         </div>
                     `;
                 } else if (rawStatus.includes('Failed')) {
+                    // 【新增】：智能生成外部跳转链接 (优先使用 DOI，没有则用 Google Scholar 搜索)
+                    let sourceLinkHtml = '';
+                    if (lit.doi) {
+                        let cleanDoi = lit.doi.replace('https://doi.org/', '').trim();
+                        sourceLinkHtml = `
+                            <a href="https://doi.org/${cleanDoi}" target="_blank" style="font-size: 11px; color: #0071e3; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 2px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
+                                Open Source <span style="font-size: 14px; margin-bottom: 2px;">↗</span>
+                            </a>
+                        `;
+                    } else {
+                        let searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(lit.title)}`;
+                        sourceLinkHtml = `
+                            <a href="${searchUrl}" target="_blank" style="font-size: 11px; color: #0071e3; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 2px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">
+                                Search Scholar <span style="font-size: 14px; margin-bottom: 2px;">↗</span>
+                            </a>
+                        `;
+                    }
+
                     actionContent = `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 120px; z-index: 10;">
                             <label class="btn" style="font-size: 13px; padding: 8px 18px; border-radius: 20px; font-weight: 600; background-color: #ff3b30; color: white; border: none; cursor: pointer; text-align: center; margin: 0; box-shadow: 0 4px 12px rgba(255,59,48,0.3); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
                                 <input type="file" accept="application/pdf" style="display: none;" onchange="autoUploadPDF(${lit.id}, this)">
                                 ⇧ Upload
                             </label>
+                            ${sourceLinkHtml}
                         </div>
                     `;
                 } else {
@@ -1512,7 +1556,7 @@ window.autoUploadPDF = function(paperId, inputElement) {
     formData.append("paper_id", paperId);
     formData.append("file", file);
 
-    fetch("http://47.102.222.252:3000/api/upload-pdf", {
+    fetch(`${API_BASE_URL}/api/upload-pdf`, {
         method: "POST",
         body: formData
     })
@@ -1548,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             runAiBtn.style.backgroundColor = '#6c757d';
 
             try {
-                const response = await fetch('http://47.102.222.252:3000/api/run-fulltext-ai', {
+                const response = await fetch(`${API_BASE_URL}/api/run-fulltext-ai`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ project_id: currentProject.id })
@@ -1587,9 +1631,9 @@ window.togglePdfView = function(litId, safePath) {
         // 让 Action 列动态跨越两行，包裹住上方摘要和下方巨幅 PDF
         actionCell.rowSpan = 2;
 
-        // 懒加载：只有第一次点击才生成 iframe 获取文件，避免页面加载时同时请求几十个PDF卡死服务器
+        // 懒加载：只有第一次点击才生成 iframe 获取文件
         if (!pdfContainer.innerHTML.trim()) {
-            pdfContainer.innerHTML = `<iframe src="http://47.102.222.252:3000/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
+            pdfContainer.innerHTML = `<iframe src="${API_BASE_URL}/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
         }
 
         // 按钮变红，文字变为关闭
@@ -1638,125 +1682,7 @@ abstractModal.addEventListener('click', function(e) {
 // Data Extraction 专属逻辑
 // ==========================================
 
-// 1. 进入页面时，自动加载要提取的文献数量
-window.loadDataExtraction = async function() {
-    if (!currentProject || !currentProject.id) return;
 
-    try {
-        const response = await fetch('http://47.102.222.252:3000/api/get-literatures', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            // 核心：统计最终在全文阶段被判定为 Included 的文献数量 (结合手动决定)
-            const finalPapers = result.data.filter(lit => {
-                return lit.full_text_user_decision === 'Include' ||
-                       ((!lit.full_text_user_decision || lit.full_text_user_decision === 'Keep') && lit.full_text_decision === 'Included');
-            });
-            document.getElementById('extract-paper-count').textContent = finalPapers.length;
-
-            const btn = document.getElementById('run-extraction-btn');
-            if (finalPapers.length === 0) {
-                btn.disabled = true;
-                btn.style.backgroundColor = '#6c757d';
-                btn.innerHTML = 'No Papers Ready';
-            } else {
-                btn.disabled = false;
-                btn.style.backgroundColor = '#0071e3';
-                btn.innerHTML = '✨ Start AI Data Extraction';
-            }
-
-            // 重置状态UI
-            document.getElementById('download-center').style.display = 'none';
-            document.getElementById('extraction-status-icon').textContent = '📑';
-            document.getElementById('extraction-status-icon').style.animation = 'none';
-            document.getElementById('extraction-status-title').textContent = 'Ready to Extract';
-        }
-    } catch (e) {
-        console.error("Failed to load extraction stats:", e);
-    }
-};
-
-// 2. 点击开始提取按钮的事件与后端交互
-document.addEventListener('DOMContentLoaded', () => {
-    const runExtBtn = document.getElementById('run-extraction-btn');
-    if (runExtBtn) {
-        runExtBtn.addEventListener('click', async () => {
-            if (!currentProject || !currentProject.id) return;
-
-            // UI变为处理中：齿轮旋转
-            const icon = document.getElementById('extraction-status-icon');
-            icon.textContent = '⚙️';
-            icon.style.animation = 'spin 2s linear infinite';
-
-            document.getElementById('extraction-status-title').textContent = 'AI is Extracting Data...';
-            document.getElementById('extraction-status-desc').textContent = 'Deep reading multiple full-text PDFs. This may take several minutes.';
-
-            runExtBtn.disabled = true;
-            runExtBtn.innerHTML = 'Processing...';
-            runExtBtn.style.backgroundColor = '#86868b';
-            document.getElementById('download-center').style.display = 'none';
-
-            try {
-                // 等待下一阶段我们在 app.py 中写这个接口
-                const response = await fetch('http://47.102.222.252:3000/api/run-data-extraction', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    icon.textContent = '✅';
-                    icon.style.animation = 'none';
-                    document.getElementById('extraction-status-title').textContent = 'Extraction Complete';
-                    document.getElementById('extraction-status-desc').textContent = result.message;
-
-                    // 显示下载区域，隐藏提取按钮
-                    document.getElementById('download-center').style.display = 'block';
-                    runExtBtn.style.display = 'none';
-                } else {
-                    icon.textContent = '❌';
-                    icon.style.animation = 'none';
-                    document.getElementById('extraction-status-title').textContent = 'Extraction Failed';
-                    alert('Error: ' + result.message);
-                }
-            } catch (e) {
-                console.error(e);
-                alert('Network error while running data extraction.');
-                icon.textContent = '⚠️';
-                icon.style.animation = 'none';
-                document.getElementById('extraction-status-title').textContent = 'Connection Error';
-            } finally {
-                // 恢复按钮（以便失败时重试）
-                runExtBtn.disabled = false;
-                runExtBtn.innerHTML = '✨ Try Extraction Again';
-                runExtBtn.style.backgroundColor = '#0071e3';
-                if(document.getElementById('download-center').style.display !== 'block') {
-                    runExtBtn.style.display = 'inline-flex';
-                }
-            }
-        });
-    }
-
-    // 下载按钮绑定 (后续接入后端下载路由)
-    const dlXlsxBtn = document.getElementById('download-xlsx-btn');
-    if (dlXlsxBtn) {
-        dlXlsxBtn.addEventListener('click', () => {
-            window.open(`http://47.102.222.252:3000/api/download-extraction?project_id=${currentProject.id}&type=xlsx`, '_blank');
-        });
-    }
-
-    const dlCsvBtn = document.getElementById('download-csv-btn');
-    if (dlCsvBtn) {
-        dlCsvBtn.addEventListener('click', () => {
-            window.open(`http://47.102.222.252:3000/api/download-extraction?project_id=${currentProject.id}&type=csv`, '_blank');
-        });
-    }
-});
 
 // ====== 新增：处理 Abstract Screening 一键智能切换按钮逻辑 ======
 window.toggleUserDecision = async function(btn, litId, currentAction, aiDecision) {
@@ -1796,7 +1722,7 @@ window.toggleUserDecision = async function(btn, litId, currentAction, aiDecision
 
     // 后台静默发送请求保存结果
     try {
-        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
+        await fetch(`${API_BASE_URL}/api/update-literature-decision`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1884,7 +1810,7 @@ window.toggleFullTextUserDecision = async function(btn, litId, currentAction, ai
 
     // 后台静默发送请求保存结果到新的全文字段
     try {
-        await fetch('http://47.102.222.252:3000/api/update-literature-decision', {
+        await fetch(`${API_BASE_URL}/api/update-literature-decision`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1896,3 +1822,268 @@ window.toggleFullTextUserDecision = async function(btn, litId, currentAction, ai
         console.error('Failed to update full-text decision:', error);
     }
 };
+
+// ==========================================
+// Data Extraction 专属逻辑 (极致苹果风重构版)
+// ==========================================
+
+// 1. 进入页面时，自动加载要提取的文献数量并渲染列表
+window.loadDataExtraction = async function() {
+    if (!currentProject || !currentProject.id) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: currentProject.id })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            // 筛选最终纳入的文献
+            const finalPapers = result.data.filter(lit => {
+                return lit.full_text_user_decision === 'Include' ||
+                       ((!lit.full_text_user_decision || lit.full_text_user_decision === 'Keep') && lit.full_text_decision === 'Included');
+            });
+
+            document.getElementById('extract-paper-count').textContent = finalPapers.length;
+
+            // 动态渲染苹果风的待提取列表
+            const listContainer = document.getElementById('extraction-paper-list');
+            if(listContainer) {
+                listContainer.innerHTML = '';
+                
+                if (finalPapers.length === 0) {
+                    listContainer.innerHTML = `<li style="padding: 24px; text-align: center; color: #86868b; font-size: 14px;">No papers included for extraction.</li>`;
+                } else {
+                    finalPapers.forEach((p, index) => {
+                        const li = document.createElement('li');
+                        li.style.cssText = `
+                            padding: 12px 16px;
+                            border-bottom: ${index === finalPapers.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.04)'};
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                            background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.4)'};
+                            border-radius: 8px;
+                            margin-bottom: 2px;
+                            transition: background-color 0.2s;
+                        `;
+                        li.onmouseover = () => li.style.backgroundColor = 'rgba(0, 113, 227, 0.05)';
+                        li.onmouseout = () => li.style.backgroundColor = index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.4)';
+                        
+                        li.innerHTML = `
+                            <span style="font-size: 18px;">📄</span>
+                            <span style="font-size: 14px; color: #1d1d1f; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;" title="${p.title}">${p.title}</span>
+                            <span style="font-size: 12px; color: #86868b; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px;">ID: ${p.id}</span>
+                        `;
+                        listContainer.appendChild(li);
+                    });
+                }
+            }
+
+            const btn = document.getElementById('start-extraction-btn');
+            if(btn) {
+                if (finalPapers.length === 0) {
+                    btn.disabled = true;
+                    btn.innerHTML = 'No Papers Ready';
+                    btn.style.backgroundColor = '#a1a1a6';
+                    btn.style.boxShadow = 'none';
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '✨ Start AI Data Extraction';
+                    btn.style.backgroundColor = '#0071e3';
+                    btn.style.boxShadow = '0 8px 24px rgba(0,113,227,0.25)';
+                }
+            }
+
+            const loadingArea = document.getElementById('extraction-loading-area');
+            const iconContainer = document.getElementById('extraction-icon-container');
+            if(loadingArea) loadingArea.style.display = 'none';
+            if(iconContainer) {
+                iconContainer.textContent = '📑';
+                iconContainer.style.animation = 'none';
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load extraction stats:", e);
+    }
+};
+
+// 2. 状态检查核心逻辑
+async function checkExtractionStatus() {
+    if (!currentProject) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/get-extraction-preview?project_id=${currentProject.id}`);
+        const result = await response.json();
+
+        const unstartedView = document.getElementById('extraction-unstarted-view');
+        const completedView = document.getElementById('extraction-completed-view');
+
+        if (result.success && result.data && result.data.length > 0) {
+            if(unstartedView) unstartedView.style.display = 'none';
+            if(completedView) completedView.style.display = 'block';
+            renderExtractionTable(result.columns, result.data);
+        } else {
+            if(unstartedView) unstartedView.style.display = 'block';
+            if(completedView) completedView.style.display = 'none';
+        }
+    } catch (error) {
+        console.error("Failed to fetch extraction preview:", error);
+    }
+}
+
+// 3. 苹果风表格渲染
+function renderExtractionTable(columns, data) {
+    const thead = document.getElementById('extraction-table-head');
+    const tbody = document.getElementById('extraction-table-body');
+    if(!thead || !tbody) return;
+    thead.innerHTML = ''; tbody.innerHTML = '';
+
+    columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        th.style.padding = '14px 20px';
+        th.style.borderBottom = '1px solid rgba(0,0,0,0.1)';
+        th.style.fontWeight = '600';
+        th.style.color = '#1d1d1f';
+        th.style.letterSpacing = '0.3px';
+        thead.appendChild(th);
+    });
+
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #f2f2f7';
+        tr.style.transition = 'background-color 0.2s ease';
+        tr.addEventListener('mouseover', () => tr.style.backgroundColor = '#f9f9fb');
+        tr.addEventListener('mouseout', () => tr.style.backgroundColor = 'transparent');
+
+        columns.forEach(col => {
+            const td = document.createElement('td');
+            td.style.padding = '14px 20px';
+            td.style.maxWidth = '240px'; 
+            td.style.overflow = 'hidden';
+            td.style.textOverflow = 'ellipsis';
+            td.style.whiteSpace = 'nowrap';
+            td.style.color = '#3a3a3c';
+
+            const val = row[col];
+            if (typeof val === 'string' && val.trim().startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(val);
+                    td.textContent = parsed.value || val; 
+                    td.title = parsed.evidence ? `Evidence: ${parsed.evidence}` : val;
+                } catch(e) {
+                    td.textContent = val; td.title = val;
+                }
+            } else {
+                td.textContent = val; td.title = val;
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+}
+
+// 4. 绑定提取按钮事件
+document.getElementById('start-extraction-btn')?.addEventListener('click', async () => {
+    if(!currentProject) return;
+    const btn = document.getElementById('start-extraction-btn');
+    const loadingArea = document.getElementById('extraction-loading-area');
+    const iconContainer = document.getElementById('extraction-icon-container');
+    
+    if(btn) {
+        btn.disabled = true;
+        btn.textContent = 'Extracting...';
+        btn.style.backgroundColor = '#a1a1a6';
+        btn.style.boxShadow = 'none';
+    }
+    
+    if(loadingArea) loadingArea.style.display = 'block';
+    if(iconContainer) {
+        iconContainer.textContent = '⚙️';
+        iconContainer.style.animation = 'spin 2s linear infinite';
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/run-data-extraction`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ project_id: currentProject.id })
+        });
+        const result = await response.json();
+        if(result.success) {
+            checkExtractionStatus(); 
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch(e) {
+        alert('Network request failed.');
+    } finally {
+        if(btn) {
+            btn.disabled = false;
+            btn.textContent = '✨ Start AI Data Extraction';
+            btn.style.backgroundColor = '#0071e3';
+            btn.style.boxShadow = '0 8px 24px rgba(0,113,227,0.25)';
+        }
+        if(loadingArea) loadingArea.style.display = 'none';
+        if(iconContainer) {
+            iconContainer.textContent = '📑';
+            iconContainer.style.animation = 'none';
+        }
+    }
+});
+
+// 5. 极其优雅的无跳转下载逻辑 (Fetch + Blob)
+async function handleDownload(type) {
+    if (!currentProject) return;
+    const btn = document.getElementById(`download-${type}-btn`);
+    if(!btn) return;
+    const originalText = btn.textContent;
+    btn.textContent = 'Downloading...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/download-extraction?project_id=${currentProject.id}&type=${type}`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = downloadUrl;
+            a.download = `Project_${currentProject.id}_Extraction.${type}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            document.body.removeChild(a);
+        } else {
+            const errorText = await response.text();
+            alert(`Download Failed: ${errorText}`);
+        }
+    } catch (error) {
+        console.error('Download error:', error);
+        alert('Network error occurred while trying to download.');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+document.getElementById('download-csv-btn')?.addEventListener('click', () => handleDownload('csv'));
+document.getElementById('download-xlsx-btn')?.addEventListener('click', () => handleDownload('xlsx'));
+
+document.getElementById('re-run-extraction-btn')?.addEventListener('click', () => {
+    if(confirm('Are you sure you want to re-run? This will overwrite existing results.')) {
+        const completedView = document.getElementById('extraction-completed-view');
+        const unstartedView = document.getElementById('extraction-unstarted-view');
+        if(completedView) completedView.style.display = 'none';
+        if(unstartedView) unstartedView.style.display = 'block';
+        
+        const thead = document.getElementById('extraction-table-head');
+        const tbody = document.getElementById('extraction-table-body');
+        if(thead) thead.innerHTML = '';
+        if(tbody) tbody.innerHTML = '';
+        
+        document.getElementById('start-extraction-btn')?.click();
+    }
+});

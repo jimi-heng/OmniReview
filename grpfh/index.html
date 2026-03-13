@@ -619,7 +619,11 @@
                 <button class="btn btn-secondary" onclick="showPage('home-page')">Back to Home</button>
             </div>
             <div class="card">
-                <h3>Enter the PICS Elements</h3>
+                <h3>Enter the SPICO Elements</h3>
+                <div class="form-group">
+                    <label for="study_design">Study Design (S)</label>
+                    <input type="text" id="study_design" placeholder="e.g. Randomized controlled trials, Cohort studies">
+                </div>
                 <div class="form-group">
                     <label for="population">Population (P)</label>
                     <input type="text" id="population" placeholder="e.g. Patients with type 2 diabetes">
@@ -633,8 +637,8 @@
                     <input type="text" id="comparison" placeholder="e.g. Placebo">
                 </div>
                 <div class="form-group">
-                    <label for="study_design">Study Design (S)</label>
-                    <input type="text" id="study_design" placeholder="e.g. HbA1c reduction">
+                    <label for="outcome">Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label>
+                    <input type="text" id="outcome" placeholder="e.g. HbA1c reduction (Leave blank if not strictly required)">
                 </div>
             </div>
             <div class="card">
@@ -644,12 +648,8 @@
                     <textarea id="research-objective" placeholder="Enter your research objectives"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="inclusion-criteria">Additional Inclusion Criteria (excluding PICO)</label>
-                    <textarea id="inclusion-criteria" placeholder="e.g. Published after 1995, Randomized controlled trials"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="exclusion-criteria">Exclusion Criteria</label>
-                    <textarea id="exclusion-criteria" placeholder="e.g. Case reports, Non-English studies"></textarea>
+                    <label for="additional-criteria">Additional Inclusion & Exclusion Criteria</label>
+                    <textarea id="additional-criteria" placeholder="e.g. Include papers published after 1995. Exclude case reports and non-English studies."></textarea>
                 </div>
                 <button class="btn btn-primary" id="import-papers-btn">Import Papers</button>
             </div>
@@ -823,48 +823,62 @@
         </div>
 
         <!-- 6. 数据提取页 -->
-        <div id="data-extraction-page" class="container" style="display: none;">
-            <div class="header">
-                <h1>Data Extraction & Export</h1>
-                <button class="btn btn-secondary" onclick="showPage('full-text-screen-page')">Back to Full-Text</button>
-            </div>
+        <div id="data-extraction-page" class="container" style="display: none; padding-top: 40px; padding-bottom: 60px;">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px;">Data Extraction</h2>
+                <p style="color: #86868b; margin-bottom: 30px;">Automatically extract structured data from included full-text papers.</p>
 
-            <div class="card" style="text-align: center; padding: 60px 20px; max-width: 800px; margin: 0 auto; border-top: 5px solid #0071e3;">
-                
-                <div id="extraction-status-icon" style="font-size: 72px; margin-bottom: 20px; transition: all 0.3s ease;">📑</div>
-                
-                <h2 id="extraction-status-title" style="margin-bottom: 15px; font-size: 28px;">Ready to Extract</h2>
-                
-                <p id="extraction-status-desc" style="color: #86868b; font-size: 16px; margin-bottom: 40px; line-height: 1.5;">
-                    Our AI agent will read your included full-text PDFs, extract PICO elements, <br>
-                    and map them directly into your standardized Excel template.
-                </p>
+                <div id="extraction-unstarted-view" style="text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 40px rgba(0,0,0,0.04);">
+                    <div id="extraction-icon-container" style="font-size: 56px; margin-bottom: 16px; transition: all 0.3s ease;">📑</div>
+                    <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 12px; color: #1d1d1f; letter-spacing: -0.5px;">Ready to Extract</h3>
+                    <p style="color: #86868b; margin-bottom: 24px; font-size: 15px;">
+                        <span id="extract-paper-count" style="font-weight: 700; color: #1d1d1f; font-size: 18px;">0</span> papers are scheduled for multi-agent extraction.
+                    </p>
 
-                <div id="extraction-stats" style="display: inline-flex; gap: 20px; margin-bottom: 40px; background: rgba(0,0,0,0.03); padding: 15px 30px; border-radius: 20px;">
-                    <div>
-                        <span style="display: block; font-size: 24px; font-weight: 700; color: #1d1d1f;" id="extract-paper-count">0</span>
-                        <span style="font-size: 12px; color: #86868b; text-transform: uppercase;">Included Papers Ready</span>
+                    <div style="background: rgba(242, 242, 247, 0.7); border-radius: 16px; margin: 0 auto 32px auto; max-width: 650px; max-height: 280px; overflow-y: auto; text-align: left; padding: 8px; border: 1px solid rgba(0,0,0,0.04); box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);">
+                        <ul id="extraction-paper-list" style="list-style: none; padding: 0; margin: 0;">
+                            </ul>
+                    </div>
+
+                    <button class="btn btn-primary" id="start-extraction-btn" style="padding: 16px 48px; font-size: 16px; font-weight: 600; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,113,227,0.25); transition: all 0.3s ease;">✨ Start AI Data Extraction</button>
+                    
+                    <div id="extraction-loading-area" style="display: none; margin-top: 24px; animation: modalPop 0.5s ease;">
+                        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #0071e3;">AI is processing...</h4>
+                        <p style="color: #86868b; font-size: 13px;">This may take several minutes depending on the paper length.</p>
                     </div>
                 </div>
 
-                <br>
+                <div id="extraction-completed-view" style="display: none; animation: modalPop 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f; letter-spacing: -0.5px;">Extraction Results</h3>
+                            <p style="color: #34c759; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                Extraction completed successfully.
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; background: rgba(255,255,255,0.7); padding: 6px; border-radius: 999px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+                            <button id="re-run-extraction-btn" class="btn" style="padding: 8px 16px; font-size: 13px; background: transparent; color: #1d1d1f; border: none; font-weight: 600; border-radius: 999px;">🔄 Re-run</button>
+                            <div style="width: 1px; background: rgba(0,0,0,0.1); margin: 6px 2px;"></div>
+                            <button id="download-csv-btn" class="btn" style="padding: 8px 16px; font-size: 13px; background: white; color: #1d1d1f; border: 1px solid rgba(0,0,0,0.05); font-weight: 600; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">📥 CSV</button>
+                            <button id="download-xlsx-btn" class="btn" style="padding: 8px 16px; font-size: 13px; background-color: #34c759; color: white; border: none; font-weight: 600; border-radius: 999px; box-shadow: 0 4px 12px rgba(52,199,89,0.3);">📥 Excel</button>
+                        </div>
+                    </div>
 
-                <button id="run-extraction-btn" class="btn btn-primary" style="font-size: 16px; padding: 16px 40px; box-shadow: 0 8px 24px rgba(0, 113, 227, 0.4);">
-                    ✨ Start AI Data Extraction
-                </button>
-
-                <div id="download-center" style="display: none; margin-top: 50px; padding-top: 40px; border-top: 1px solid rgba(0,0,0,0.05);">
-                    <h3 style="margin-bottom: 25px; font-size: 20px; color: #1d1d1f;">Extraction Complete!</h3>
-                    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-                        <button id="download-xlsx-btn" class="btn" style="background: #107c41; color: white; padding: 14px 28px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 14px rgba(16, 124, 65, 0.3);">
-                            📊 Download Excel Report
-                        </button>
-                        <button id="download-csv-btn" class="btn btn-secondary" style="padding: 14px 28px; font-size: 15px;">
-                            📄 Download Raw CSV
-                        </button>
+                    <div style="background: rgba(255,255,255,0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 40px rgba(0,0,0,0.05); overflow: hidden;">
+                        <div style="overflow-x: auto; max-height: 65vh;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; white-space: nowrap;">
+                                <thead style="background-color: rgba(242, 242, 247, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10;">
+                                    <tr id="extraction-table-head">
+                                        </tr>
+                                </thead>
+                                <tbody id="extraction-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
