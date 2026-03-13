@@ -10,13 +10,13 @@ const API_BASE_URL = (window.location.hostname === 'localhost' || window.locatio
     : 'http://47.102.222.252:3000';
     
 // ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
+// ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
 function playLoginEntranceAnimation() {
     // 隐藏导航栏，直到登录成功 (确保和 showPage 守卫同步)
     const navbar = document.querySelector('.navbar');
     if (navbar) navbar.style.display = 'none';
 
-    // 1. 给背景和动画元素加上基础的动画准备类
-    document.querySelector('.login-background')?.classList.add('animate-item');
+    // 1. 给动画元素加上基础的动画准备类 (删除了 .login-background)
     document.getElementById('login-title')?.classList.add('animate-item');
     document.getElementById('login-subtitle')?.classList.add('animate-item');
     document.getElementById('feature-1')?.classList.add('animate-item');
@@ -25,11 +25,9 @@ function playLoginEntranceAnimation() {
     document.getElementById('login-card')?.classList.add('animate-item');
 
     // 2. 瞬间清除，触发重新计算 (Triggers reflow)
-    // 这是让 CSS 重新认识该元素，从而能够再次播放动画的神奇一步
-    void document.querySelector('.login-background')?.offsetWidth;
+    void document.body.offsetWidth;
 
-    // 3. 加上触发关键帧播放的类
-    document.querySelector('.login-background')?.classList.add('play-animation');
+    // 3. 加上触发关键帧播放的类 (删除了 .login-background)
     document.getElementById('login-title')?.classList.add('play-animation');
     document.getElementById('login-subtitle')?.classList.add('play-animation');
     document.getElementById('feature-1')?.classList.add('play-animation');
@@ -91,15 +89,42 @@ function showPage(pageId) {
         if(el) el.style.display = 'none';
     });
     
-    // 显示目标页面 (智能识别弹性布局)
-    const targetEl = document.getElementById(pageId);
-    if(targetEl) {
+    // 显示目标页面 (兼容全新平移空间架构)
+    if (pageId === 'login-page' || pageId === 'register-page') {
+        const megaWrapper = document.getElementById('auth-mega-wrapper');
+        if (megaWrapper) {
+            megaWrapper.style.display = 'block'; // 必须是 block
+            megaWrapper.className = 'state-cover';
+            document.body.classList.add('hide-nav');
+        }
+    } else {
+        const targetEl = document.getElementById(pageId);
+        if(targetEl) targetEl.style.display = 'block';
+        
+        // 离开封面空间后，关掉 mega-wrapper 并显示导航栏
+        const megaWrapper = document.getElementById('auth-mega-wrapper');
+        if (megaWrapper) megaWrapper.style.display = 'none';
+        document.body.classList.remove('hide-nav');
+    }
+
+    // =========================================================
+    // 🌟 新增：智能底图隔离逻辑 (将华丽底图严格限制在登录/注册页)
+    // =========================================================
+    const loginBg = document.querySelector('.login-background');
+    if (loginBg) {
         if (pageId === 'login-page' || pageId === 'register-page') {
-            targetEl.style.display = 'flex'; // 登录和注册页必须使用 flex 才能左右完美居中对齐
+            loginBg.style.display = 'block'; // 开启华丽动态医学底图
         } else {
-            targetEl.style.display = 'block'; // 其他页面保持默认的 block
+            loginBg.style.display = 'none'; // 彻底隐藏华丽底图，露出原版经典的静谧渐变
         }
     }
+    // =========================================================
+
+    // 【核心新增】：如果用户切换到了数据提取页面，静默检查是否已有提取结果
+    if (pageId === 'data-extraction-page' && currentProject) {
+        checkExtractionStatus();
+    }
+
 
     // 【核心新增】：如果用户切换到了数据提取页面，静默检查是否已有提取结果
     if (pageId === 'data-extraction-page' && currentProject) {
