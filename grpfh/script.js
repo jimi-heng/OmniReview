@@ -721,34 +721,42 @@ async function loadUserProjects() {
 
 // 渲染项目列表到页面
 // 渲染项目列表到页面
+// 渲染项目列表到页面
+// 渲染项目列表到页面 (修复按钮丢失问题)
 function renderProjects(projects) {
     const homePage = document.getElementById('home-page');
     const projectsContainer = homePage.querySelector('.card');
-
     if (!projectsContainer) return;
+
+    // 🌟 核心修复：把顶部标题和 Create 按钮的结构单独提出来，保证每次渲染都在
+    const headerHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">Recent Projects</h3>
+            <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
+        </div>
+    `;
 
     if (projects.length === 0) {
         // 没有项目时显示空状态
-        projectsContainer.innerHTML = `
-            <h3>Recent Projects</h3>
-            <div class="no-projects">
-                No projects yet. Click "Create New Project" to start.
-            </div>
-            <div style="margin-top: 20px;">
-                <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
-            </div>
+        projectsContainer.innerHTML = headerHtml + `
+            <div class="empty-data">No projects yet. Click "Create New Project" to start.</div>
         `;
     } else {
         // 有项目时渲染列表
-        let projectsHtml = '<h3>Recent Projects</h3>';
-
+        let projectsHtml = headerHtml;
+        
         projects.forEach(project => {
+            // 解析后端传来的类型并渲染正确的角标
+            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'SPICO';
+            let badgeClass = pType.toLowerCase();
+
             projectsHtml += `
                 <div class="project-item" data-project-id="${project.id}">
                     <div>
-                        <p>
-                            <strong class="project-name">${project.project_name}</strong>
-                            <button class="btn btn-sm btn-secondary" style="margin-left: 10px;" onclick="editProjectName(${project.id}, this)">✎</button>
+                        <p style="display: flex; align-items: center; margin-bottom: 4px;">
+                            <strong class="project-name" style="font-size: 16px;">${project.project_name}</strong>
+                            <span class="type-badge ${badgeClass}">${pType}</span>
+                            <button class="btn btn-sm btn-secondary" style="margin-left: 10px; padding: 2px 8px;" onclick="editProjectName(${project.id}, this)">✎</button>
                         </p>
                         <p><small>Status: ${project.status} | Created: ${project.created_at}</small></p>
                     </div>
@@ -759,19 +767,13 @@ function renderProjects(projects) {
                 </div>
             `;
         });
-
-        projectsHtml += `
-            <div style="margin-top: 20px;">
-                <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
-            </div>
-        `;
-
         projectsContainer.innerHTML = projectsHtml;
     }
 
-    // 重新绑定创建项目按钮事件
+    // 🌟 核心修复：每次重新渲染 HTML 后，必须重新给按钮绑定点击事件！
     const createBtn = document.getElementById('create-project-btn');
     if (createBtn) {
+        // 为了防止重复绑定，先克隆再替换，然后再绑定绝对安全的事件
         createBtn.replaceWith(createBtn.cloneNode(true));
         const newCreateBtn = document.getElementById('create-project-btn');
         newCreateBtn.addEventListener('click', openCreateProjectModal);
@@ -779,115 +781,131 @@ function renderProjects(projects) {
 }
 
 // 创建新项目
+// 创建新项目
 async function createNewProject(projectName) {
     if (!currentUser) return;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/api/create-project`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: currentUser.id,
-                project_name: projectName
-            })
-        });
+        // 抓取用户选中的类型
+        const activeOption = document.querySelector('.type-option.active');
+        const projectType = activeOption ? activeOption.getAttribute('data-type') : 'SPICO';
 
+        const response = await fetch(`${API_BASE_URL}/api/create-project`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: currentUser.id, project_name: projectName })
+        });
         const result = await response.json();
 
         if (result.success) {
-            currentProject = {
-                id: result.project_id,
-                name: projectName,
-                status: 'PICO Setup'
-            };
+            currentProject = { id: result.project_id, name: projectName, status: 'PICO Setup', type: projectType };
             sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
 
-            // 【核心修复】：新建项目时，先清空上一个项目遗留的输入！
-            clearAllInputs();
+            // 立刻将类型存入 project_data 供后端 AI 和首页角标读取
+            await fetch(`${API_BASE_URL}/api/save-project-data`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_id: currentProject.id, data_type: 'project_type', data_content: projectType })
+            });
 
+            clearAllInputs();
+            renderPicoPageByType(projectType);
             showPage('pico-page');
         } else {
             alert('Failed to create project: ' + result.message);
         }
-    } catch (error) {
-        alert('Failed to create project');
-    }
+    } catch (error) { alert('Failed to create project'); }
 }
 
 // 继续项目
 async function continueProject(projectId) {
     try {
-        // 【核心修复】：加载项目前，先清空面板，防止上一个项目的数据串号！
-        clearAllInputs();
+        clearAllInputs(); // 安全清空
 
         const response = await fetch(`${API_BASE_URL}/api/get-project-data`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ project_id: projectId })
         });
-
         const result = await response.json();
 
         if (result.success) {
             currentProject = { id: projectId };
+            
+            // 1. 读取项目类型并恢复界面形态
+            if (result.data.project_type) {
+                currentProject.type = result.data.project_type;
+            } else {
+                currentProject.type = 'SPICO'; // 兼容老数据
+            }
+            renderPicoPageByType(currentProject.type);
 
-            // 加载 PICO 数据
-            // 加载 SPICO 数据
+            // 2. 将数据安全填入对应的输入框
             if (result.data.pico) {
-                document.getElementById('study_design').value = result.data.pico.study_design || '';
-                document.getElementById('population').value = result.data.pico.population || '';
-                document.getElementById('intervention').value = result.data.pico.intervention || '';
-                document.getElementById('comparison').value = result.data.pico.comparison || '';
-                document.getElementById('outcome').value = result.data.pico.outcome || '';
+                if (currentProject.type === 'SPICO') {
+                    document.getElementById('spico-s').value = result.data.pico.s || '';
+                    document.getElementById('spico-p').value = result.data.pico.p || '';
+                    document.getElementById('spico-i').value = result.data.pico.i || '';
+                    document.getElementById('spico-c').value = result.data.pico.c || '';
+                    document.getElementById('spico-o').value = result.data.pico.o || '';
+                } else if (currentProject.type === 'PECO') {
+                    document.getElementById('peco-p').value = result.data.pico.p || '';
+                    document.getElementById('peco-e').value = result.data.pico.e || '';
+                    document.getElementById('peco-c').value = result.data.pico.c || '';
+                    document.getElementById('peco-o').value = result.data.pico.o || '';
+                } else if (currentProject.type === 'PIRO') {
+                    document.getElementById('piro-p').value = result.data.pico.p || '';
+                    document.getElementById('piro-i').value = result.data.pico.i || '';
+                    document.getElementById('piro-r').value = result.data.pico.r || '';
+                    document.getElementById('piro-o').value = result.data.pico.o || '';
+                }
             }
 
             // 加载 Protocol 数据
             if (result.data.protocol) {
                 document.getElementById('research-objective').value = result.data.protocol.objective || '';
-                
-                // 兼容旧版本数据的平滑过渡：如果旧项目有 inclusion/exclusion，合并显示
                 if (result.data.protocol.criteria !== undefined) {
                     document.getElementById('additional-criteria').value = result.data.protocol.criteria;
-                } else {
-                    let oldCriteria = [];
-                    if (result.data.protocol.inclusion) oldCriteria.push("Inclusion:\n" + result.data.protocol.inclusion);
-                    if (result.data.protocol.exclusion) oldCriteria.push("Exclusion:\n" + result.data.protocol.exclusion);
-                    document.getElementById('additional-criteria').value = oldCriteria.join('\n\n');
                 }
             }
-
-            // 【核心修复】：加载 Search 阶段的数据（隔离各项目的搜索参数）
+            // 加载 Search 数据
             if (result.data.search_params) {
                 document.getElementById('search-keywords').value = result.data.search_params.keywords || '';
                 document.getElementById('max-papers').value = result.data.search_params.maxPapers || 200;
             }
 
             const projectResponse = await fetch(`${API_BASE_URL}/api/get-projects`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: currentUser.id })
             });
-
-            const projectResult = await projectResponse.json();
-            const project = projectResult.data.find(p => p.id === projectId);
-
+            const project = (await projectResponse.json()).data.find(p => p.id === projectId);
             if (project) {
                 currentProject.name = project.project_name;
                 sessionStorage.setItem('currentProject', JSON.stringify(currentProject));
-
                 switch(project.status) {
                     case 'PICO Setup': showPage('pico-page'); break;
                     case 'Import/Search': showPage('import-search-page'); break;
                     case 'Abstract Screening': showPage('abstract-screen-page'); break;
-                    case 'Full-Text Screening': showPage('full-text-screen-page'); break; // 新增：全文筛选的跳转
+                    case 'Full-Text Screening': showPage('full-text-screen-page'); break;
                     case 'Data Extraction': showPage('data-extraction-page'); break;
                     default: showPage('pico-page');
                 }
             }
         }
-    } catch (error) {
-        alert('Failed to load project data');
-    }
+    } catch (error) { console.error(error); alert('Failed to load project data'); }
+}
+
+function clearAllInputs() {
+    const textInputs = [
+        'spico-s', 'spico-p', 'spico-i', 'spico-c', 'spico-o',
+        'peco-p', 'peco-e', 'peco-c', 'peco-o',
+        'piro-p', 'piro-i', 'piro-r', 'piro-o',
+        'research-objective', 'additional-criteria', 'search-keywords'
+    ];
+    textInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const maxPapers = document.getElementById('max-papers');
+    if (maxPapers) maxPapers.value = 200;
+    const fileUpload = document.getElementById('file-upload');
+    if (fileUpload) fileUpload.value = '';
 }
 
 // 编辑项目名称
@@ -981,30 +999,35 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
 
 // 保存PICO数据
 // 保存PICO数据 (更新为 SPICO 结构)
+// 动态保存针对该类型的输入
 async function savePicoData() {
     if (!currentProject || !currentProject.id) return;
-
-    const picoData = {
-        study_design: document.getElementById('study_design').value,
-        population: document.getElementById('population').value,
-        intervention: document.getElementById('intervention').value,
-        comparison: document.getElementById('comparison').value,
-        outcome: document.getElementById('outcome').value // 新增 Outcome
-    };
+    const type = currentProject.type || 'SPICO';
+    let picoData = {};
+    
+    if (type === 'SPICO') {
+        picoData = {
+            s: document.getElementById('spico-s').value, p: document.getElementById('spico-p').value,
+            i: document.getElementById('spico-i').value, c: document.getElementById('spico-c').value, o: document.getElementById('spico-o').value
+        };
+    } else if (type === 'PECO') {
+        picoData = {
+            p: document.getElementById('peco-p').value, e: document.getElementById('peco-e').value,
+            c: document.getElementById('peco-c').value, o: document.getElementById('peco-o').value
+        };
+    } else if (type === 'PIRO') {
+        picoData = {
+            p: document.getElementById('piro-p').value, i: document.getElementById('piro-i').value,
+            r: document.getElementById('piro-r').value, o: document.getElementById('piro-o').value
+        };
+    }
 
     try {
         await fetch(`${API_BASE_URL}/api/save-project-data`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                project_id: currentProject.id,
-                data_type: 'pico',
-                data_content: picoData
-            })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: currentProject.id, data_type: 'pico', data_content: picoData })
         });
-    } catch (error) {
-        console.error('Failed to save PICO data:', error);
-    }
+    } catch (error) { console.error('Failed to save PICO data:', error); }
 }
 
 // 保存Protocol数据 (合并纳排标准)

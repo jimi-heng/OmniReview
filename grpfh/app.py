@@ -384,10 +384,11 @@ def get_projects():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT id, project_name, status, created_at 
-            FROM projects 
-            WHERE user_id = ? 
-            ORDER BY updated_at DESC
+            SELECT p.id, p.project_name, p.status, p.created_at, pd.data_content as project_type
+            FROM projects p
+            LEFT JOIN project_data pd ON p.id = pd.project_id AND pd.data_type = 'project_type'
+            WHERE p.user_id = ? 
+            ORDER BY p.updated_at DESC
             LIMIT 5
         ''', (user_id,))
 
@@ -675,8 +676,13 @@ def run_ai_screening_api():
                 'abstract': row['abstract'] if row['abstract'] else row['reasoning']
             })
 
-        # 3. 将 PICO 字典和文献列表传给我们的同步包装函数
-        screen_results = run_ai_screening_sync(pico_data, papers_to_screen)
+        # 3. 获取该项目的类型 (SPICO / PECO / PIRO)
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'", (project_id,))
+        pt_row = cursor.fetchone()
+        project_type = json.loads(pt_row['data_content']) if pt_row else 'SPICO'
+
+        # 4. 将 PICO 字典、文献列表 和 项目类型 一起传给 AI 包装函数
+        screen_results = run_ai_screening_sync(pico_data, papers_to_screen, project_type)
 
         # 4. 将 AI 智能体跑出的结果批量覆盖写回数据库 (新增容错拦截)
         for res in screen_results:
@@ -1068,13 +1074,26 @@ def run_data_extraction():
         print(
             f"\n🚀 [Project {project_id}] Starting AI Data Extraction for {valid_count} papers... (Please wait, about 30s per paper)")
 
-        # 【核心修改】：去掉 capture_output=True，让进度直接在终端中实时打印！
-        process = subprocess.run(cmd)
+        # 重新开启 capture_output，把真正的死因死死抓住！
+        process = subprocess.run(cmd, capture_output=True, text=True)
 
         if process.returncode != 0:
-            return jsonify(
-                {'success': False, 'message': 'Extraction script failed. Please check backend terminal for details.'})
+            # 提取终端里的真实报错信息
+            error_msg = process.stderr.strip()
+            if not error_msg:
+                error_msg = process.stdout.strip()
+                
+            # 在 Flask 终端用红字醒目地打印出完整报错
+            print(f"\n❌ [FATAL ERROR] 提取脚本崩溃！详细报错如下：\n{error_msg}\n")
+            
+            # 把报错的最后 300 个字符传给前端弹窗，让你立刻看到问题
+            short_err = error_msg[-300:] if len(error_msg) > 300 else error_msg
+            return jsonify({
+                'success': False, 
+                'message': f'Script crashed!\nReason: ...{short_err}'
+            })
 
+        print(f"✅ Extraction finished:\n{process.stdout}")
         return jsonify({'success': True, 'message': f'Successfully extracted nested data from {valid_count} papers!'})
 
 

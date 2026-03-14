@@ -480,7 +480,7 @@
            🌓 昼夜切换按钮样式 (极简玻璃拟物)
            ======================================================= */
         .theme-toggle {
-            position: fixed; top: 24px; right: 24px; width: 44px; height: 44px;
+            position: fixed; top: 12px; right: 12px; width: 44px; height: 44px;
             border-radius: 50%; background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
@@ -978,6 +978,372 @@
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: #e5e5ea !important;
         }
+
+        /* =======================================================
+           🌞 终极白天模式：封面排版、颜色与按钮修复
+           ======================================================= */
+        
+        /* 清除类名的默认布局样式 */
+        .cover-badge {
+            display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 24px; letter-spacing: 1px; width: fit-content; transition: all 0.3s;
+        }
+        .cover-title {
+            font-size: 72px; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px; transition: all 0.3s;
+        }
+        .cover-title span {
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; transition: all 0.3s;
+        }
+        .cover-desc {
+            font-size: 19px; line-height: 1.6; margin-bottom: 48px; font-weight: 400; max-width: 500px; transition: all 0.3s;
+        }
+        .cover-btn-primary, .cover-btn-secondary {
+            padding: 16px 48px; font-size: 16px; font-weight: 700; border-radius: 14px; border: none; transition: all 0.3s;
+        }
+
+        /* 🌙 夜晚模式下的封面样式 (恢复你最初喜欢的样子) */
+        body.dark-theme .cover-badge { background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); color: #00d2ff; box-shadow: 0 0 15px rgba(0,210,255,0.2); }
+        body.dark-theme .cover-title { color: #ffffff; }
+        body.dark-theme .cover-title span { background-image: linear-gradient(135deg, #00d2ff 0%, #8a2be2 50%, #34c759 100%); text-shadow: 0 0 30px rgba(0,210,255,0.3); }
+        body.dark-theme .cover-desc { color: #a1a1a6; }
+        body.dark-theme .cover-btn-primary { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: #05050A; box-shadow: 0 0 20px rgba(0,210,255,0.4); }
+        body.dark-theme .cover-btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
+        body.dark-theme .cover-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        /* 🌞 白天模式下的封面样式 (纯净极简果味) */
+        /* 强制背景为：左上纯白 -> 中间亮灰 -> 右下微灰 */
+        body:not(.dark-theme) #auth-mega-wrapper {
+            background: radial-gradient(circle at top left, #ffffff 0%, #f5f5f7 60%, #e5e5ea 100%) !important;
+        }
+        /* 彻底干掉导致标题偏移的 padding */
+        body:not(.dark-theme) #auth-mega-wrapper .intro-panel {
+            background: transparent !important; padding: 6vw 8vw !important; border: none !important;
+        }
+        body:not(.dark-theme) .cover-badge { background: rgba(0, 113, 227, 0.1); border: 1px solid rgba(0, 113, 227, 0.3); color: #0071e3; }
+        body:not(.dark-theme) .cover-title { color: #1d1d1f; }
+        body:not(.dark-theme) .cover-title span { background-image: linear-gradient(135deg, #0071e3 0%, #5e5ce6 50%, #34c759 100%); }
+        body:not(.dark-theme) .cover-desc { color: #555555; }
+        body:not(.dark-theme) .cover-btn-primary { background: linear-gradient(135deg, #0071e3 0%, #30b0ff 100%); color: #ffffff; box-shadow: 0 8px 24px rgba(0,113,227,0.3); }
+        body:not(.dark-theme) .cover-btn-secondary { background: rgba(0,0,0,0.05); color: #1d1d1f; border: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+        body:not(.dark-theme) .cover-btn-secondary:hover { background: rgba(0,0,0,0.08); }
+
+        /* =======================================================
+           🌅 终极昼夜平滑切换：高级铝合金背景与双轨流光字
+           ======================================================= */
+        
+        /* 1. 丝滑且带有高级质感的白天背景 (加深灰蓝色调，告别刺眼纯白) */
+        body:not(.dark-theme) #auth-mega-wrapper {
+            background: radial-gradient(circle at 75% 50%, #0a1128 0%, #030610 60%, #010101 100%) !important; 
+        }
+        #auth-mega-wrapper::before {
+            content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            /* 🌟 调整为苹果 Mac 铝合金质感的深空灰蓝渐变，极具医学与科技感 */
+            background: radial-gradient(circle at top left, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+            opacity: 0; transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: -1;
+        }
+        body:not(.dark-theme) #auth-mega-wrapper::before {
+            opacity: 1; 
+        }
+
+        /* 2. 彻底修复 Knowledge 文字发白和 g 字母漏黑边的问题 */
+        /* 清理旧的全局 span 干扰 */
+        .cover-title span { background-image: none; -webkit-text-fill-color: initial; text-shadow: none !important; }
+        
+        /* 🌙 夜晚模式的流光字 */
+        .knowledge-night {
+            display: inline-block;
+            background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 50%, #34c759 100%) !important;
+            -webkit-background-clip: text !important; background-clip: text !important; 
+            -webkit-text-fill-color: transparent !important; color: transparent !important;
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.3)); 
+            opacity: 1; transition: opacity 1s ease;
+            /* 👇 核心修复：强行向下拉伸渐变画布，拯救 g 字母的尾巴！ */
+            padding-bottom: 15px !important; 
+        }
+        
+        /* 🌞 白天模式的流光字 */
+        .knowledge-day {
+            display: inline-block;
+            background: linear-gradient(135deg, #0055ff 0%, #00aadd 50%, #5e5ce6 100%) !important;
+            -webkit-background-clip: text !important; background-clip: text !important; 
+            -webkit-text-fill-color: transparent !important; color: transparent !important;
+            filter: drop-shadow(0 8px 16px rgba(0, 85, 255, 0.2));
+            opacity: 0; transition: opacity 1s ease;
+            /* 👇 核心修复：同上 */
+            padding-bottom: 15px !important; 
+        }
+        
+        /* 昼夜透明度交替互换 */
+        body:not(.dark-theme) .knowledge-night { opacity: 0; }
+        body:not(.dark-theme) .knowledge-day { opacity: 1; }
+
+        /* 3. 白天模式下的表单纯净磨砂玻璃 */
+        body:not(.dark-theme) .dark-glass {
+            background: rgba(255, 255, 255, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05) !important;
+            color: #1d1d1f !important;
+        }
+        body:not(.dark-theme) .dark-glass h2 { color: #1d1d1f !important; }
+        body:not(.dark-theme) .dark-glass p { color: #86868b !important; }
+        body:not(.dark-theme) .dark-glass label { color: #555555 !important; }
+        body:not(.dark-theme) .dark-input {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            color: #1d1d1f !important;
+        }
+        body:not(.dark-theme) .dark-input:focus {
+            border-color: #0055ff !important;
+            box-shadow: 0 0 0 4px rgba(0, 85, 255, 0.15) !important;
+            background-color: #ffffff !important;
+        }
+        
+        body:not(.dark-theme) .auth-forms-panel > button,
+        body:not(.dark-theme) .auth-forms-panel p { color: #86868b !important; }
+        body:not(.dark-theme) .auth-forms-panel > button:hover { color: #1d1d1f !important; }
+
+        /* =======================================================
+           🌟 补充修复：白天模式表单错误提示颜色被误伤
+           ======================================================= */
+        body:not(.dark-theme) #login-error,
+        body:not(.dark-theme) #register-error {
+            color: #ff3b30 !important; /* 强制覆盖回纯正的苹果红 */
+        }
+
+        /* =======================================================
+           🌟 补充修复：抢救白天模式被误伤的表单错误提示颜色
+           ======================================================= */
+        body:not(.dark-theme) p#login-error,
+        body:not(.dark-theme) p#register-error {
+            color: #ff3b30 !important; /* 强制覆盖回纯正的苹果红 */
+            font-weight: 600 !important;
+            text-shadow: 0 2px 8px rgba(255, 59, 48, 0.15) !important; /* 加一点非常微弱的警告红晕 */
+        }
+
+        /* =======================================================
+           🌟 补充修复：白天模式主按钮纯色化 (去除渐变，回归克制高级感)
+           ======================================================= */
+        
+        /* 1. 白天模式的封面 Log In 按钮 & 表单 INITIALIZE 按钮 -> 纯正苹果蓝 */
+        body:not(.dark-theme) .cover-btn-primary,
+        body:not(.dark-theme) #login-btn {
+            background: #0071e3 !important; /* 纯苹果蓝 */
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
+            border: none !important;
+        }
+        /* 悬停时微微提亮 */
+        body:not(.dark-theme) .cover-btn-primary:hover,
+        body:not(.dark-theme) #login-btn:hover {
+            background: #0077ed !important;
+            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4) !important;
+        }
+
+        /* 2. 白天模式的 DEPLOY INSTANCE 按钮 -> 纯正苹果绿 */
+        body:not(.dark-theme) #register-btn {
+            background: #34c759 !important; /* 纯苹果绿 */
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(52, 199, 89, 0.3) !important;
+            border: none !important;
+        }
+        /* 悬停时微微提亮 */
+        body:not(.dark-theme) #register-btn:hover {
+            background: #32d75b !important;
+            box-shadow: 0 6px 20px rgba(52, 199, 89, 0.4) !important;
+        }
+
+        /* =======================================================
+           🌟 新增功能：项目分析类型选择器 (Radio Cards) & 状态角标
+           ======================================================= */
+        
+        /* 1. 弹窗内的选择卡片 */
+        .type-selector { display: flex; flex-direction: column; gap: 10px; }
+        .type-option {
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; padding: 14px 16px;
+            cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.6);
+            text-align: left; position: relative; overflow: hidden;
+        }
+        .type-option:hover { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.2); }
+        .type-option.active {
+            background: rgba(0, 113, 227, 0.05); border-color: #0071e3;
+            box-shadow: 0 0 0 1px #0071e3;
+        }
+        .type-option .type-title { font-size: 14px; font-weight: 700; color: #1d1d1f; margin-bottom: 4px; transition: color 0.2s; }
+        .type-option .type-desc { font-size: 12px; color: #86868b; line-height: 1.4; }
+        
+        /* 2. 项目列表与PICO界面的精美角标 (Badges) */
+        .type-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; 
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;
+            vertical-align: middle;
+        }
+        /* 白天模式角标颜色 (蓝/绿/紫) */
+        body:not(.dark-theme) .type-badge.spico { background: rgba(0, 113, 227, 0.1); color: #0071e3; }
+        body:not(.dark-theme) .type-badge.peco  { background: rgba(52, 199, 89, 0.1); color: #28a745; }
+        body:not(.dark-theme) .type-badge.piro  { background: rgba(175, 82, 222, 0.1); color: #af52de; }
+
+        /* 🌙 夜晚模式适配 */
+        body.dark-theme .type-option {
+            background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.1);
+        }
+        body.dark-theme .type-option:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+        body.dark-theme .type-option.active {
+            background: rgba(0, 210, 255, 0.1); border-color: #00d2ff;
+            box-shadow: 0 0 0 1px #00d2ff;
+        }
+        body.dark-theme .type-option .type-title { color: #f5f5f7; }
+        body.dark-theme .type-option .type-desc { color: #a1a1a6; }
+        body.dark-theme .type-option.active .type-title { color: #00d2ff; }
+        
+        /* 夜晚模式角标颜色 (赛博蓝/极光绿/幻紫) */
+        body.dark-theme .type-badge.spico { background: rgba(0, 210, 255, 0.15); color: #00d2ff; }
+        body.dark-theme .type-badge.peco  { background: rgba(52, 199, 89, 0.15); color: #34c759; }
+        body.dark-theme .type-badge.piro  { background: rgba(191, 90, 242, 0.15); color: #bf5af2; }
+
+        /* =======================================================
+           🌟 最新 UI 打磨：极简黑白灰风格 (提取页、搜索标签、弹窗)
+           ======================================================= */
+        
+        /* 1. Data Extraction 界面的 Re-run / CSV / Excel 按钮改为黑底白边 */
+        body.dark-theme #re-run-extraction-btn,
+        body.dark-theme #download-csv-btn,
+        body.dark-theme #download-xlsx-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: none !important;
+        }
+        body.dark-theme #re-run-extraction-btn:hover,
+        body.dark-theme #download-csv-btn:hover,
+        body.dark-theme #download-xlsx-btn:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+        /* 顺便压暗包裹这三个按钮的白色发光底座，避免突兀 */
+        body.dark-theme #extraction-completed-view > div:first-child > div:last-child {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none !important;
+        }
+
+        /* 2. Upload Citations 和 Search 标签页改为黑底白边 (与 Back 按钮统一) */
+        body.dark-theme .tabs .tab.active {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: none !important;
+        }
+
+        /* 3. Create Project 弹窗的极简纯白/银色化 */
+        /* 输入框聚焦时变白/亮灰，不再是幽蓝色 */
+        body.dark-theme #createProjectModal .dark-input:focus {
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1) !important;
+        }
+        /* 选项卡选中时：白边框、不偏蓝、整个卡片微微浮起放大 */
+        body.dark-theme .type-option.active {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+            transform: scale(1.02) !important; /* 微微放大卡片 */
+        }
+        /* 选中的文字保持白色，并且字号稍作放大凸显层级 */
+        body.dark-theme .type-option.active .type-title {
+            color: #ffffff !important;
+            font-size: 15.5px !important; /* 比默认稍微放大一点 */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* 增加极其微弱的白光 */
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* =======================================================
+           🌟 终极视觉打磨：夜晚模式蓝色主按钮 (真正的全透明镂空 + 渐变描边)
+           ======================================================= */
+        
+        body.dark-theme .btn-primary,
+        body.dark-theme .cover-btn-primary,
+        body.dark-theme #login-btn,
+        body.dark-theme #confirmCreateProjectBtn {
+            position: relative;
+            background: transparent !important; /* 真正的彻底透明！连玻璃都不是，就是纯空气！ */
+            color: #ffffff !important; /* 纯白文字 */
+            border: 1.5px solid transparent !important; /* 占位，保持按钮大小排版不乱 */
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.15) !important;
+            font-weight: 700 !important;
+            z-index: 1; /* 开启层级控制 */
+        }
+
+        /* =======================================================
+           🌟 终极主按钮阵列：渐变实心(封面/执行) + 纯色勾边(导航)
+           ======================================================= */
+           
+        /* 1. 导航类蓝色按钮 (Proceed, Create等) -> 保持纯透明镂空蓝边 + 白字 */
+        body.dark-theme .btn-primary:not([id*="run"]):not([id*="Run"]):not(.cover-btn-primary):not(#login-btn),
+        body.dark-theme #confirmCreateProjectBtn {
+            background: transparent !important;
+            color: #ffffff !important;
+            /* 👇 核心修改：将透明度从 0.4 提升到 0.85，蓝色会瞬间变得清透锐利 */
+            border: 1px solid rgba(0, 210, 255, 0.85) !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+        }
+        
+        body.dark-theme .btn-primary:not([id*="run"]):not([id*="Run"]):not(.cover-btn-primary):not(#login-btn):hover,
+        body.dark-theme #confirmCreateProjectBtn:hover {
+            /* 👇 核心修改：悬停时边框变成 100% 纯色 (1)，背景色也稍微提亮一点 (0.15) */
+            background: rgba(0, 210, 255, 0.15) !important; 
+            border-color: rgba(0, 210, 255, 1) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* 2. 封面页蓝色按钮 (Log In, INITIALIZE) -> 赛博蓝实心渐变 + 黑字 */
+        body.dark-theme .cover-btn-primary,
+        body.dark-theme #login-btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+            color: #05050A !important; 
+            border: none !important;
+            box-shadow: none !important; 
+            text-shadow: none !important;
+            font-weight: 700 !important;
+        }
+        body.dark-theme .cover-btn-primary:hover,
+        body.dark-theme #login-btn:hover {
+            background: linear-gradient(135deg, #33ddff 0%, #548ce6 100%) !important; 
+            transform: scale(1.02) !important;
+        }
+
+        /* 3. 执行类绿色按钮 (Run AI, Deploy Instance) -> 极光绿实心渐变 + 黑字 */
+        body.dark-theme .btn-success,
+        body.dark-theme button[id*="run"],
+        body.dark-theme button[id*="Run"],
+        body.dark-theme #register-btn {
+            background: linear-gradient(135deg, #34c759 0%, #008744 100%) !important;
+            color: #05050A !important; 
+            border: none !important; 
+            box-shadow: none !important; 
+            text-shadow: none !important;
+            font-weight: 700 !important;
+        }
+        body.dark-theme .btn-success:hover,
+        body.dark-theme button[id*="run"]:hover,
+        body.dark-theme button[id*="Run"]:hover,
+        body.dark-theme #register-btn:hover {
+            background: linear-gradient(135deg, #4ede65 0%, #00a050 100%) !important; 
+            transform: scale(1.02) !important;
+        }
+        
+        /* 全局清理：彻底移除发光光晕及可能的残影伪元素，保证极简 */
+        body.dark-theme .btn-primary::before, body.dark-theme .btn-success::before,
+        body.dark-theme .cover-btn-primary::before, body.dark-theme #login-btn::before,
+        body.dark-theme #register-btn::before, body.dark-theme #confirmCreateProjectBtn::before {
+            display: none !important;
+        }
+
+        /* 清理可能残留的伪元素遮罩，杜绝一切背景色干扰 */
+        body.dark-theme .btn-success::before,
+        body.dark-theme button[id*="run"]::before,
+        body.dark-theme button[id*="Run"]::before,
+        body.dark-theme #register-btn::before {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1050,22 +1416,25 @@
             <div class="auth-slider-track">
                 
                 <div class="intro-panel">
-                    <div class="animate-item delay-1" style="display: inline-block; padding: 6px 14px; border-radius: 20px; background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); color: #00d2ff; font-size: 13px; font-weight: 600; margin-bottom: 24px; letter-spacing: 1px; width: fit-content; box-shadow: 0 0 15px rgba(0,210,255,0.2);">
+                    <div class="animate-item delay-1 cover-badge">
                         ⚡ POWERED BY NEURAL ENGINE
                     </div>
                     
-                    <h1 class="animate-item delay-2" style="font-size: 72px; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px; color: #ffffff;">
+                    <h1 class="animate-item delay-2 cover-title">
                         Synthesize<br>
-                        <span style="background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 50%, #34c759 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(0,210,255,0.3);">Knowledge.</span>
+                        <span style="position: relative; display: inline-block;">
+                            <span class="knowledge-night">Knowledge.</span>
+                            <span class="knowledge-day" style="position: absolute; left: 0; top: 0;">Knowledge.</span>
+                        </span>
                     </h1>
                     
-                    <p class="animate-item delay-3" style="font-size: 19px; color: #a1a1a6; line-height: 1.6; margin-bottom: 48px; font-weight: 400; max-width: 500px;">
+                    <p class="animate-item delay-3 cover-desc">
                         Step into the next-generation workspace. Multi-Agent AI architecture processing millions of medical literature parameters in real-time.
                     </p>
                     
                     <div class="animate-item delay-4" style="display: flex; gap: 20px;">
-                        <button class="btn" onclick="openAuthSpace('login')" style="padding: 16px 48px; font-size: 16px; font-weight: 700; border-radius: 14px; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: #05050A; border: none; box-shadow: 0 0 20px rgba(0,210,255,0.4); transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Log In</button>
-                        <button class="btn" onclick="openAuthSpace('signup')" style="padding: 16px 48px; font-size: 16px; font-weight: 700; border-radius: 14px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)'">Sign Up</button>
+                        <button class="btn cover-btn-primary" onclick="openAuthSpace('login')" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Log In</button>
+                        <button class="btn cover-btn-secondary" onclick="openAuthSpace('signup')" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Sign Up</button>
                     </div>
                 </div>
 
@@ -1145,23 +1514,13 @@
                 <button class="btn btn-secondary" id="logout-btn">Log Out</button>
             </div>
             <div class="card">
-                <h3>Recent Projects</h3>
-                <div class="project-item">
-                    <div>
-                        <p><strong>Diabetes Treatment Review 2025</strong></p>
-                        <small>Status: PICO Setup Completed | Updated: 2025-11-01</small>
-                    </div>
-                    <button class="btn btn-secondary btn-sm">Continue</button>
-                </div>
-                <div class="project-item">
-                    <div>
-                        <p><strong>Antibiotic Resistance Study</strong></p>
-                        <small>Status: Abstract Screening | Updated: 2025-10-28</small>
-                    </div>
-                    <button class="btn btn-secondary btn-sm">Continue</button>
-                </div>
-                <div style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Recent Projects</h3>
                     <button class="btn btn-primary" id="create-project-btn">Create New Project</button>
+                </div>
+                
+                <div id="project-list-container">
+                    <div class="empty-data">Loading projects from server...</div>
                 </div>
             </div>
         </div>
@@ -1172,27 +1531,32 @@
                 <h1>Create New Review</h1>
                 <button class="btn btn-secondary" onclick="showPage('home-page')">Back to Home</button>
             </div>
-            <div class="card">
-                <h3>Enter the SPICO Elements</h3>
-                <div class="form-group">
-                    <label for="study_design">Study Design (S)</label>
-                    <input type="text" id="study_design" placeholder="e.g. Randomized controlled trials, Cohort studies">
+            <div class="card" id="pico-setup-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 id="pico-setup-title" style="margin: 0;">Enter the SPICO Elements</h3>
+                    <span id="current-project-type-badge" class="type-badge spico">Intervention (SPICO)</span>
                 </div>
-                <div class="form-group">
-                    <label for="population">Population (P)</label>
-                    <input type="text" id="population" placeholder="e.g. Patients with type 2 diabetes">
+
+                <div id="fields-SPICO" class="pico-fields-group">
+                    <div class="form-group"><label>Study Design (S)</label><input id="spico-s" type="text" placeholder="e.g. Randomized controlled trials, Cohort studies"></div>
+                    <div class="form-group"><label>Population (P)</label><input id="spico-p" type="text" placeholder="e.g. Patients with type 2 diabetes"></div>
+                    <div class="form-group"><label>Intervention (I)</label><input id="spico-i" type="text" placeholder="e.g. Metformin treatment"></div>
+                    <div class="form-group"><label>Comparison (C)</label><input id="spico-c" type="text" placeholder="e.g. Placebo"></div>
+                    <div class="form-group"><label>Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label><input id="spico-o" type="text" placeholder="e.g. HbA1c reduction"></div>
                 </div>
-                <div class="form-group">
-                    <label for="intervention">Intervention (I)</label>
-                    <input type="text" id="intervention" placeholder="e.g. Metformin treatment">
+
+                <div id="fields-PECO" class="pico-fields-group" style="display: none;">
+                    <div class="form-group"><label>Population (P)</label><input id="peco-p" type="text" placeholder="e.g. Healthy adults or specific patient groups"></div>
+                    <div class="form-group"><label>Exposure (E)</label><input id="peco-e" type="text" placeholder="e.g. Air pollution (PM2.5), Smoking"></div>
+                    <div class="form-group"><label>Comparison (C)</label><input id="peco-c" type="text" placeholder="e.g. Low or no exposure"></div>
+                    <div class="form-group"><label>Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label><input id="peco-o" type="text" placeholder="e.g. Incidence of asthma or mortality"></div>
                 </div>
-                <div class="form-group">
-                    <label for="comparison">Comparison (C)</label>
-                    <input type="text" id="comparison" placeholder="e.g. Placebo">
-                </div>
-                <div class="form-group">
-                    <label for="outcome">Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label>
-                    <input type="text" id="outcome" placeholder="e.g. HbA1c reduction (Leave blank if not strictly required)">
+
+                <div id="fields-PIRO" class="pico-fields-group" style="display: none;">
+                    <div class="form-group"><label>Population (P)</label><input id="piro-p" type="text" placeholder="e.g. Patients with suspected appendicitis"></div>
+                    <div class="form-group"><label>Index Test (I)</label><input id="piro-i" type="text" placeholder="e.g. Ultrasound, Biomarker test"></div>
+                    <div class="form-group"><label>Reference Standard (R)</label><input id="piro-r" type="text" placeholder="e.g. CT scan or surgical pathology"></div>
+                    <div class="form-group"><label>Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label><input id="piro-o" type="text" placeholder="e.g. Diagnostic accuracy (Sensitivity/Specificity)"></div>
                 </div>
             </div>
             <div class="card">
@@ -1438,10 +1802,30 @@
     </div>
 
     <div id="createProjectModal" class="reason-modal">
-        <div class="modal-content" style="max-width: 350px; text-align: center; padding: 32px 24px;">
+        <div class="modal-content" style="max-width: 440px; text-align: center; padding: 32px 24px;">
             <h3 style="margin-bottom: 8px; font-size: 20px; font-weight: 600;">New Project</h3>
-            <p style="color: #86868b; font-size: 13px; margin-bottom: 24px;">Enter a name for your systematic review.</p>
-            <input type="text" id="newProjectNameInput" placeholder="Project Name" style="margin-bottom: 24px; text-align: center; font-weight: 500;">
+            <p style="color: #86868b; font-size: 13px; margin-bottom: 24px;">Configure your systematic review parameters.</p>
+            
+            <input type="text" id="newProjectNameInput" class="dark-input" placeholder="Project Name" style="width: 100%; margin-bottom: 24px; text-align: center; font-weight: 500;">
+            
+            <div style="text-align: left; margin-bottom: 32px;">
+                <label style="font-size: 11px; letter-spacing: 1px; color: #86868b; display: block; margin-bottom: 12px; text-align: center; font-weight: 600;">SELECT ANALYSIS TYPE</label>
+                <div class="type-selector">
+                    <div class="type-option active" data-type="SPICO" onclick="selectProjectType(this, 'SPICO')">
+                        <div class="type-title">Intervention (SPICO)</div>
+                        <div class="type-desc">Study, Population, Intervention, Comparison, Outcome</div>
+                    </div>
+                    <div class="type-option" data-type="PECO" onclick="selectProjectType(this, 'PECO')">
+                        <div class="type-title">Prognosis (PECO)</div>
+                        <div class="type-desc">Population, Exposure, Comparison, Outcome</div>
+                    </div>
+                    <div class="type-option" data-type="PIRO" onclick="selectProjectType(this, 'PIRO')">
+                        <div class="type-title">Diagnosis (PIRO)</div>
+                        <div class="type-desc">Population, Index Test, Reference Standard, Outcome</div>
+                    </div>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 12px; justify-content: center;">
                 <button id="cancelCreateProjectBtn" class="btn btn-secondary" style="flex: 1; padding: 10px 0;">Cancel</button>
                 <button id="confirmCreateProjectBtn" class="btn btn-primary" style="flex: 1; padding: 10px 0;">Create</button>
@@ -1536,6 +1920,9 @@
         // ==========================================
         // 🚀 终极满血版：原位自下而上扫描显现 + 极致性能优化
         // ==========================================
+        // ==========================================
+        // 🚀 终极满血版：支持无缝平滑色彩过渡的 3D DNA 引擎
+        // ==========================================
         function initNeuralDNA() {
             const container = document.getElementById('dna-canvas-container');
             if(!container) return;
@@ -1550,7 +1937,6 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // 🌟 性能优化 2：微调粒子数，肉眼看不出区别，但计算量锐减 40%
             const particleCount = 700; 
             const radius = 2.8;        
             const height = 30;         
@@ -1558,33 +1944,26 @@
 
             const geometry = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
-            const currentColors = new Float32Array(particleCount * 3); // 当前渲染的颜色 (一开始是全黑/透明)
-            const targetColors = new Float32Array(particleCount * 3);  // 目标真实颜色
+            const currentColors = new Float32Array(particleCount * 3); 
+            const targetColors = new Float32Array(particleCount * 3);  
             const basePositions = new Float32Array(particleCount * 3); 
             const velocities = new Float32Array(particleCount * 3);    
             
             const heightRatios = new Float32Array(particleCount); 
-            const isVisible = new Uint8Array(particleCount); // 标记是否已被扫描出来
+            const isVisible = new Uint8Array(particleCount); 
 
-            const colorBlue = new THREE.Color(0x00d2ff);
-            const colorPurple = new THREE.Color(0x8a2be2);
-            const colorGreen = new THREE.Color(0x34c759);
-
+            // 初始化占位，具体颜色由主题控制器决定
             for (let i = 0; i < particleCount; i++) {
                 let x, y, z, t; 
                 
                 if (i < particleCount * 0.4) {
                     t = Math.random();
                     const angle = t * Math.PI * 2 * turns;
-                    y = (t - 0.5) * height;
-                    x = Math.cos(angle) * radius;
-                    z = Math.sin(angle) * radius;
+                    y = (t - 0.5) * height; x = Math.cos(angle) * radius; z = Math.sin(angle) * radius;
                 } else if (i < particleCount * 0.8) {
                     t = Math.random();
                     const angle = t * Math.PI * 2 * turns + Math.PI;
-                    y = (t - 0.5) * height;
-                    x = Math.cos(angle) * radius;
-                    z = Math.sin(angle) * radius;
+                    y = (t - 0.5) * height; x = Math.cos(angle) * radius; z = Math.sin(angle) * radius;
                 } else {
                     const rungSteps = 35; 
                     const discreteT = Math.floor(Math.random() * rungSteps) / rungSteps;
@@ -1592,38 +1971,18 @@
                     const angle = discreteT * Math.PI * 2 * turns;
                     y = (discreteT - 0.5) * height;
                     const lerpFactor = Math.random() * 2 - 1; 
-                    x = Math.cos(angle) * (radius * lerpFactor);
-                    z = Math.sin(angle) * (radius * lerpFactor);
+                    x = Math.cos(angle) * (radius * lerpFactor); z = Math.sin(angle) * (radius * lerpFactor);
                 }
                 
-                x += (Math.random() - 0.5) * 0.6;
-                y += (Math.random() - 0.5) * 0.6;
-                z += (Math.random() - 0.5) * 0.6;
+                x += (Math.random() - 0.5) * 0.6; y += (Math.random() - 0.5) * 0.6; z += (Math.random() - 0.5) * 0.6;
 
-                heightRatios[i] = t; 
-                isVisible[i] = 0; // 初始状态：隐身
-
-                // 🌟 核心：坐标一开始就在正确的位置！
-                positions[i*3] = x;     
-                positions[i*3+1] = y;        
-                positions[i*3+2] = z;   
-
+                heightRatios[i] = t; isVisible[i] = 0;
+                // 🌟 修复：初始将粒子藏在极远处(9999)，彻底消灭小黑点！
+                positions[i*3] = 9999; positions[i*3+1] = 9999; positions[i*3+2] = 9999;   
                 basePositions[i*3] = x; basePositions[i*3+1] = y; basePositions[i*3+2] = z;
                 velocities[i*3] = 0; velocities[i*3+1] = 0; velocities[i*3+2] = 0;
 
-                let pColor = new THREE.Color();
-                if (t < 0.5) pColor.lerpColors(colorBlue, colorPurple, t * 2);
-                else pColor.lerpColors(colorPurple, colorGreen, (t - 0.5) * 2);
-                
-                // 存下它们真实的样子
-                targetColors[i*3] = pColor.r; 
-                targetColors[i*3+1] = pColor.g; 
-                targetColors[i*3+2] = pColor.b;
-
-                // 渲染颜色设为全黑 (因为是 AdditiveBlending 混合模式，全黑 = 完全透明看不见)
-                currentColors[i*3] = 0; 
-                currentColors[i*3+1] = 0; 
-                currentColors[i*3+2] = 0;
+                currentColors[i*3] = 0; currentColors[i*3+1] = 0; currentColors[i*3+2] = 0;
             }
 
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -1632,12 +1991,12 @@
             const dnaGroup = new THREE.Group();
             const pMaterial = new THREE.PointsMaterial({ size: 0.16, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, vertexColors: true });
             const particles = new THREE.Points(geometry, pMaterial);
-            particles.frustumCulled = false; // 防止拖拽时消失
+            particles.frustumCulled = false; 
             dnaGroup.add(particles);
 
             const lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, vertexColors: true });
             const linesMesh = new THREE.LineSegments(new THREE.BufferGeometry(), lineMaterial);
-            linesMesh.frustumCulled = false; // 防止拖拽时消失
+            linesMesh.frustumCulled = false; 
             dnaGroup.add(linesMesh);
 
             dnaGroup.rotation.z = Math.PI / 8;
@@ -1658,7 +2017,6 @@
             });
             document.addEventListener('mouseup', () => { isDragging = false; });
             document.addEventListener('mouseleave', () => { isDragging = false; });
-
             document.addEventListener('mousemove', (e) => {
                 mouseX = (e.clientX / window.innerWidth) * 2 - 1;
                 mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -1670,20 +2028,52 @@
                 }
                 if (isDragging) {
                     const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
-                    targetRotationY += deltaMove.x * 0.005; 
-                    targetRotationX += deltaMove.y * 0.005; 
+                    targetRotationY += deltaMove.x * 0.005; targetRotationX += deltaMove.y * 0.005; 
                     previousMousePosition = { x: e.clientX, y: e.clientY };
                 }
             });
 
+            // 🌟 平滑动画目标变量
+            let targetPointOpacity = document.body.classList.contains('dark-theme') ? 0.9 : 0.7;
+            let targetLineOpacity = document.body.classList.contains('dark-theme') ? 0.35 : 0.6;
+            let currentIsDark = null;
+
+            // 主题监听器 (动态修改 Target 颜色)
+            setInterval(() => {
+                const isDark = document.body.classList.contains('dark-theme');
+                if (currentIsDark !== isDark) {
+                    currentIsDark = isDark;
+                    
+                    const newBlending = isDark ? THREE.AdditiveBlending : THREE.NormalBlending;
+                    pMaterial.blending = newBlending;
+                    linesMesh.material.blending = newBlending;
+                    
+                    targetPointOpacity = isDark ? 0.9 : 0.7;
+                    targetLineOpacity = isDark ? 0.35 : 0.6;
+                    
+                    const palette = isDark 
+                        ? { c1: new THREE.Color(0x00d2ff), c2: new THREE.Color(0x8a2be2), c3: new THREE.Color(0x34c759) } // 黑夜：亮蓝 / 幻紫 / 极光绿
+                        : { c1: new THREE.Color(0x0055ff), c2: new THREE.Color(0x00aadd), c3: new THREE.Color(0x5e5ce6) }; // 白天：深邃蓝 / 医疗青 / 靛蓝
+                    
+                    for (let i = 0; i < particleCount; i++) {
+                        let pColor = new THREE.Color();
+                        let t = heightRatios[i];
+                        if (t < 0.5) pColor.lerpColors(palette.c1, palette.c2, t * 2);
+                        else pColor.lerpColors(palette.c2, palette.c3, (t - 0.5) * 2);
+                        
+                        targetColors[i*3] = pColor.r; 
+                        targetColors[i*3+1] = pColor.g; 
+                        targetColors[i*3+2] = pColor.b;
+                    }
+                }
+            }, 100);
+
             let clock = 0; 
-            const buildDuration = 1.3; // 扫描构建的总时间
+            const buildDuration = 1.3; 
 
             const animate = () => {
                 requestAnimationFrame(animate);
                 clock += 0.016; 
-                
-                // 扫描进度：稍微延伸一点以确保所有粒子都被扫到 (-0.1 到 1.1)
                 const scanProgress = (clock / buildDuration) * 1.2 - 0.1; 
 
                 raycaster.setFromCamera(mouseVec, camera);
@@ -1697,18 +2087,30 @@
                 const cols = particles.geometry.attributes.color.array; 
                 
                 for(let i=0; i < particleCount; i++) {
-                    // 🌟 核心：由下至上扫描，到达对应高度时瞬间点亮粒子
                     if (heightRatios[i] <= scanProgress) {
                         if (!isVisible[i]) {
                             isVisible[i] = 1;
-                            // 将渲染颜色切换为它的真实渐变色
                             cols[i*3] = targetColors[i*3];
                             cols[i*3+1] = targetColors[i*3+1];
                             cols[i*3+2] = targetColors[i*3+2];
+                            // 🌟 瞬间传送回原位
+                            pos[i*3] = basePositions[i*3];
+                            pos[i*3+1] = basePositions[i*3+1];
+                            pos[i*3+2] = basePositions[i*3+2];
                         }
                     }
 
-                    // 所有的粒子都在原地保持有机蠕动 (即使看不见也在运动)
+                    // 🌟 如果还没出生，坚决不参与任何运算，死死藏在屏幕外！
+                    if (!isVisible[i]) {
+                        pos[i*3] = 9999; pos[i*3+1] = 9999; pos[i*3+2] = 9999;
+                        continue; 
+                    }
+
+                    // 🌟 核心：永远向当前的主题色进行极其丝滑的插值逼近 (Lerp)
+                    cols[i*3] += (targetColors[i*3] - cols[i*3]) * 0.08;
+                    cols[i*3+1] += (targetColors[i*3+1] - cols[i*3+1]) * 0.08;
+                    cols[i*3+2] += (targetColors[i*3+2] - cols[i*3+2]) * 0.08;
+
                     velocities[i*3] += (basePositions[i*3] - pos[i*3]) * 0.012;
                     velocities[i*3+1] += (basePositions[i*3+1] - pos[i*3+1]) * 0.012;
                     velocities[i*3+2] += (basePositions[i*3+2] - pos[i*3+2]) * 0.012;
@@ -1721,35 +2123,31 @@
                     const dyM = pos[i*3+1] - mouseLocalPos.y;
                     const dzM = pos[i*3+2] - mouseLocalPos.z;
                     const distM = Math.sqrt(dxM*dxM + dyM*dyM + dzM*dzM);
-                    const interactRadius = 1.5; 
-                    if (distM < interactRadius && distM > 0.01) {
-                        const force = (interactRadius - distM) / interactRadius;
-                        const pushStrength = 0.10; 
-                        velocities[i*3] += (dxM / distM) * force * pushStrength;
-                        velocities[i*3+1] += (dyM / distM) * force * pushStrength;
-                        velocities[i*3+2] += (dzM / distM) * force * pushStrength;
+                    if (distM < 1.5 && distM > 0.01) {
+                        const force = (1.5 - distM) / 1.5;
+                        velocities[i*3] += (dxM / distM) * force * 0.10;
+                        velocities[i*3+1] += (dyM / distM) * force * 0.10;
+                        velocities[i*3+2] += (dzM / distM) * force * 0.10;
                     }
 
                     velocities[i*3] *= 0.94; velocities[i*3+1] *= 0.94; velocities[i*3+2] *= 0.94;
                     pos[i*3] += velocities[i*3]; pos[i*3+1] += velocities[i*3+1]; pos[i*3+2] += velocities[i*3+2];
                 }
                 particles.geometry.attributes.position.needsUpdate = true;
-                particles.geometry.attributes.color.needsUpdate = true; // 必须通知显卡颜色变了
+                particles.geometry.attributes.color.needsUpdate = true; 
+
+                // 🌟 透明度平滑插值
+                pMaterial.opacity += (targetPointOpacity - pMaterial.opacity) * 0.05;
+                linesMesh.material.opacity += (targetLineOpacity - linesMesh.material.opacity) * 0.05;
 
                 const linePositions = [];
                 const lineColors = []; 
                 for (let i = 0; i < particleCount; i++) {
-                    if (!isVisible[i]) continue; // 没扫出来的粒子，绝对不画线！
-
+                    if (!isVisible[i]) continue; 
                     for (let j = i + 1; j < particleCount; j++) {
-                        if (!isVisible[j]) continue; // 没扫出来的粒子，绝对不画线！
-
-                        const dx = pos[i*3] - pos[j*3];
-                        const dy = pos[i*3+1] - pos[j*3+1];
-                        const dz = pos[i*3+2] - pos[j*3+2];
+                        if (!isVisible[j]) continue; 
+                        const dx = pos[i*3] - pos[j*3]; const dy = pos[i*3+1] - pos[j*3+1]; const dz = pos[i*3+2] - pos[j*3+2];
                         const distSq = dx*dx + dy*dy + dz*dz; 
-
-                        // 🌟 性能优化 3：略微缩减连线阈值，大幅降低显卡绘制线条的压力
                         if (distSq < 4.5) { 
                             linePositions.push(pos[i*3], pos[i*3+1], pos[i*3+2], pos[j*3], pos[j*3+1], pos[j*3+2]);
                             lineColors.push(cols[i*3], cols[i*3+1], cols[i*3+2], cols[j*3], cols[j*3+1], cols[j*3+2]);
@@ -1773,6 +2171,60 @@
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth/2, window.innerHeight);
             });
+        }
+
+        // ==========================================
+        // 🌟 2. 项目类型选择与界面动态渲染引擎
+        // ==========================================
+        let selectedProjectType = 'SPICO'; // 默认状态
+
+        // 弹窗内的点击选择特效
+        function selectProjectType(element, type) {
+            document.querySelectorAll('.type-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedProjectType = type;
+        }
+
+        // 点击 Create 按钮时的流转逻辑
+        function confirmProjectCreation() {
+            // 获取输入框的名字 (如果是空，可以加判断，这里直接跳过校验演示)
+            const projectName = document.getElementById('newProjectNameInput').value || 'Untitled Project';
+            
+            // 1. 渲染 PICO 页面的输入框
+            renderPicoPageByType(selectedProjectType);
+            
+            // 2. 关闭弹窗并跳转到 PICO 页面 (假设你原本通过 external JS 的 showPage 或 modal logic 控制)
+            document.getElementById('createProjectModal').style.display = 'none';
+            // 如果你的路由函数是 showPage:
+            if(typeof showPage === 'function') { showPage('pico-page'); }
+        }
+
+        // 根据选中的类型动态改变 PICO 设定的界面
+        function renderPicoPageByType(type) {
+            // 隐藏所有表单组
+            document.querySelectorAll('.pico-fields-group').forEach(el => el.style.display = 'none');
+            
+            // 显示目标表单组
+            const targetGroup = document.getElementById('fields-' + type);
+            if(targetGroup) targetGroup.style.display = 'block';
+
+            // 更新标题和角标样式
+            const titleEl = document.getElementById('pico-setup-title');
+            const badgeEl = document.getElementById('current-project-type-badge');
+            
+            if (type === 'SPICO') {
+                titleEl.textContent = "Enter the SPICO Elements";
+                badgeEl.textContent = "Intervention (SPICO)";
+                badgeEl.className = "type-badge spico";
+            } else if (type === 'PECO') {
+                titleEl.textContent = "Enter the PECO Elements";
+                badgeEl.textContent = "Prognosis (PECO)";
+                badgeEl.className = "type-badge peco";
+            } else if (type === 'PIRO') {
+                titleEl.textContent = "Enter the PIRO Elements";
+                badgeEl.textContent = "Diagnosis (PIRO)";
+                badgeEl.className = "type-badge piro";
+            }
         }
 
         // ==========================================
@@ -1825,11 +2277,6 @@
         });
     </script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
 </body>
