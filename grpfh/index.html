@@ -475,10 +475,520 @@
         .delay-2 { transition-delay: 0.25s; }
         .delay-3 { transition-delay: 0.4s; }
         .delay-4 { transition-delay: 0.55s; }
+    
+        /* =======================================================
+           🌓 昼夜切换按钮样式 (极简玻璃拟物)
+           ======================================================= */
+        .theme-toggle {
+            position: fixed; top: 24px; right: 24px; width: 44px; height: 44px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+            font-size: 20px; cursor: pointer; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .theme-toggle:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
+        body.dark-theme .theme-toggle { background: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.1); }
+
+        /* =======================================================
+           🌙 全局夜晚模式 (Dark Theme) - 匹配极光 DNA 风格
+           ======================================================= */
+        /* 1. 基础背景 */
+        body.dark-theme {
+            background: radial-gradient(circle at top left, #0a1128 0%, #030610 60%, #010101 100%) !important;
+            color: #f5f5f7;
+        }
+
+        /* 2. 顶部导航栏 (深色毛玻璃) */
+        body.dark-theme .progress-header {
+            background-color: rgba(10, 15, 30, 0.6) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        body.dark-theme .step { color: #636366; }
+        body.dark-theme .step.active { color: #f5f5f7; border-bottom: 2px solid #00d2ff; }
+
+        /* 3. 工作台卡片 (深空透明质感) */
+        body.dark-theme .card,
+        body.dark-theme .project-item,
+        body.dark-theme .modal-content {
+            background: rgba(20, 25, 40, 0.45) !important;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            color: #f5f5f7;
+        }
+
+        /* 4. 表单与输入框 */
+        body.dark-theme input,
+        body.dark-theme select,
+        body.dark-theme textarea {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+        }
+        body.dark-theme input::placeholder,
+        body.dark-theme textarea::placeholder { color: #86868b !important; }
+        body.dark-theme input:focus,
+        body.dark-theme textarea:focus { border-color: #00d2ff !important; box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.2) !important; }
+
+        /* 5. 表格设计 */
+        body.dark-theme table { border-color: rgba(255, 255, 255, 0.05) !important; }
+        body.dark-theme th {
+            background: rgba(255, 255, 255, 0.03) !important;
+            color: #a1a1a6 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        body.dark-theme td { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; color: #d1d1d6 !important; }
+        body.dark-theme tr:hover td { background: rgba(255, 255, 255, 0.03) !important; }
+
+        /* 6. 文字与标签页细节 */
+        body.dark-theme h2, body.dark-theme h3 { color: #ffffff; }
+        body.dark-theme .tabs .tab { color: #636366; }
+        body.dark-theme .tabs .tab.active { color: #00d2ff; border-bottom: 2px solid #00d2ff; }
+        body.dark-theme .modal-content p, body.dark-theme .modal-content span { color: #a1a1a6; }
         
+        /* 7. 浅色模式下的封面重置 (如果用户切回白天，封面背景也要跟着变亮) */
+        body:not(.dark-theme) #auth-mega-wrapper {
+            background: radial-gradient(circle at 75% 50%, #e4efe9 0%, #c4d7e6 60%, #93a5ce 100%) !important;
+        }
+        body:not(.dark-theme) #auth-mega-wrapper h1, 
+        body:not(.dark-theme) #auth-mega-wrapper p { color: #1d1d1f !important; }
+        body:not(.dark-theme) #auth-mega-wrapper .intro-panel { background: rgba(255,255,255,0.4); border-radius: 20px; padding: 24px; }
+
+        /* 8. 按钮与次要操作的高对比度适配 (修复灰色按钮看不清) */
+        /* 适配 Continue, Back 等次要按钮 */
+        body.dark-theme .btn-secondary,
+        body.dark-theme .btn-outline {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important; /* 霜白文字 */
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: none !important;
+        }
+        body.dark-theme .btn-secondary:hover,
+        body.dark-theme .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        /* 适配纯文字类型的返回按钮或链接 (例如 Back to home) */
+        body.dark-theme a,
+        body.dark-theme .back-link,
+        body.dark-theme .btn-link {
+            color: #00d2ff !important; /* 赛博蓝，保证绝对醒目 */
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+        }
+        body.dark-theme a:hover,
+        body.dark-theme .back-link:hover {
+            color: #fff !important;
+        }
+
+        /* 修复有些特定的灰色提示文字在夜晚太暗 */
+        body.dark-theme .text-muted, 
+        body.dark-theme small {
+            color: #a1a1a6 !important; /* 苹果深空灰 */
+        }
+
+        /* =======================================================
+           🌙 暗黑模式深度护眼优化 (修复按钮刺眼与亮灰区块)
+           ======================================================= */
+        
+        /* 1. 修复 Upload / Search 等主按钮 (去除非自然的纯白底蓝边) */
+        body.dark-theme .btn-primary,
+        body.dark-theme button[id*="upload"],
+        body.dark-theme button[id*="search"] {
+            background: rgba(0, 210, 255, 0.15) !important;
+            color: #00d2ff !important;
+            border: 1px solid rgba(0, 210, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+        }
+        body.dark-theme .btn-primary:hover,
+        body.dark-theme button[id*="upload"]:hover,
+        body.dark-theme button[id*="search"]:hover {
+            background: rgba(0, 210, 255, 0.25) !important;
+        }
+
+        /* 2. 修复 Keep AI 按钮在暗黑模式下刺眼的白底 */
+        /* 精准拦截 JS 写入的 #f2f2f7 (rgb(242, 242, 247)) */
+        body.dark-theme td button[style*="#f2f2f7"],
+        body.dark-theme td button[style*="rgb(242, 242, 247)"],
+        body.dark-theme td button[style*="background-color: #f2f2f7"] {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: none !important;
+        }
+        body.dark-theme td button[style*="#f2f2f7"]:hover,
+        body.dark-theme td button[style*="rgb(242, 242, 247)"]:hover {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* 3. 修复 Data Extraction 中间大框和列表的亮灰色扎眼问题 */
+        /* 覆盖提取列表的白底和黑字 */
+        body.dark-theme #extraction-paper-list li[style*="rgba(255,255,255,0.4)"],
+        body.dark-theme #extraction-paper-list li[style*="rgba(255, 255, 255, 0.4)"] {
+            background: rgba(255, 255, 255, 0.04) !important;
+        }
+        body.dark-theme #extraction-paper-list li {
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        body.dark-theme #extraction-paper-list li:hover {
+            background: rgba(0, 210, 255, 0.1) !important;
+        }
+        body.dark-theme #extraction-paper-list li span[style*="color: #1d1d1f"],
+        body.dark-theme #extraction-paper-list li span[style*="color: rgb(29, 29, 31)"] {
+            color: #e5e5ea !important; /* 让黑字变成柔和的亮灰色 */
+        }
+        /* 修复列表里 ID 小标签的灰底 */
+        body.dark-theme #extraction-paper-list li span[style*="background: rgba(0,0,0,0.05)"],
+        body.dark-theme #extraction-paper-list li span[style*="background: rgba(0, 0, 0, 0.05)"] {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #a1a1a6 !important;
+        }
+
+        /* 4. 修复其它预设的浅灰色占位大框 (如 PDF 占位、空数据框、加载区) */
+        body.dark-theme [style*="background: #e9ecef"],
+        body.dark-theme [style*="background-color: #e9ecef"],
+        body.dark-theme [style*="rgb(233, 236, 239)"],
+        body.dark-theme .empty-data {
+            background: rgba(0, 0, 0, 0.25) !important;
+            color: #a1a1a6 !important;
+            border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* =======================================================
+           🌙 终极暗黑模式：全局渐变按钮与深度护眼 (强制覆盖)
+           ======================================================= */
+        
+        /* 1. 将所有【白天模式的苹果蓝】和【带蓝色边框的白按钮(Upload/Search)】替换为：赛博蓝渐变 */
+        body.dark-theme .btn-primary,
+        body.dark-theme .btn-outline-primary,
+        body.dark-theme button[style*="color: #0071e3"],
+        body.dark-theme button[style*="border: 1px solid #0071e3"],
+        body.dark-theme button[style*="rgb(0, 113, 227)"],
+        body.dark-theme button[id*="upload"],
+        body.dark-theme button[id*="search"] {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+            color: #05050A !important; /* 深邃的黑字，凸显高级感 */
+            border: none !important;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
+            text-shadow: none !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        /* 渐变蓝按钮的悬停提亮特效 */
+        body.dark-theme .btn-primary:hover,
+        body.dark-theme button[id*="upload"]:hover,
+        body.dark-theme button[id*="search"]:hover {
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.5) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* 2. 将所有【白天模式的苹果绿 / 成功绿】替换为：极光绿渐变 */
+        body.dark-theme .btn-success,
+        body.dark-theme button[style*="#34c759"],
+        body.dark-theme button[style*="rgb(52, 199, 89)"],
+        body.dark-theme button[style*="#28a745"],
+        body.dark-theme button[style*="rgb(40, 167, 69)"],
+        body.dark-theme button[id*="run-ai"] {
+            background: linear-gradient(135deg, #34c759 0%, #008744 100%) !important;
+            color: #05050A !important;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(52, 199, 89, 0.3) !important;
+            text-shadow: none !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        /* 极光绿按钮的悬停提亮特效 */
+        body.dark-theme .btn-success:hover,
+        body.dark-theme button[style*="#34c759"]:hover,
+        body.dark-theme button[id*="run-ai"]:hover {
+            box-shadow: 0 0 25px rgba(52, 199, 89, 0.5) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* 3. 彻底剿灭 Data Extraction 等界面的所有【顽固亮灰框】 */
+        /* 精准拦截所有能想到的 Bootstrap 灰和手写灰色值 */
+        body.dark-theme .bg-light,
+        body.dark-theme [style*="background: #e9ecef"],
+        body.dark-theme [style*="background-color: #e9ecef"],
+        body.dark-theme [style*="background: #f8f9fa"],
+        body.dark-theme [style*="background-color: #f8f9fa"],
+        body.dark-theme [style*="background: #f4f5f7"],
+        body.dark-theme [style*="background-color: #f4f5f7"],
+        body.dark-theme [style*="background: #f2f2f7"],
+        body.dark-theme [style*="background-color: #f2f2f7"],
+        body.dark-theme [style*="rgb(233, 236, 239)"],
+        body.dark-theme [style*="rgb(248, 249, 250)"] {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #e5e5ea !important;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 强制深色框里的黑色文字翻转为亮灰色 */
+        body.dark-theme .bg-light *,
+        body.dark-theme [style*="background: #e9ecef"] *,
+        body.dark-theme [style*="background: #f8f9fa"] *,
+        body.dark-theme [style*="background-color: #f8f9fa"] * {
+            color: #e5e5ea !important;
+        }
+
+        /* =======================================================
+           🌙 终极细节修复：Tab样式、纯色小按钮与AI决策文字颜色
+           ======================================================= */
+        
+        /* 1. 彻底修复 Upload Citations / Search 标签页在选中时的纯白底色 */
+        body.dark-theme .tabs .tab.active {
+            background-color: rgba(0, 210, 255, 0.15) !important;
+            color: #00d2ff !important;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.2) !important;
+            border: 1px solid rgba(0, 210, 255, 0.3) !important;
+        }
+        
+        /* 2. 还原表格内 USER ACTION 按钮的纯色 (去掉多余的极光渐变) */
+        body.dark-theme td button[style*="#34c759"] {
+            background: #34c759 !important; /* 恢复纯苹果绿 */
+            box-shadow: 0 2px 6px rgba(52, 199, 89, 0.2) !important;
+        }
+        body.dark-theme td button[style*="#ff3b30"] {
+            background: #ff3b30 !important; /* 恢复纯苹果红 */
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2) !important;
+        }
+        
+        /* 3. 还原 AI Decision 列原本的红绿文本颜色 (对抗全局的白字漂白) */
+        body.dark-theme td[style*="#34c759"],
+        body.dark-theme td[style*="rgb(52, 199, 89)"] {
+            color: #34c759 !important;
+            text-shadow: 0 0 8px rgba(52, 199, 89, 0.2) !important;
+        }
+        body.dark-theme td[style*="#ff3b30"],
+        body.dark-theme td[style*="rgb(255, 59, 48)"] {
+            color: #ff3b30 !important;
+            text-shadow: 0 0 8px rgba(255, 59, 48, 0.2) !important;
+        }
+        body.dark-theme td[style*="#ff9500"],
+        body.dark-theme td[style*="rgb(255, 149, 0)"] {
+            color: #ff9500 !important; /* 恢复 Error 的橙色 */
+            text-shadow: 0 0 8px rgba(255, 149, 0, 0.2) !important;
+        }
+        /* =======================================================
+           🌙 终极细节修复：Tab样式、纯色小按钮与AI决策文字颜色
+           ======================================================= */
+        
+        /* 1. 彻底修复 Upload Citations / Search 标签页在选中时的纯白底色 */
+        body.dark-theme .tabs .tab.active {
+            background-color: rgba(0, 210, 255, 0.15) !important;
+            color: #00d2ff !important;
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.2) !important;
+            border: 1px solid rgba(0, 210, 255, 0.3) !important;
+        }
+        
+        /* 2. 还原表格内 USER ACTION 按钮的纯色 (去掉多余的极光渐变) */
+        body.dark-theme td button[style*="#34c759"] {
+            background: #34c759 !important; /* 恢复纯苹果绿 */
+            box-shadow: 0 2px 6px rgba(52, 199, 89, 0.2) !important;
+        }
+        body.dark-theme td button[style*="#ff3b30"] {
+            background: #ff3b30 !important; /* 恢复纯苹果红 */
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2) !important;
+        }
+        
+        /* 3. 还原 AI Decision 列原本的红绿文本颜色 (对抗全局的白字漂白) */
+        body.dark-theme td[style*="#34c759"],
+        body.dark-theme td[style*="rgb(52, 199, 89)"] {
+            color: #34c759 !important;
+            text-shadow: 0 0 8px rgba(52, 199, 89, 0.2) !important;
+        }
+        body.dark-theme td[style*="#ff3b30"],
+        body.dark-theme td[style*="rgb(255, 59, 48)"] {
+            color: #ff3b30 !important;
+            text-shadow: 0 0 8px rgba(255, 59, 48, 0.2) !important;
+        }
+        body.dark-theme td[style*="#ff9500"],
+        body.dark-theme td[style*="rgb(255, 149, 0)"] {
+            color: #ff9500 !important; /* 恢复 Error 的橙色 */
+            text-shadow: 0 0 8px rgba(255, 149, 0, 0.2) !important;
+        }
+
+        /* =======================================================
+           🌙 终极精准修复补丁 (覆盖表格按钮与提取页白框)
+           ======================================================= */
+        
+        /* 1. 彻底干掉表格内 User Action 小按钮的“渐变色”，恢复纯色 */
+        body.dark-theme td button {
+            background-image: none !important; /* 强制清除所有被误伤的极光渐变 */
+        }
+        /* 匹配由 JS 生成的 rgb 颜色 */
+        body.dark-theme td button[style*="52, 199, 89"],
+        body.dark-theme td button[style*="#34c759"] {
+            background-color: #34c759 !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme td button[style*="255, 59, 48"],
+        body.dark-theme td button[style*="#ff3b30"] {
+            background-color: #ff3b30 !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme td button[style*="242, 242, 247"],
+        body.dark-theme td button[style*="#f2f2f7"] {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+        }
+
+        /* 2. 精准打击 Data Extraction 页面的刺眼白框 (使用结构穿透) */
+        /* Ready to Extract 最外层大框 */
+        body.dark-theme #extraction-unstarted-view {
+            background: rgba(20, 25, 40, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        /* 里面的列表容器底框 */
+        body.dark-theme #extraction-unstarted-view > div:nth-of-type(2) {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.2) !important;
+        }
+        /* Extraction Results 表格外层容器 */
+        body.dark-theme #extraction-completed-view > div:nth-of-type(2) {
+            background: rgba(20, 25, 40, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        /* 提取结果表头沉浸感 */
+        body.dark-theme #extraction-completed-view thead {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+        }
+        body.dark-theme #extraction-completed-view th {
+            color: #a1a1a6 !important;
+        }
+
+        /* =======================================================
+           🌟 最终视觉打磨：完美修复导航栏、提取页及纯色按钮覆盖
+           ======================================================= */
+        
+        /* 1. 修复左上角 Systematic Review Progress 文字太暗 */
+        body.dark-theme .progress-header .title {
+            color: #f5f5f7 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 2. 彻底拦截所有 JS 动态注入的纯色按钮（干掉烦人的渐变和变色）*/
+        /* ⚠️ 核心技巧：使用 background 简写属性，直接抹除线性渐变 linear-gradient */
+        body.dark-theme td button[style*="52, 199, 89"],
+        body.dark-theme td button[style*="#34c759"] {
+            background: #34c759 !important; /* 强制覆盖回纯正苹果绿 */
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(52, 199, 89, 0.2) !important;
+        }
+        body.dark-theme td button[style*="255, 59, 48"],
+        body.dark-theme td button[style*="#ff3b30"] {
+            background: #ff3b30 !important; /* 强制覆盖回纯正苹果红 */
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2) !important;
+        }
+        body.dark-theme td button[style*="242, 242, 247"],
+        body.dark-theme td button[style*="#f2f2f7"] {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #f5f5f7 !important;
+            box-shadow: none !important;
+        }
+
+        /* 3. 去除 AI DECISION 文本的辉光（解决看起来像渐变的问题，恢复和白天一样的纯粹） */
+        body.dark-theme td[style*="#34c759"],
+        body.dark-theme td[style*="rgb(52, 199, 89)"] {
+            color: #34c759 !important;
+            text-shadow: none !important; /* 彻底去掉发光 */
+            font-weight: 700 !important;
+        }
+        body.dark-theme td[style*="#ff3b30"],
+        body.dark-theme td[style*="rgb(255, 59, 48)"] {
+            color: #ff3b30 !important;
+            text-shadow: none !important;
+            font-weight: 700 !important;
+        }
+
+        /* 4. 修复 Data Extraction 界面中所有自带内联样式 #1d1d1f (深灰) 的文本 */
+        /* 只要是代码里写死 #1d1d1f 的，在夜晚全部强制翻转为亮白色 */
+        body.dark-theme [style*="color: #1d1d1f"],
+        body.dark-theme [style*="color: rgb(29, 29, 31)"] {
+            color: #f5f5f7 !important;
+        }
+        
+        /* 针对 Ready to Extract 等标题加强处理 */
+        body.dark-theme #data-extraction-page h2,
+        body.dark-theme #extraction-unstarted-view h3,
+        body.dark-theme #extraction-completed-view h3 {
+            color: #ffffff !important;
+        }
+
+        /* =======================================================
+           🌟 悬停光晕修复：强制注入高亮渐变，彻底干掉变暗的旧逻辑
+           ======================================================= */
+        
+        /* 1. 赛博蓝按钮 - 悬停时提亮并扩大蓝色光晕 */
+        body.dark-theme .btn-primary:hover,
+        body.dark-theme .btn-outline-primary:hover,
+        body.dark-theme button[id*="upload"]:hover,
+        body.dark-theme button[id*="search"]:hover,
+        body.dark-theme button[style*="color: #0071e3"]:hover,
+        body.dark-theme button[style*="border: 1px solid #0071e3"]:hover,
+        body.dark-theme button[style*="rgb(0, 113, 227)"]:hover {
+            /* 比正常状态更亮的渐变色 */
+            background: linear-gradient(135deg, #33ddff 0%, #548ce6 100%) !important;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.6) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* 2. 极光绿按钮 - 悬停时提亮并扩大绿色光晕 */
+        body.dark-theme .btn-success:hover,
+        body.dark-theme button[style*="#34c759"]:hover,
+        body.dark-theme button[style*="rgb(52, 199, 89)"]:hover,
+        body.dark-theme button[style*="#28a745"]:hover,
+        body.dark-theme button[style*="rgb(40, 167, 69)"]:hover,
+        body.dark-theme button[id*="run-ai"]:hover {
+            /* 比正常状态更亮的极光渐变色 */
+            background: linear-gradient(135deg, #4ede65 0%, #00a050 100%) !important;
+            box-shadow: 0 0 30px rgba(52, 199, 89, 0.6) !important;
+            transform: scale(1.02) !important;
+        }
+
+        /* =======================================================
+           🌟 导航栏终极补丁：赛博渐变激活状态与暗色未激活状态
+           ======================================================= */
+        
+        /* 1. 修复激活状态 (Active) 为赛博蓝渐变 */
+        body.dark-theme .progress-step.active {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+            color: #05050A !important; /* 深邃黑字 */
+            font-weight: 700 !important;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
+            border: none !important;
+        }
+
+        /* 2. 修复未激活/禁用状态 (Disabled) 的深色护眼底色 */
+        body.dark-theme .progress-step.disabled {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #86868b !important;
+            box-shadow: none !important;
+        }
+        
+        /* 悬停未激活的标签时微微提亮 */
+        body.dark-theme .progress-step.disabled:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #e5e5ea !important;
+        }
     </style>
 </head>
 <body>
+    <button id="theme-toggle-btn" class="theme-toggle" title="Toggle Theme">
+        <span id="theme-icon">☀️</span>
+    </button>
+    <script>
+        if (localStorage.getItem('app-theme') !== 'light') {
+            document.body.classList.add('dark-theme');
+        }
+    </script>
     <div class="login-background">
     </div>
 
@@ -1320,56 +1830,6 @@
 </body>
 </html>
 
-        // ==========================================
-        // 🚀 UI 控制与引擎安全启动器
-        // ==========================================
-        function openAuthSpace(type) {
-            const wrapper = document.getElementById('auth-mega-wrapper');
-            if(wrapper) wrapper.className = 'state-auth';
-            document.body.classList.remove('hide-nav'); 
-            switchForm(type);
-        }
-
-        function backToCoverSpace() {
-            const wrapper = document.getElementById('auth-mega-wrapper');
-            if(wrapper) wrapper.className = 'state-cover';
-            document.body.classList.add('hide-nav'); 
-        }
-
-        function switchForm(type) {
-            const loginForm = document.getElementById('inner-login-form');
-            const regForm = document.getElementById('inner-register-form');
-            if(loginForm) loginForm.classList.remove('active');
-            if(regForm) regForm.classList.remove('active');
-            
-            if(type === 'login') {
-                if(loginForm) loginForm.classList.add('active');
-            } else {
-                if(regForm) regForm.classList.add('active');
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.querySelectorAll('.animate-item').forEach(el => {
-                    el.classList.add('play-animation');
-                });
-            }, 100);
-
-            const checkContainer = setInterval(() => {
-                const container = document.getElementById('dna-canvas-container');
-                const wrapper = document.getElementById('auth-mega-wrapper');
-                
-                if (wrapper && wrapper.style.display !== 'none' && container && container.children.length === 0) {
-                    if (typeof THREE !== 'undefined') {
-                        initNeuralDNA();
-                    }
-                    clearInterval(checkContainer);
-                }
-            }, 50);
-        });
-    </script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
 </body>

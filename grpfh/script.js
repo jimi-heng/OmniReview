@@ -664,6 +664,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ==========================================
+// 🌓 昼夜主题切换核心逻辑
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    
+    // 初始化时根据 body 是否有 dark-theme 来设置图标
+    if (document.body.classList.contains('dark-theme')) {
+        themeIcon.textContent = '☀️'; // 当前是黑夜，提示可切白天
+    } else {
+        themeIcon.textContent = '🌙'; // 当前是白天，提示可切黑夜
+    }
+
+    themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        
+        if (isDark) {
+            themeIcon.textContent = '☀️';
+            localStorage.setItem('app-theme', 'dark'); // 记住用户的夜间偏好
+        } else {
+            themeIcon.textContent = '🌙';
+            localStorage.setItem('app-theme', 'light'); // 记住用户的白天偏好
+        }
+        
+        // 💡 下一步：如果你想让 3D DNA 在白天变成另外一种颜色，可以在这里触发修改
+    });
+});
+
+
 
 // 加载用户的项目列表
 async function loadUserProjects() {
