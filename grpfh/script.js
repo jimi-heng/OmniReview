@@ -259,20 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// 4. 注册相关逻辑
-// 跳转到注册页
-document.getElementById('to-register').addEventListener('click', (e) => {
-    e.preventDefault(); // 阻止链接默认跳转
-    showPage('register-page'); // 显示注册页
-    updateProgressStep('step-login'); // 进度条仍显示login
-});
 
-// 跳回登录页
-document.getElementById('to-login').addEventListener('click', (e) => {
-    e.preventDefault();
-    showPage('login-page');
-    updateProgressStep('step-login');
-});
 
 // 注册按钮点击事件
 document.getElementById('register-btn').addEventListener('click', async () => {
