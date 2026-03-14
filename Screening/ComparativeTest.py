@@ -124,10 +124,10 @@ async def main():
 
         # === 调用多智能体处理 ===
         await ThreeAgnets.use_agent_all(df, keyword, model1_name, model2_name, model3_name,
-                                             AbstractScreening.systemPromptReason,
-                                             AbstractScreening.systemPromptNoReason,
-                                             AbstractScreening.userPromptReason,
-                                             AbstractScreening.userPromptNoReason)
+                                        AbstractScreening.PICOSsystemPromptReason,
+                                        AbstractScreening.PICOSsystemPromptNoReason,
+                                        AbstractScreening.PICOSuserPromptReason,
+                                        AbstractScreening.PICOSuserPromptNoReason)
 
         # === 累积评估指标 ===
         Tp += ((df["Flag3"] == "1") & (df["label"] == "1")).sum()
