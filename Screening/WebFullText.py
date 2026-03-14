@@ -25,48 +25,104 @@ Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
 Core Directives:
-- You will receive ONLY PDF page images.
-- You MUST base all judgments strictly on visible content in the images. Tables and figures are valid evidence.
-- Do NOT assume missing information or infer unstated details. If something is not explicitly visible, treat it as Not Matched.
+- You will receive ONLY PDF pages.
+- You MUST base all judgments strictly on visible content in the PDF. Tables and figures are valid evidence.
+- Do NOT assume missing information or infer unstated details.
+- If something is not explicitly visible, treat it as Not Matched.
 - This is FULL-TEXT screening (not abstract screening).
 
+Evaluation Scope:
+- Always evaluate the following SPIC components:
+  Study Design (S), Population (P), Intervention (I), Comparison (C).
+
+- Outcome (O) should ONLY be evaluated if the user explicitly provides an Outcome requirement.
+  If Outcome is not provided, completely ignore Outcome in both evaluation and counting.
+
+- Extra Requirements (if any) should also be evaluated.
+
 Component Evaluation Rules:
-1. Population (P): Matched ONLY if explicit textual evidence supports the target population.
-2. Intervention (I): Matched ONLY if the specific intervention therapy is explicitly described.
-3. Comparison (C): Matched ONLY if a comparator group is explicitly described.
-4. Study Design (S): Matched ONLY if the study design (e.g., randomized controlled trial, cohort study, case-control study) is explicitly described.
-5. Extra Requirements: Matched ONLY if the study design explicitly satisfies the requirements.
+
+1. Study Design (S)
+Matched ONLY if the study design (e.g., randomized controlled trial, cohort study, case-control study) is explicitly described.
+
+2. Population (P)
+Matched ONLY if explicit textual evidence supports the target population.
+
+3. Intervention (I)
+Matched ONLY if the specific intervention therapy is explicitly described.
+
+4. Comparison (C)
+Matched ONLY if a comparator group is explicitly described.
+
+5. Outcome (O) – ONLY evaluate if provided
+Matched ONLY if the study explicitly reports outcomes corresponding to the user-specified outcome concept.
+
+6. Extra Requirements
+Matched ONLY if the text explicitly satisfies the extra requirement.
 
 Final Inclusion Rule:
-- Count the matched components among P, I, C, S, and Extra.
-- If ≥4 components are Matched → Flag = 1.
-- If <4 components are Matched → Flag = 0.
+- Count matched components among:
+  S, P, I, C
+  Outcome (only if provided)
+  Extra requirements (if provided)
+
+- If ≥4 components are Matched → Flag = 1
+- If <4 components are Matched → Flag = 0
+
 
 CRITICAL Evidence Extraction Rule (STRICT):
 
-For EVERY component (P, I, C, S, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
+For EVERY evaluated component (S, P, I, C, and optionally O, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
 
 Evidence rules:
 
-If Matched = Yes: Extract the exact original text that directly supports why it satisfies the requirement.
-If Matched = No: Extract the exact contradictory text, or text indicating a different population/intervention/comparison/study design/etc.
-If the information is completely not mentioned, the Evidence MUST be an empty string ("").
-If multiple candidate sentences exist, select the single most direct supporting sentence only.
+If Matched = Yes:
+Extract the exact original text that directly supports why it satisfies the requirement.
+
+If Matched = No:
+Extract the exact contradictory text, or text indicating a different population/intervention/comparison/study design/etc.
+
+If the information is completely not mentioned:
+The Evidence MUST be an empty string ("").
+
+If multiple candidate sentences exist:
+Select the single most direct supporting sentence only.
+
 
 Evidence constraints (STRICT):
+
 Evidence must be copied verbatim from the PDF.
-Do NOT paraphrase, summarize, rewrite, correct grammar, modify tense, omit words, add words, merge sentences, or remove punctuation.
+
+Do NOT:
+- paraphrase
+- summarize
+- rewrite
+- correct grammar
+- modify tense
+- omit words
+- add words
+- merge sentences
+- remove punctuation
+
 The extracted evidence must be directly traceable to a visible sentence in the PDF.
+
 Only ONE piece of evidence is allowed per component.
+
 The evidence must be a single continuous span of text from one location in the document.
 
 Do NOT combine multiple sentences from different locations.
 
+
 STRICT OUTPUT TEMPLATE:
+
 DOI : the doi of this paper
 Flag: <0 or 1>
 
 Reason:
+
+Study Design:
+Matched: <Yes/No>
+Evidence: <exact copied text or empty string>
 
 Population:
 Matched: <Yes/No>
@@ -80,7 +136,7 @@ Comparison:
 Matched: <Yes/No>
 Evidence: <exact copied text or empty string>
 
-Study Design:
+Outcome: (ONLY if Outcome requirement is provided)
 Matched: <Yes/No>
 Evidence: <exact copied text or empty string>
 
@@ -89,7 +145,7 @@ Matched: <Yes/No>
 Evidence: <exact copied text or empty string>
 
 Conclusion:
-"<concise overall explanation why the paper is included or excluded, based strictly on visible matched component count>"
+"<concise explanation why the paper is included or excluded based strictly on matched component count>"
 """
 
 import re
@@ -100,7 +156,7 @@ def clean_evidence(text: str) -> str:
     return text.strip().strip('"').strip("'")
 
 def extract_evidence(text):
-    components = ["Population", "Intervention", "Comparison", "Study Design", "Extra"]
+    components = ["Study Design", "Population", "Intervention", "Comparison", "Outcome", "Extra"]
     evidences = {}
 
     for comp in components:
@@ -151,17 +207,18 @@ async def _post_with_auth_fallback(client, url, api_key, payload, timeout_s):
     return await client.post(url, headers=headers2, json=payload, timeout=timeout_s)
 
 async def process_single_paper(client, endpoint, api_key, model_name, paper, pico_dict):
-    # 1. 动态拼装用户在前端设置的 PICO
+    # 1. 动态拼装用户在前端设置的SPICO
     user_prompt = f"""
-Target PICO Criteria for this Evaluation:
+Target PICS Criteria for this Evaluation:
+- Study Design (S): {pico_dict.get('study_design', 'Not specified')}
 - Population (P): {pico_dict.get('population', 'Not specified')}
 - Intervention (I): {pico_dict.get('intervention', 'Not specified')}
 - Comparison (C): {pico_dict.get('comparison', 'Not specified')}
-- Outcome (O): {pico_dict.get('outcome', 'Not specified')}
+-Outcome (O): {pico_dict.get('outcome', 'Not specified')}
 - Extra requirements: None
 
 Instructions for this task:
-Evaluate the paper below against the Target PICO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.
+Evaluate the paper below against the Target PICS Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.
 
 Input Data:
 [Paper ID: {paper['id']}]

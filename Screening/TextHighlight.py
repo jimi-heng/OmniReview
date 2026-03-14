@@ -4,10 +4,11 @@ from rapidfuzz import fuzz
 from pathlib import Path
 
 COLORS = {
+    "Study Design": (0, 0.6, 0.6),
     "Population": (1, 0, 0),  #红
     "Intervention": (0, 0, 1), #蓝
     "Comparison": (0, 0.6, 0), #绿
-    "Study Design": (1, 0.5, 0), #橙
+    "Outcome": (1, 0.5, 0), #橙
     "Extra": (0.6, 0, 0.6) #紫
 }
 
