@@ -531,7 +531,7 @@
     <!-- 主内容区 -->
     <div class="main-content">
         <!-- 1. 登录页 -->
-        <div id="auth-mega-wrapper" class="state-cover" style="display: none;">
+        <div id="auth-mega-wrapper" class="state-cover">
             
             <div id="star-field"></div>
             
@@ -1037,8 +1037,7 @@
 
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth/2, window.innerHeight);
-            // 🌟 性能优化 1：限制最高像素比为 2，防止高配 Mac 视网膜屏幕渲染压力过大导致卡顿
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+            renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
             // 🌟 性能优化 2：微调粒子数，肉眼看不出区别，但计算量锐减 40%
@@ -1351,7 +1350,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 🌟 触发右侧文字的高级虚化入场动画
             setTimeout(() => {
                 document.querySelectorAll('.animate-item').forEach(el => {
                     el.classList.add('play-animation');
@@ -1370,58 +1368,9 @@
                 }
             }, 50);
         });
-
-        // ==========================================
-        // 🚀 1. 找回丢失的平移空间与表单切换函数
-        // ==========================================
-        function openAuthSpace(type) {
-            const wrapper = document.getElementById('auth-mega-wrapper');
-            if(wrapper) wrapper.className = 'state-auth';
-            document.body.classList.remove('hide-nav'); // 显现导航栏
-            switchForm(type);
-        }
-
-        function backToCoverSpace() {
-            const wrapper = document.getElementById('auth-mega-wrapper');
-            if(wrapper) wrapper.className = 'state-cover';
-            document.body.classList.add('hide-nav'); // 隐藏导航栏
-        }
-
-        function switchForm(type) {
-            const loginForm = document.getElementById('inner-login-form');
-            const regForm = document.getElementById('inner-register-form');
-            if(loginForm) loginForm.classList.remove('active');
-            if(regForm) regForm.classList.remove('active');
-            
-            if(type === 'login') {
-                if(loginForm) loginForm.classList.add('active');
-            } else {
-                if(regForm) regForm.classList.add('active');
-            }
-        }
-
-        // ==========================================
-        // 🚀 2. 引擎安全启动器
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkContainer = setInterval(() => {
-                const container = document.getElementById('dna-canvas-container');
-                const wrapper = document.getElementById('auth-mega-wrapper');
-                
-                // 当平移空间显示时，瞬间注入 DNA 渲染
-                if (wrapper && wrapper.style.display !== 'none' && container && container.children.length === 0) {
-                    if (typeof THREE !== 'undefined') {
-                        initNeuralDNA();
-                    } else {
-                        console.error("🚨 无法找到 3D 引擎！大概率被 Flask 后端拦截了！");
-                    }
-                    clearInterval(checkContainer);
-                }
-            }, 50);
-        });
     </script>
     
-    <script src="https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
