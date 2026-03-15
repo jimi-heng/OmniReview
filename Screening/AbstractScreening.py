@@ -180,7 +180,7 @@ You are an expert in biomedical literature evaluation, specializing in evidence-
 
 Goal:
 Determine whether a research paper is potentially relevant based on the provided PECO framework 
-(considering Population, Exposure, Comparator, and Outcome), the research title, and extra requirements (if any).
+(considering Population, Exposure, Comparison, and Outcome), the research title, and extra requirements (if any).
 
 General Screening Principle (High Recall):
 - Default to inclusion unless there is an explicit contradiction.
@@ -189,7 +189,7 @@ General Screening Principle (High Recall):
 
 Instructions:
 1. Read the Title, Abstract_clean, PECO information, and Extra requirements (if provided).
-2. Evaluate the paper using the PECO framework: Population (P), Exposure (E), Comparator (C), and Outcome (O).
+2. Evaluate the paper using the PECO framework: Population (P), Exposure (E), Comparison (C), and Outcome (O).
 3. Match Chinese PECO terms with English content, allowing for synonyms and equivalent medical concepts.
 
 Matching Rules:
@@ -218,15 +218,15 @@ Exposure (E):
     - Exposure mismatch MUST NOT be used as a reason for exclusion.
     - Exposure matching status is for counting purposes only.
 
-Comparator (C):
+Comparison (C):
 - Matched if:
     - The study includes a comparison group or reference group (e.g., unexposed group, low exposure vs high exposure, control group, baseline comparison).
-    - Even if the comparator is not identical, as long as it enables comparison of exposure effects.
+    - Even if the comparison is not identical, as long as it enables comparison of exposure effects.
 - Not matched if:
     - No comparison or reference group is mentioned.
 - IMPORTANT:
-    - Comparator mismatch MUST NOT be used as a reason for exclusion.
-    - Comparator matching status is for counting purposes only.
+    - Comparison mismatch MUST NOT be used as a reason for exclusion.
+    - Comparison matching status is for counting purposes only.
 
 Outcome (O):
 - Matched if:
@@ -246,12 +246,12 @@ Final Inclusion Rule (Flag):
 - Evaluate the following components:
     - Population (P)
     - Exposure (E)
-    - Comparator (C)
+    - Comparison (C)
     - Outcome (O)
     - Extra (if provided)
 
 - Count how many components are matched.
-- Do NOT exclude a paper solely because Population or Exposure or Comparator does not match.
+- Do NOT exclude a paper solely because Population or Exposure or Comparison does not match.
 
 - If ≥ 2 components match → Flag = 1 (Include).
 - If < 2 components match → Flag = 0 (Exclude).
@@ -276,7 +276,7 @@ Task:
 2. For each paper, evaluate the following components:
    - Population (P)
    - Exposure (E)
-   - Comparator (C)
+   - Comparison (C)
    - Outcome (O)
 
 3. Extra requirements (if any) should also be evaluated.
@@ -302,8 +302,8 @@ Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
 Goal:
-Determine whether a research paper is potentially relevant based on the provided PIRO framework 
-(considering Population, Intervention, Response, and Outcome), the research title, and extra requirements (if any).
+Determine whether a research paper is potentially relevant based on the provided PIRO framework
+(considering Population, Indicator, Reference, and Outcome), the research title, and extra requirements (if any).
 
 General Screening Principle (High Recall):
 - Default to inclusion unless there is an explicit contradiction.
@@ -312,7 +312,7 @@ General Screening Principle (High Recall):
 
 Instructions:
 1. Read the Title, Abstract_clean, PIRO information, and Extra requirements (if provided).
-2. Evaluate the paper using the PIRO framework: Population (P), Intervention (I), Response (R), and Outcome (O).
+2. Evaluate the paper using the PIRO framework: Population (P), Indicator (I), Reference (R), and Outcome (O).
 3. Match Chinese PIRO terms with English content, allowing for synonyms and equivalent medical concepts.
 
 Matching Rules:
@@ -331,22 +331,23 @@ Population (P):
     - Population mismatch MUST NOT be used as a reason for exclusion.
     - Population matching status is for counting purposes only.
 
-Intervention (I):
+Indicator (I)
+
 - Matched if:
-    - The study investigates the specified treatment, exposure, or management strategy.
-    - The intervention concept is the same or clinically equivalent.
+    - The study investigates the specified indicator, such as a clinical indicator, biomarker, diagnostic measure, physiological measure, or risk indicator.
+    - The indicator concept is the same or clinically equivalent.
 - Not matched if:
-    - The intervention is clearly different or unrelated.
+    - The indicator is clearly different or unrelated.
 - IMPORTANT:
-    - Intervention mismatch MUST NOT be used as a reason for exclusion.
-    - Intervention matching status is for counting purposes only.
+    - Indicator mismatch MUST NOT be used as a reason for exclusion.
+    - Indicator matching status is for counting purposes only.
 
 Response (R):
 - Matched if:
-    - The study evaluates a biological, physiological, or clinical response related to the intervention.
-    - Minor measurement differences are acceptable.
+    - The study includes a reference group, baseline group, control group, or comparative benchmark.
+    - Even if the reference is not identical, as long as it enables comparison of indicator effects..
 - Not matched if:
-    - No relevant response indicators are described.
+    - No reference or comparison group is mentioned.
 
 Outcome (O):
 - Matched if:
@@ -395,8 +396,8 @@ Task:
 
 2. For each paper, evaluate the following components:
    - Population (P)
-   - Intervention (I)
-   - Response (R)
+   - Indicator (I)
+   - Reference (R)
    - Outcome (O)
 
 3. Extra requirements (if any) should also be evaluated.
@@ -731,31 +732,45 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
         sys_no_reason = PECOsystemPromptNoReason
         usr_reason = PECOuserPromptReason
         usr_no_reason = PECOuserPromptNoReason
+
+        query = {
+            "Topic": topic_keywords if 'topic_keywords' in globals() else "",
+            "Population": pico_data.get('p', ''),
+            "Exposure": pico_data.get('e', ""),
+            "Comparison": pico_data.get('c', ""),
+            "Outcome": pico_data.get('o', ''),
+        }
+
     elif project_type == 'PIRO':
         sys_reason = PIROsystemPromptReason
         sys_no_reason = PIROsystemPromptNoReason
         usr_reason = PIROuserPromptReason
         usr_no_reason = PIROuserPromptNoReason
+
+        # 将前端统一格式转化为 AI 识别的 Query 字典
+        query = {
+            "Topic": topic_keywords if 'topic_keywords' in globals() else "",
+            "Population": pico_data.get('p', ''),
+            "Indicator": pico_data.get('i', ""),
+            "Reference": pico_data.get('r', ""),
+            "Outcome": pico_data.get('o', ''),
+        }
+
     else:
         sys_reason = PICOSsystemPromptReason
         sys_no_reason = PICOSsystemPromptNoReason
         usr_reason = PICOSuserPromptReason
         usr_no_reason = PICOSuserPromptNoReason
 
-    # 将前端统一格式转化为 AI 识别的 Query 字典
-    query = {
-        "Topic": topic_keywords if 'topic_keywords' in globals() else "",
-        "Study Design": pico_data.get("s", ""),
-        "Population": pico_data.get('p', ''),
-        "Intervention": pico_data.get('i', ""),
-        "Exposure": pico_data.get('e', ""),
-        "Comparator": pico_data.get('c', ""),
-        "Comparison": pico_data.get('c', ""),
-        "Index Test": pico_data.get('i', ""),
-        "Reference Standard": pico_data.get('r', ""),
-        "Response": pico_data.get('r', ""),
-        "Outcome": pico_data.get('o', ''),
-    }
+        # 将前端统一格式转化为 AI 识别的 Query 字典
+        query = {
+            "Topic": topic_keywords if 'topic_keywords' in globals() else "",
+            "Study Design": pico_data.get("s", ""),
+            "Population": pico_data.get('p', ''),
+            "Intervention": pico_data.get('i', ""),
+            "Comparison": pico_data.get('c', ""),
+            "Outcome": pico_data.get('o', ''),
+        }
     
     df_list = []
     for p in papers:
