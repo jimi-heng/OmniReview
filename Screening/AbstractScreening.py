@@ -20,6 +20,7 @@ Entrez.email = "erzhuzi2023@outlook.com"
 
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
+WOS_API_KEY = os.getenv("WOS_API_KEY")
 
 model1_name = "gpt-4.1"
 model2_name = "gpt-4.1-mini"
@@ -654,15 +655,104 @@ def search_pubmed(query, max_number):
         print(f"PubMed search error: {e}")
         return []
 
-def literature_search_all(query, N):
+def search_wos(query, max_number):
 
+    try:
+
+        url = "https://wos-api.clarivate.com/api/wos"
+
+        params = {
+            "databaseId": "WOS",
+            "usrQuery": f"TS={query}",
+            "count": max_number,
+            "firstRecord": 1
+        }
+
+        headers = {
+            "X-ApiKey": "WOS_API_KEY"
+        }
+
+        r = requests.get(url, headers=headers, params=params)
+
+        if r.status_code != 200:
+            print("WOS request failed:", r.status_code)
+            return []
+
+        data = r.json()
+
+        results = []
+
+        records = data.get("Data", {}).get("Records", {}).get("records", {}).get("REC", [])
+
+        for p in records:
+
+            title = ""
+            abstract = ""
+            journal = ""
+            year = ""
+            doi = ""
+            authors = []
+
+            # title
+            titles = p.get("static_data", {}).get("summary", {}).get("titles", {}).get("title", [])
+            if titles:
+                title = titles[0].get("content", "")
+
+            # abstract
+            abstract_block = p.get("static_data", {}).get("fullrecord_metadata", {}).get("abstracts", {})
+            if "abstract" in abstract_block:
+                abstract = abstract_block["abstract"].get("abstract_text", "")
+
+            # authors
+            names = p.get("static_data", {}).get("summary", {}).get("names", {}).get("name", [])
+            for n in names:
+                if "full_name" in n:
+                    authors.append(n["full_name"])
+
+            # journal
+            source = p.get("static_data", {}).get("summary", {}).get("publishers", {})
+            journal = str(source)
+
+            # year
+            pub_info = p.get("static_data", {}).get("summary", {}).get("pub_info", {})
+            year = pub_info.get("pubyear", "")
+
+            # DOI
+            ids = p.get("dynamic_data", {}).get("cluster_related", {}).get("identifiers", {}).get("identifier", [])
+            for i in ids:
+                if i.get("type") == "doi":
+                    doi = i.get("value")
+
+            row = {
+                "title": title,
+                "abstract": abstract,
+                "author": "; ".join(authors),
+                "journal": journal,
+                "year": year,
+                "doi": doi
+            }
+
+            if not has_valid_abstract(row):
+                continue
+
+            results.append(row)
+
+        return results
+
+    except Exception as e:
+        print(f"WOS search error: {e}")
+        return []
+
+def literature_search_all(query, N):
     pubmed_papers = search_pubmed(query, N)
     openalex_papers = search_openalex(query, N)
+    wos_papers = search_wos(query, N)
 
     print(f"PubMed returned {len(pubmed_papers)} papers")
     print(f"OpenAlex returned {len(openalex_papers)} papers")
+    print(f"WOS returned {len(wos_papers)} papers")
 
-    all_papers = pubmed_papers + openalex_papers
+    all_papers = pubmed_papers + openalex_papers + wos_papers
 
     unique = {}
     results = []
@@ -710,8 +800,6 @@ def has_valid_abstract(paper):
         return False
 
     return True
-
-# --- 新增对接接口开始 ---
 
 # --- 新增对接接口开始 ---
 
