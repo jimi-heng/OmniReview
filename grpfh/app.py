@@ -1108,8 +1108,8 @@ def run_data_extraction():
         out_csv = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
         out_xlsx = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
 
-        # 5. 使用 subprocess 调用 DataExtraction.py，完美避开 async 事件循环冲突
-        script_path = os.path.join(parent_dir, 'Screening', 'DataExtraction.py')
+        # 🌟 完美对接新的增强版提取脚本
+        script_path = os.path.join(parent_dir, 'Screening', 'EnhancedDataExtraction.py')
         
         # 【核心修复】：解决宝塔 uWSGI 部署环境下 sys.executable 指向错乱的问题
         python_exe = sys.executable
