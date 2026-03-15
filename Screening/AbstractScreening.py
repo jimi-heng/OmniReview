@@ -736,8 +736,8 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
         query = {
             "Topic": topic_keywords if 'topic_keywords' in globals() else "",
             "Population": pico_data.get('p', ''),
-            "Exposure": pico_data.get('e', ""),
-            "Comparison": pico_data.get('c', ""),
+            "Exposure": pico_data.get('e', ''),
+            "Comparison": pico_data.get('c', ''),
             "Outcome": pico_data.get('o', ''),
         }
 
@@ -751,8 +751,8 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
         query = {
             "Topic": topic_keywords if 'topic_keywords' in globals() else "",
             "Population": pico_data.get('p', ''),
-            "Indicator": pico_data.get('i', ""),
-            "Reference": pico_data.get('r', ""),
+            "Indicator": pico_data.get('i', ''),
+            "Reference": pico_data.get('r', ''),
             "Outcome": pico_data.get('o', ''),
         }
 
@@ -765,10 +765,10 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
         # 将前端统一格式转化为 AI 识别的 Query 字典
         query = {
             "Topic": topic_keywords if 'topic_keywords' in globals() else "",
-            "Study Design": pico_data.get("s", ""),
+            "Study Design": pico_data.get('s', ''),
             "Population": pico_data.get('p', ''),
-            "Intervention": pico_data.get('i', ""),
-            "Comparison": pico_data.get('c', ""),
+            "Intervention": pico_data.get('i', ''),
+            "Comparison": pico_data.get('c', ''),
             "Outcome": pico_data.get('o', ''),
         }
     

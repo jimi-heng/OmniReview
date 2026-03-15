@@ -957,8 +957,13 @@ def run_fulltext_ai_api():
 
         papers_to_screen = [{'id': p['id'], 'title': p['title'], 'pdf_path': p['pdf_path']} for p in papers]
 
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'",
+                       (project_id,))
+        pt_row = cursor.fetchone()
+        project_type = json.loads(pt_row['data_content']) if pt_row else 'SPICO'
+
         # 调用大模型多模态阅片与高亮
-        results = run_fulltext_ai_sync(papers_to_screen, pico_data)
+        results = run_fulltext_ai_sync(papers_to_screen, pico_data, project_type)
 
         # 将判决结果、抽取的 JSON 证据，以及带有颜色高亮的 PDF 路径写回数据库
         success_count = 0
