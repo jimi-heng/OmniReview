@@ -92,14 +92,62 @@ def login():
             return jsonify({
                 'success': True,
                 'message': 'Login successful',
-                'user_id': user['id']
+                'user_id': user['id'],
+                'email': user['email']
             })
         else:
             return jsonify({'success': False, 'message': 'Incorrect email or password'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'})
+    
+# ==========================================
+# 用户主页：真实修改密码接口 (修复MD5与字段名匹配问题)
+# ==========================================
+@app.route('/api/change-password', methods=['POST', 'OPTIONS'])
+def change_password():
+    if request.method == 'OPTIONS':
+        response = jsonify({'success': True})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
 
+    data = request.json
+    user_id = data.get('user_id')
+    current_pwd = data.get('current_password')
+    new_pwd = data.get('new_password')
 
+    if not all([user_id, current_pwd, new_pwd]):
+        return jsonify({'success': False, 'message': 'Missing fields'}), 400
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 1. 查询用户的现有密码 (注意：字段名是 password)
+        cursor.execute('SELECT password FROM users WHERE id = ?', (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        # 2. 验证旧密码 (使用你系统原生的 MD5 加密)
+        current_hash = hashlib.md5(current_pwd.encode()).hexdigest()
+        if current_hash != user['password']:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Incorrect current password'}), 401
+
+        # 3. 旧密码正确，MD5 加密新密码并更新
+        new_hash = hashlib.md5(new_pwd.encode()).hexdigest()
+        cursor.execute('UPDATE users SET password = ? WHERE id = ?', (new_hash, user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Password updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
 # 注册接口
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():

@@ -82,8 +82,8 @@ function showPage(pageId) {
     }
     // =========================================================
 
-    // 隐藏所有页面
-    const allPages = ['login-page', 'register-page', 'home-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
+    // 隐藏所有页面 (已加入全新的 profile-page)
+    const allPages = ['login-page', 'register-page', 'home-page', 'profile-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
     allPages.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.style.display = 'none';
@@ -198,13 +198,27 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     if (result.success) {
       errorTip.style.display = 'none';
 
-      // 保存用户信息（现在后端会返回user_id）
+      // 1. 获取当前格式化的时间 (例如：Mar 15, 17:30)
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+      // 2. 保存用户信息 (加入了时间)
       currentUser = {
         id: result.user_id,
-        email: inputEmail
+        email: inputEmail, // 你的代码直接拿到了输入邮箱，完美！
+        loginTime: `${dateStr}, ${timeStr}`
       };
 
-      // 保存到sessionStorage以便页面刷新后保留
+      // 3. 动态渲染到 HTML 界面上 (苹果风悬浮窗和个人主页)
+      const emailDisplays = [document.getElementById('profile-email-display'), document.getElementById('tooltip-email')];
+      emailDisplays.forEach(el => { 
+          if (el) el.textContent = currentUser.email; 
+      });
+      const timeDisplay = document.getElementById('tooltip-time');
+      if (timeDisplay) timeDisplay.textContent = `Logged in: ${currentUser.loginTime}`;
+
+      // 4. 保存到sessionStorage以便页面刷新后保留
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
       showPage('home-page');
@@ -248,6 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedUser = sessionStorage.getItem('currentUser');
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
+    
+    // 🔄 恢复页面刷新后的悬浮窗和账号显示
+    const emailDisplays = [document.getElementById('profile-email-display'), document.getElementById('tooltip-email')];
+    emailDisplays.forEach(el => { if (el) el.textContent = currentUser.email; });
+    const timeDisplay = document.getElementById('tooltip-time');
+    if (timeDisplay && currentUser.loginTime) timeDisplay.textContent = `Logged in: ${currentUser.loginTime}`;
+
     // 如果是在登录状态，直接显示首页并加载项目
     showPage('home-page');
     loadUserProjects();
@@ -2153,3 +2174,94 @@ document.getElementById('re-run-extraction-btn')?.addEventListener('click', () =
         document.getElementById('start-extraction-btn')?.click();
     }
 });
+
+// ==========================================
+// 🌟 Profile 页面：视图切换与密码修改逻辑 (安全升级版)
+// ==========================================
+
+// 🛡️ 每次打开 Profile 页面时，强制重置状态并清空残影
+function openProfilePage() {
+    showPage('profile-page'); // 切换页面
+    document.getElementById('profile-menu-view').style.display = 'block'; // 强制显示主菜单
+    document.getElementById('profile-password-view').style.display = 'none'; // 强制隐藏修改密码视图
+    
+    // 彻底清空所有密码输入框，杜绝隐私泄漏
+    document.getElementById('current-password-input').value = '';
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('confirm-password-input').value = '';
+}
+
+// 切换 iOS 菜单和密码表单视图
+function toggleProfileView(view) {
+    const menuView = document.getElementById('profile-menu-view');
+    const pwdView = document.getElementById('profile-password-view');
+    
+    // 无论进出，只要触发切换就清空输入框
+    document.getElementById('current-password-input').value = '';
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('confirm-password-input').value = '';
+
+    if (view === 'password') {
+        menuView.style.display = 'none';
+        pwdView.style.display = 'block';
+    } else {
+        pwdView.style.display = 'none';
+        menuView.style.display = 'block';
+    }
+}
+
+// 真正向后端发起修改请求
+async function submitPasswordChange() {
+    const currentPwd = document.getElementById('current-password-input').value;
+    const newPwd = document.getElementById('new-password-input').value;
+    const confirmPwd = document.getElementById('confirm-password-input').value;
+
+    if (!currentPwd || !newPwd || !confirmPwd) {
+        alert("Please fill in all password fields."); return;
+    }
+    if (newPwd !== confirmPwd) {
+        alert("New password and confirmation do not match."); return;
+    }
+    // 🛡️ 新增拦截：新旧密码不能相同
+    if (currentPwd === newPwd) {
+        alert("New password cannot be the same as the current password."); 
+        document.getElementById('new-password-input').value = '';
+        document.getElementById('confirm-password-input').value = '';
+        return;
+    }
+    if (!currentUser || !currentUser.id) {
+        alert("Error: User session lost. Please log in again."); return;
+    }
+
+    const btn = document.getElementById('update-password-btn');
+    const originalText = btn.textContent;
+    btn.textContent = "Updating...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                current_password: currentPwd,
+                new_password: newPwd
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert("Password updated successfully! Please log in again with your new password.");
+            document.getElementById('logout-btn').click(); // 修改成功后强制登出
+        } else {
+            alert(`Failed: ${result.message}`); // 后端返回密码错误等提示
+        }
+    } catch (error) {
+        console.error("Change password error:", error);
+        alert("A network error occurred.");
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}

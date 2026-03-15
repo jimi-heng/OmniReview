@@ -1359,6 +1359,130 @@
         body.dark-theme #extraction-table-body tr {
             border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
         }
+
+        /* =======================================================
+           🌟 苹果 iOS 设置界面风格 (分组列表) - 终极修复版
+           ======================================================= */
+        .ios-list-container {
+            background: rgba(128, 128, 128, 0.04);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(128, 128, 128, 0.08);
+            margin-bottom: 24px;
+        }
+        
+        .ios-list-item {
+            /* 强制在一行内左右两端分布，绝不允许掉到第二行 */
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            /* 加深横线的透明度，确保它清晰可见 */
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2) !important;
+            width: 100% !important;
+        }
+        
+        .ios-list-item:last-child {
+            border-bottom: none !important; /* 最后一项不要底边框 */
+        }
+        
+        .ios-list-item:hover {
+            background: rgba(128, 128, 128, 0.08);
+        }
+        
+        .ios-list-item-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 15px;
+            color: #1d1d1f;
+        }
+        
+        body.dark-theme .ios-list-item-left {
+            color: #f5f5f7;
+        }
+        
+        .ios-chevron {
+            /* 强制箭头变成灰色，保持垂直居中，且绝对禁止被挤压变形 */
+            display: flex !important;
+            align-items: center !important;
+            color: #86868b !important; 
+            flex-shrink: 0 !important; 
+        }
+        
+        /* 密码视图顶部导航栏 */
+        .profile-subview-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+        }
+
+        /* =======================================================
+           🌟 苹果风毛玻璃悬浮提示框 (Tooltip)
+           ======================================================= */
+        #profile-btn {
+            position: relative;
+            overflow: visible !important; /* 确保悬浮窗能溢出显示 */
+        }
+        
+        /* 1. 白天模式 (默认) 悬浮窗：纯白毛玻璃底 + 深色字 */
+        .apple-tooltip {
+            position: absolute;
+            top: 130%; 
+            right: 0;
+            background: rgba(255, 255, 255, 0.75); /* 白天：极度克制的透明白底 */
+            backdrop-filter: blur(16px); /* 苹果灵魂：毛玻璃模糊效果 */
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 0, 0, 0.08); /* 白天：极浅的灰色边框 */
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* 白天：极其柔和的弥散阴影 */
+            color: #1d1d1f; /* 白天：深色苹果字 */
+            text-align: left;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 1000;
+            pointer-events: none; 
+        }
+
+        /* 2. 黑夜模式悬浮窗：深灰毛玻璃底 + 纯白字 */
+        body.dark-theme .apple-tooltip {
+            background: rgba(30, 30, 30, 0.65); /* 黑夜：透明深灰底 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 黑夜：浅色高光边框 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* 黑夜：较深的阴影 */
+            color: #f5f5f7; /* 黑夜：浅色高亮字 */
+        }
+        
+        /* 鼠标悬停时触发悬浮窗 */
+        #profile-btn:hover .apple-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* =======================================================
+           🌟 修复：提升全局头部的物理层级，防止 Apple 悬浮窗被遮挡
+           ======================================================= */
+        .header {
+            position: relative !important;
+            z-index: 999 !important; /* 强行拔高头部容器的层级 */
+            overflow: visible !important; /* 绝对禁止裁剪溢出的悬浮窗 */
+        }
+        
+        /* 顺手确保包裹按钮的那个 flex 容器也不阻拦 */
+        .header > div {
+            position: relative !important;
+            z-index: 1000 !important;
+            overflow: visible !important;
+        }
     </style>
 </head>
 <body>
@@ -1524,10 +1648,22 @@
 
         <!-- 2. 首页（保留Recent Project） -->
         <div id="home-page" class="container" style="display: none;">
+            
             <div class="header">
                 <h1>Systematic Review Projects</h1>
-                <button class="btn btn-secondary" id="logout-btn">Log Out</button>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button class="btn btn-secondary" id="profile-btn" onclick="openProfilePage()" style="display: flex; align-items: center; gap: 6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Profile
+                        
+                        <div class="apple-tooltip">
+                            <div id="tooltip-email" style="font-size: 14px; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px;">Loading...</div>
+                            <div id="tooltip-time" style="font-size: 12px; color: #86868b;">Logged in: --</div>
+                        </div>
+                    </button>
+                    </div>
             </div>
+            
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0;">Recent Projects</h3>
@@ -1536,6 +1672,75 @@
                 
                 <div id="project-list-container">
                     <div class="empty-data">Loading projects from server...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile-page" class="container" style="display: none;">
+            <div class="header">
+                <h1>User Profile</h1>
+                <button class="btn btn-secondary" onclick="showPage('home-page')">Back to Dashboard</button>
+            </div>
+            
+            <div class="card" style="max-width: 480px; margin: 0 auto; padding: 32px; position: relative;">
+                
+                <div id="profile-menu-view">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.2);">U</div>
+                        <h3 id="profile-username-display" style="margin: 0; font-size: 20px;">My Account</h3>
+                        <p id="profile-email-display" style="color: #86868b; font-size: 14px; margin-top: 4px; font-weight: 500;">user@example.com</p>
+                    </div>
+                    
+                    <h4 style="color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-left: 8px;">Security</h4>
+                    <div class="ios-list-container">
+                        <div class="ios-list-item" onclick="toggleProfileView('password')">
+                            <div class="ios-list-item-left">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                Change Password
+                            </div>
+                            <div class="ios-chevron">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="color: #86868b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-left: 8px; margin-top: 24px;">Advanced (Coming Soon)</h4>
+                    <div class="ios-list-container" style="opacity: 0.5;">
+                        <div class="ios-list-item" style="cursor: default;">
+                            <div class="ios-list-item-left">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline></svg>
+                                API Key Management
+                            </div>
+                        </div>
+                        <div class="ios-list-item" style="cursor: default;">
+                            <div class="ios-list-item-left">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Data Export Preferences
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-list-container" style="margin-top: 32px;">
+                        <div class="ios-list-item" id="logout-btn" style="justify-content: center !important;">
+                            <div class="ios-list-item-left" style="color: #ff3b30; font-weight: 500; margin: 0 auto; gap: 0;">
+                                Log Out
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="profile-password-view" style="display: none;">
+                    <div class="profile-subview-header">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleProfileView('menu')" style="padding: 6px 10px; margin-right: 16px; border-radius: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <h3 style="margin: 0; font-size: 18px;">Change Password</h3>
+                    </div>
+                    
+                    <div class="form-group"><input type="password" id="current-password-input" class="dark-input" placeholder="Current Password" style="width: 100%;"></div>
+                    <div class="form-group"><input type="password" id="new-password-input" class="dark-input" placeholder="New Password" style="width: 100%;"></div>
+                    <div class="form-group" style="margin-bottom: 24px;"><input type="password" id="confirm-password-input" class="dark-input" placeholder="Confirm New Password" style="width: 100%;"></div>
+                    
+                    <button class="btn btn-primary" id="update-password-btn" style="width: 100%;" onclick="submitPasswordChange()">Update Password</button>
                 </div>
             </div>
         </div>
