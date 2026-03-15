@@ -1344,6 +1344,21 @@
         body.dark-theme #register-btn::before {
             display: none !important;
         }
+
+        /* =======================================================
+           🌟 终极修复：Data Extraction 提取表格黑夜悬停亮瞎眼问题
+           ======================================================= */
+        
+        /* 强行镇压 script.js 中写死的 #f9f9fb 亮白背景 */
+        body.dark-theme #extraction-table-body tr:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important; /* 极其微弱的磨砂白光 */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2) !important; /* 增加一点内阴影提升质感 */
+        }
+        
+        /* 确保黑夜模式下的底部边框也不会是刺眼的白天色 */
+        body.dark-theme #extraction-table-body tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
     </style>
 </head>
 <body>

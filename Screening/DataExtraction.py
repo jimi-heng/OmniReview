@@ -437,7 +437,7 @@ async def main() -> None:
         default=PROJECT_DIR / "outputs" / "Extracted_Data.xlsx",
     )
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1")
-    parser.add_argument("--model", type=str, default="glm-5")
+    parser.add_argument("--model", type=str, default="gpt-5.1")
     parser.add_argument("--api-key-env", type=str, default="DMX_API_KEY_1")
     parser.add_argument("--pdf-pages", type=str, default="all", help="e.g. all or 1-3,5 (requires pymupdf)")
     parser.add_argument("--timeout", type=float, default=300.0)
