@@ -384,7 +384,7 @@ def clean_evidence(text: str) -> str:
     return text.strip().strip('"').strip("'")
 
 def extract_evidence(text):
-    components = ["Study Design", "Population", "Intervention", "Comparison", "Outcome", "Extra"]
+    components = ["Study Design", "Population", "Intervention", "Comparison", "Outcome", "Indicator",  "Reference", "Exposure", "Extra"]
     evidences = {}
 
     for comp in components:
