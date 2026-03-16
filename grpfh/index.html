@@ -50,7 +50,12 @@
             -webkit-backdrop-filter: blur(24px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             padding: 16px 32px;
-            z-index: 999;
+            
+            /* 🌟 核心修复 1：将层级拔高到 2000，绝对压制大标题的 999 */
+            z-index: 2000 !important; 
+            /* 🌟 核心修复 2：强制开启 Windows 浏览器的 GPU 硬件加速，确保毛玻璃不失效 */
+            transform: translateZ(0); 
+            
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
             display: flex;
             align-items: center;
