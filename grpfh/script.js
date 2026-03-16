@@ -768,7 +768,7 @@ function renderProjects(projects) {
         
         projects.forEach(project => {
             // 解析后端传来的类型并渲染正确的角标
-            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'SPICO';
+            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'PICOS';
             let badgeClass = pType.toLowerCase();
 
             projectsHtml += `
@@ -808,7 +808,7 @@ async function createNewProject(projectName) {
     try {
         // 抓取用户选中的类型
         const activeOption = document.querySelector('.type-option.active');
-        const projectType = activeOption ? activeOption.getAttribute('data-type') : 'SPICO';
+        const projectType = activeOption ? activeOption.getAttribute('data-type') : 'PICOS';
 
         const response = await fetch(`${API_BASE_URL}/api/create-project`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -853,13 +853,17 @@ async function continueProject(projectId) {
             if (result.data.project_type) {
                 currentProject.type = result.data.project_type;
             } else {
-                currentProject.type = 'SPICO'; // 兼容老数据
+                currentProject.type = 'PICOS'; // 兼容老数据
+            }
+            // 兼容旧数据：SPICO 和 PICOS 是一样的
+            if (currentProject.type === 'SPICO') {
+                currentProject.type = 'PICOS';
             }
             renderPicoPageByType(currentProject.type);
 
             // 2. 将数据安全填入对应的输入框
             if (result.data.pico) {
-                if (currentProject.type === 'SPICO') {
+                if (currentProject.type === 'PICOS') {
                     document.getElementById('spico-s').value = result.data.pico.s || '';
                     document.getElementById('spico-p').value = result.data.pico.p || '';
                     document.getElementById('spico-i').value = result.data.pico.i || '';
@@ -1019,14 +1023,14 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
 });
 
 // 保存PICO数据
-// 保存PICO数据 (更新为 SPICO 结构)
+// 保存PICO数据 (更新为 PICOS 结构)
 // 动态保存针对该类型的输入
 async function savePicoData() {
     if (!currentProject || !currentProject.id) return;
-    const type = currentProject.type || 'SPICO';
+    const type = currentProject.type || 'PICOS';
     let picoData = {};
-    
-    if (type === 'SPICO') {
+
+    if (type === 'PICOS') {
         picoData = {
             s: document.getElementById('spico-s').value, p: document.getElementById('spico-p').value,
             i: document.getElementById('spico-i').value, c: document.getElementById('spico-c').value, o: document.getElementById('spico-o').value

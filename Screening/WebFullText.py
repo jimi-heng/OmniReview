@@ -474,7 +474,7 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
 
         prompt = PIRO_SYSTEM_PROMPT + "\n\n" + user_prompt
     else :
-        # 1. 动态拼装用户在前端设置的SPICO
+        # 1. 动态拼装用户在前端设置的PICOS
         user_prompt = f"""
                 Target PICS Criteria for this Evaluation:
                 - Study Design (S): {pico_dict.get('s', '')}
@@ -566,7 +566,7 @@ async def _run_web_fulltext(papers, pico_dict, project_type):
         tasks = [_bounded_process(p) for p in papers]
         return await asyncio.gather(*tasks)
 
-def run_fulltext_ai_sync(papers, pico_dict, project_type='SPICO'):
+def run_fulltext_ai_sync(papers, pico_dict, project_type='PICOS'):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

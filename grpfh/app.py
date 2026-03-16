@@ -724,10 +724,13 @@ def run_ai_screening_api():
                 'abstract': row['abstract'] if row['abstract'] else row['reasoning']
             })
 
-        # 3. 获取该项目的类型 (SPICO / PECO / PIRO)
+        # 3. 获取该项目的类型 (PICOS / PECO / PIRO)
         cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'", (project_id,))
         pt_row = cursor.fetchone()
-        project_type = json.loads(pt_row['data_content']) if pt_row else 'SPICO'
+        project_type = json.loads(pt_row['data_content']) if pt_row else 'PICOS'
+        # 兼容旧数据：SPICO 和 PICOS 是一样的
+        if project_type == 'SPICO':
+            project_type = 'PICOS'
 
         # 4. 将 PICO 字典、文献列表 和 项目类型 一起传给 AI 包装函数
         screen_results = run_ai_screening_sync(pico_data, papers_to_screen, project_type)
@@ -1008,7 +1011,10 @@ def run_fulltext_ai_api():
         cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'",
                        (project_id,))
         pt_row = cursor.fetchone()
-        project_type = json.loads(pt_row['data_content']) if pt_row else 'SPICO'
+        project_type = json.loads(pt_row['data_content']) if pt_row else 'PICOS'
+        # 兼容旧数据：SPICO 和 PICOS 是一样的
+        if project_type == 'SPICO':
+            project_type = 'PICOS'
 
         # 调用大模型多模态阅片与高亮
         results = run_fulltext_ai_sync(papers_to_screen, pico_data, project_type)
@@ -1108,24 +1114,46 @@ def run_data_extraction():
         out_csv = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
         out_xlsx = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
 
+        # 5. 获取该项目的 PICO 数据和项目类型
+        conn2 = get_db()
+        cursor2 = conn2.cursor()
+        cursor2.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'pico'", (project_id,))
+        pico_row = cursor2.fetchone()
+        pico_data = json.loads(pico_row['data_content']) if pico_row else {}
+
+        cursor2.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'", (project_id,))
+        pt_row = cursor2.fetchone()
+        project_type = json.loads(pt_row['data_content']) if pt_row else 'PICOS'
+        conn2.close()
+
+        # 兼容旧数据：SPICO 和 PICOS 是一样的
+        if project_type == 'SPICO':
+            project_type = 'PICOS'
+
+        # 6. 构建命令行参数，传递 PICO 数据和项目类型
+        pico_json_str = json.dumps(pico_data, ensure_ascii=False)
+
         # 🌟 完美对接新的增强版提取脚本
         script_path = os.path.join(parent_dir, 'Screening', 'EnhancedDataExtraction.py')
-        
+
         # 【核心修复】：解决宝塔 uWSGI 部署环境下 sys.executable 指向错乱的问题
         python_exe = sys.executable
         if 'uwsgi' in python_exe:
             # 顺藤摸瓜，找到 uwsgi 同目录下的真正 python 解释器
             python_exe = os.path.join(os.path.dirname(python_exe), 'python')
-            
+
         cmd = [
             python_exe, script_path,
             '--resources-dir', extract_dir,
             '--output-csv', out_csv,
-            '--output-xlsx', out_xlsx
+            '--output-xlsx', out_xlsx,
+            '--project-type', project_type,
+            '--pico-json', pico_json_str,
         ]
 
         print(
             f"\n🚀 [Project {project_id}] Starting AI Data Extraction for {valid_count} papers... (Please wait, about 30s per paper)")
+        print(f"   Project Type: {project_type}, PICO: {pico_data}")
 
         # 重新开启 capture_output，把真正的死因死死抓住！
         process = subprocess.run(cmd, capture_output=True, text=True)

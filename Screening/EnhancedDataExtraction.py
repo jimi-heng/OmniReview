@@ -46,8 +46,11 @@ except Exception:  # pragma: no cover
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 
-# Default prompt templates
-DEFAULT_SYSTEM_PROMPT = """You are an expert medical data extractor for systematic reviews.
+# ============================================================================
+# System Prompts for Different Project Types
+# ============================================================================
+
+DATA_EXTRACTION_SYSTEM_PROMPT_BASE = """You are an expert medical data extractor for systematic reviews.
 
 CRITICAL OUTPUT FORMAT — you MUST follow this exactly:
 - Return ONLY raw JSON. No markdown fences, no explanation, no preamble.
@@ -66,20 +69,144 @@ Extraction rules:
 - Multiple outcomes: return one JSON object per outcome row, duplicating study metadata.
 """
 
-DEFAULT_USER_PROMPT_TEMPLATE = """Extract the following data fields from the attached PDF.
+# PICOS System Prompt (Study Design, Population, Intervention, Comparison, Outcome)
+PICOS_SYSTEM_PROMPT = DATA_EXTRACTION_SYSTEM_PROMPT_BASE + """
+Project Type: PICOS (Intervention Studies)
+Focus on extracting data related to:
+- Study design (RCT, cohort, case-control, etc.)
+- Population characteristics
+- Intervention details
+- Comparison group details
+- Outcome measurements
+"""
 
-Target PICO Criteria for this Evaluation:
-- Population (P): 铁缺乏但尚未贫血的儿童(0-6岁), 合并疾病?
-- Intervention (I): 铁剂治疗(每日2 mg/kg元素铁的口服铁剂治疗,疗程为12周),剂量,疗程
-- Comparison (C): 不进行铁剂治疗
-- Outcome (O): Critical:血色素水平, 贫血的发生率, 生长发育指标; Important: 安全性指标：胃肠道反应、食欲下降, 神经认知发育, 肠道菌群, 感染性疾病患病率
-- Extra requirements: Study design: SR、RCT、观察性研究
+# PECO System Prompt (Population, Exposure, Comparison, Outcome)
+PECO_SYSTEM_PROMPT = DATA_EXTRACTION_SYSTEM_PROMPT_BASE + """
+Project Type: PECO (Exposure/Observational Studies)
+Focus on extracting data related to:
+- Population characteristics
+- Exposure factors (risk factors, environmental factors, behaviors, conditions)
+- Comparison group details
+- Outcome measurements
+"""
+
+# PIRO System Prompt (Population, Indicator, Reference, Outcome)
+PIRO_SYSTEM_PROMPT = DATA_EXTRACTION_SYSTEM_PROMPT_BASE + """
+Project Type: PIRO (Diagnostic/Prognostic Studies)
+Focus on extracting data related to:
+- Population characteristics
+- Indicator (biomarkers, diagnostic tests, prognostic factors, clinical scores)
+- Reference (control group, baseline level, standard diagnostic method, reference measurement)
+- Outcome measurements
+"""
+
+# Default empty criteria (to be filled from frontend)
+DEFAULT_PICOS = {
+    "s": "",
+    "p": "",
+    "i": "",
+    "c": "",
+    "o": "",
+}
+
+DEFAULT_PECO = {
+    "p": "",
+    "e": "",
+    "c": "",
+    "o": "",
+}
+
+DEFAULT_PIRO = {
+    "p": "",
+    "i": "",
+    "r": "",
+    "o": "",
+}
+
+
+def get_system_prompt(project_type: str) -> str:
+    """Get system prompt based on project type."""
+    prompts = {
+        "PICOS": PICOS_SYSTEM_PROMPT,
+        "PICO": PICOS_SYSTEM_PROMPT,  # PICO is same as PICOS
+        "PECO": PECO_SYSTEM_PROMPT,
+        "PIRO": PIRO_SYSTEM_PROMPT,
+    }
+    return prompts.get(project_type.upper(), PICOS_SYSTEM_PROMPT)
+
+
+def get_default_pico(project_type: str) -> Dict[str, str]:
+    """Get default PICO criteria based on project type."""
+    defaults = {
+        "PICOS": DEFAULT_PICOS,
+        "PICO": DEFAULT_PICOS,
+        "PECO": DEFAULT_PECO,
+        "PIRO": DEFAULT_PIRO,
+    }
+    return defaults.get(project_type.upper(), DEFAULT_PICOS)
+
+
+def generate_user_prompt(
+    project_type: str,
+    pico_dict: Dict[str, str],
+    columns_section: str,
+    paper_id: int,
+) -> str:
+    """Generate user prompt based on project type and PICO criteria."""
+
+    if project_type.upper() == "PECO":
+        return f"""Extract the following data fields from the attached PDF.
+
+Target PECO Criteria for this Evaluation:
+- Population (P): {pico_dict.get('p', '')}
+- Exposure (E): {pico_dict.get('e', '')}
+- Comparison (C): {pico_dict.get('c', '')}
+- Outcome (O): {pico_dict.get('o', '')}
 
 Data fields to extract:
 {columns_section}
 
 MANDATORY OUTPUT FORMAT:
-Return a JSON array. EVERY field must use the nested {{"value": "...", "evidence": "..."}} format.
+Return a JSON array. EVERY field must use the {{"value": "...", "evidence": "..."}} format.
+The "evidence" is the verbatim sentence from the PDF that supports the value.
+
+Paper ID: {paper_id}
+"""
+
+    elif project_type.upper() == "PIRO":
+        return f"""Extract the following data fields from the attached PDF.
+
+Target PIRO Criteria for this Evaluation:
+- Population (P): {pico_dict.get('p', '')}
+- Indicator (I): {pico_dict.get('i', '')}
+- Reference (R): {pico_dict.get('r', '')}
+- Outcome (O): {pico_dict.get('o', '')}
+
+Data fields to extract:
+{columns_section}
+
+MANDATORY OUTPUT FORMAT:
+Return a JSON array. EVERY field must use the {{"value": "...", "evidence": "..."}} format.
+The "evidence" is the verbatim sentence from the PDF that supports the value.
+
+Paper ID: {paper_id}
+"""
+
+    else:  # Default PICOS/PICO
+        return f"""Extract the following data fields from the attached PDF.
+
+Target PICOS Criteria for this Evaluation:
+- Study Design (S): {pico_dict.get('s', '')}
+- Population (P): {pico_dict.get('p', '')}
+- Intervention (I): {pico_dict.get('i', '')}
+- Comparison (C): {pico_dict.get('c', '')}
+- Outcome (O): {pico_dict.get('o', '')}
+
+Data fields to extract:
+{columns_section}
+
+MANDATORY OUTPUT FORMAT:
+Return a JSON array. EVERY field must use the {{"value": "...", "evidence": "..."}} format.
 The "evidence" is the verbatim sentence from the PDF that supports the value.
 
 Paper ID: {paper_id}
@@ -497,24 +624,32 @@ async def extract_from_paper(
     retries: int,
     retry_delay: float,
     pages_spec: Optional[List[int]],
+    project_type: str = "PICO",
+    pico_dict: Optional[Dict[str, str]] = None,
 ) -> ExtractionResult:
     """Extract data from a paper."""
     base_error = ""
     value_rows = []
     evidence_rows = []
 
+    # Use default PICO criteria if not provided
+    if pico_dict is None:
+        pico_dict = get_default_pico(project_type)
+
     try:
         pdf_bytes = load_pdf_bytes(paper.path, pages_spec)
 
-        # Build prompt
+        # Build prompt based on project type
         columns_section = generate_columns_section(llm_columns)
-
-        user_prompt = DEFAULT_USER_PROMPT_TEMPLATE.format(
+        system_prompt = get_system_prompt(project_type)
+        user_prompt = generate_user_prompt(
+            project_type=project_type,
+            pico_dict=pico_dict,
             columns_section=columns_section,
             paper_id=paper.paper_id,
         )
 
-        full_prompt = DEFAULT_SYSTEM_PROMPT + "\n\n" + user_prompt
+        full_prompt = system_prompt + "\n\n" + user_prompt
 
         # Build payload with PDF Base64 upload
         b64 = base64.b64encode(pdf_bytes).decode("ascii")
@@ -726,6 +861,19 @@ Examples:
         default=10,
         help="Maximum concurrent API requests",
     )
+    parser.add_argument(
+        "--project-type",
+        type=str,
+        default="PICOS",
+        choices=["PICOS", "PICO", "PECO", "PIRO"],
+        help="Project type: PICOS/PICO (intervention), PECO (exposure), PIRO (diagnostic/prognostic)",
+    )
+    parser.add_argument(
+        "--pico-json",
+        type=str,
+        default="",
+        help="JSON string containing PICO criteria from frontend (e.g., '{\"s\":\"RCT\",\"p\":\"children\",\"i\":\"iron\",\"c\":\"placebo\",\"o\":\"hemoglobin\"}')",
+    )
 
     args = parser.parse_args()
 
@@ -734,6 +882,18 @@ Examples:
     api_key = os.getenv(args.api_key_env)
     if not api_key:
         raise RuntimeError(f"Missing environment variable: {args.api_key_env}")
+
+    # Parse PICO JSON from frontend, or use default empty values
+    if args.pico_json:
+        try:
+            pico_dict = json.loads(args.pico_json)
+            print(f"PICO criteria loaded from frontend: {pico_dict}")
+        except json.JSONDecodeError as e:
+            print(f"Warning: Failed to parse --pico-json, using defaults. Error: {e}")
+            pico_dict = get_default_pico(args.project_type)
+    else:
+        pico_dict = get_default_pico(args.project_type)
+        print(f"Using default PICO criteria for {args.project_type}")
 
     # Load template columns
     template_path = args.template.resolve()
@@ -782,6 +942,8 @@ Examples:
                     retries=int(args.retries),
                     retry_delay=float(args.retry_delay),
                     pages_spec=pages_spec,
+                    project_type=args.project_type,
+                    pico_dict=pico_dict,
                 )
 
                 # Write to CSV

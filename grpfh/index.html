@@ -1753,11 +1753,11 @@
             </div>
             <div class="card" id="pico-setup-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 id="pico-setup-title" style="margin: 0;">Enter the SPICO Elements</h3>
-                    <span id="current-project-type-badge" class="type-badge spico">Intervention (SPICO)</span>
+                    <h3 id="pico-setup-title" style="margin: 0;">Enter the PICOS Elements</h3>
+                    <span id="current-project-type-badge" class="type-badge spico">Intervention (PICOS)</span>
                 </div>
 
-                <div id="fields-SPICO" class="pico-fields-group">
+                <div id="fields-PICOS" class="pico-fields-group">
                     <div class="form-group"><label>Study Design (S)</label><input id="spico-s" type="text" placeholder="e.g. Randomized controlled trials, Cohort studies"></div>
                     <div class="form-group"><label>Population (P)</label><input id="spico-p" type="text" placeholder="e.g. Patients with type 2 diabetes"></div>
                     <div class="form-group"><label>Intervention (I)</label><input id="spico-i" type="text" placeholder="e.g. Metformin treatment"></div>
@@ -2031,8 +2031,8 @@
             <div style="text-align: left; margin-bottom: 32px;">
                 <label style="font-size: 11px; letter-spacing: 1px; color: #86868b; display: block; margin-bottom: 12px; text-align: center; font-weight: 600;">SELECT ANALYSIS TYPE</label>
                 <div class="type-selector">
-                    <div class="type-option active" data-type="SPICO" onclick="selectProjectType(this, 'SPICO')">
-                        <div class="type-title">Intervention (SPICO)</div>
+                    <div class="type-option active" data-type="PICOS" onclick="selectProjectType(this, 'PICOS')">
+                        <div class="type-title">Intervention (PICOS)</div>
                         <div class="type-desc">Study, Population, Intervention, Comparison, Outcome</div>
                     </div>
                     <div class="type-option" data-type="PECO" onclick="selectProjectType(this, 'PECO')">
@@ -2396,7 +2396,7 @@
         // ==========================================
         // 🌟 2. 项目类型选择与界面动态渲染引擎
         // ==========================================
-        let selectedProjectType = 'SPICO'; // 默认状态
+        let selectedProjectType = 'PICOS'; // 默认状态
 
         // 弹窗内的点击选择特效
         function selectProjectType(element, type) {
@@ -2431,10 +2431,10 @@
             // 更新标题和角标样式
             const titleEl = document.getElementById('pico-setup-title');
             const badgeEl = document.getElementById('current-project-type-badge');
-            
-            if (type === 'SPICO') {
-                titleEl.textContent = "Enter the SPICO Elements";
-                badgeEl.textContent = "Intervention (SPICO)";
+
+            if (type === 'PICOS') {
+                titleEl.textContent = "Enter the PICOS Elements";
+                badgeEl.textContent = "Intervention (PICOS)";
                 badgeEl.className = "type-badge spico";
             } else if (type === 'PECO') {
                 titleEl.textContent = "Enter the PECO Elements";
