@@ -1864,11 +1864,11 @@
             
             <!-- 上传标签页（还原支持格式、多文件上传，新增ID和上传按钮事件） -->
             <div id="import-section" class="card">
-                <p style="color: #6c757d; margin-bottom: 20px;">Supported citation formats: .bib, .ris, .txt (EndNote/Mendeley/RefWorks export)</p>
+                <p style="color: #6c757d; margin-bottom: 20px;">Supported citation formats: .bib, .ris (EndNote/Mendeley/RefWorks export)</p>
                 <div class="form-group">
                     <label for="file-upload">Upload Citation Files</label>
                     <!-- 保留原属性，仅新增ID（已存在），无需修改 -->
-                    <input type="file" id="file-upload" multiple accept=".bib,.ris,.txt" style="padding: 3px;">
+                    <input type="file" id="file-upload" multiple accept=".bib,.ris" style="padding: 3px;">
                 </div>
                 <div style="margin-top: 10px;">
                     <!-- 关键修改：给按钮加ID+点击事件，关联JS上传逻辑 -->

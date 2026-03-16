@@ -503,8 +503,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = files[i];
         const fileExt = file.name.split('.').pop().toLowerCase();
 
-        // 校验文件格式
-        if (!['bib', 'ris', 'txt'].includes(fileExt)) {
+        // 校验文件格式 (严防死守，仅放行标准文献格式)
+        if (!['bib', 'ris'].includes(fileExt)) {
           errorFiles.push(`${file.name} (unsupported format)`);
           continue;
         }
@@ -517,12 +517,12 @@ document.addEventListener('DOMContentLoaded', () => {
           reader.readAsText(file);
         });
 
-        // 🌟 核心升级：全面解析 bib, ris 和 txt 文件
+        // 🌟 核心解析：安全拆分 bib 和 ris 文件
         let literatures = [];
         if (fileExt === 'bib') {
           literatures = parseBibFile(fileContent);
-        } else if (fileExt === 'ris' || fileExt === 'txt') {
-          literatures = parseRisFile(fileContent); // 完美接管 ris 和 txt
+        } else if (fileExt === 'ris') {
+          literatures = parseRisFile(fileContent); // 专注于解析纯正的 ris
         } else {
           errorFiles.push(`${file.name} (unsupported format)`);
           continue;
