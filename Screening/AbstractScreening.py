@@ -743,14 +743,27 @@ def search_wos(query, max_number):
         print(f"WOS search error: {e}")
         return []
 
-def literature_search_all(query, N):
-    pubmed_papers = search_pubmed(query, N)
-    openalex_papers = search_openalex(query, N)
-    wos_papers = search_wos(query, N)
+def literature_search_all(query, N, databases=None):
+    # 如果没传，默认全选防报错
+    if databases is None:
+        databases = ['pubmed', 'openalex', 'wos']
 
-    print(f"PubMed returned {len(pubmed_papers)} papers")
-    print(f"OpenAlex returned {len(openalex_papers)} papers")
-    print(f"WOS returned {len(wos_papers)} papers")
+    pubmed_papers = []
+    openalex_papers = []
+    wos_papers = []
+
+    # 根据前端传来的 databases 数组动态决定调用哪个库
+    if 'pubmed' in databases:
+        pubmed_papers = search_pubmed(query, N)
+        print(f"PubMed returned {len(pubmed_papers)} papers")
+        
+    if 'openalex' in databases:
+        openalex_papers = search_openalex(query, N)
+        print(f"OpenAlex returned {len(openalex_papers)} papers")
+        
+    if 'wos' in databases:
+        wos_papers = search_wos(query, N)
+        print(f"WOS returned {len(wos_papers)} papers")
 
     all_papers = pubmed_papers + openalex_papers + wos_papers
 

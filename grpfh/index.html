@@ -1483,6 +1483,67 @@
             z-index: 1000 !important;
             overflow: visible !important;
         }
+
+        /* =======================================================
+           🌟 数据库选择胶囊按钮 (Apple Chip Style)
+           ======================================================= */
+        .db-chip {
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: rgba(128, 128, 128, 0.08);
+            color: #86868b;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .db-chip:hover {
+            background: rgba(128, 128, 128, 0.15);
+        }
+        .db-chip.active {
+            background: #0071e3;
+            color: #ffffff;
+            border-color: #0071e3;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+        }
+        body.dark-theme .db-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #a1a1a6;
+        }
+        /* 🍎 纯正苹果风：修复边框过亮问题，完美匹配高级暗黑卡片质感 */
+        body.dark-theme .db-chip.active {
+            background: rgba(255, 255, 255, 0.08);   /* 底色亮度降到 8%，极其微弱 */
+            border-color: rgba(255, 255, 255, 0.3);  /* 边框亮度降到 30%，彻底告别刺眼，只留优雅轮廓 */
+            color: #ffffff;                          /* 文字保持纯白，保证可读性 */
+            box-shadow: none;                        /* 保持扁平线框感 */
+        }
+
+        /* =======================================================
+           🌟 苹果风：SPA 页面层级滑动过渡动画
+           ======================================================= */
+        .ios-slide-in-forward {
+            /* 前进：从右侧 30px 处透明滑入 */
+            animation: iosSlideForward 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+        .ios-slide-in-backward {
+            /* 后退：从左侧 30px 处透明滑入 */
+            animation: iosSlideBackward 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+        
+        @keyframes iosSlideForward {
+            0% { transform: translateX(30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes iosSlideBackward {
+            0% { transform: translateX(-30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -1501,13 +1562,12 @@
     <div class="progress-header">
         <div class="title">Systematic Review Progress</div>
         <div class="progress-steps">
-            <div class="progress-step active" id="step-login" onclick="showPage('login-page')" style="cursor: pointer; transition: 0.3s;">1. Login</div>
-            <div class="progress-step disabled" id="step-home" onclick="showPage('home-page')" style="cursor: pointer; transition: 0.3s;">2. Project Home</div>
-            <div class="progress-step disabled" id="step-pico" onclick="showPage('pico-page')" style="cursor: pointer; transition: 0.3s;">3. PICO Setup</div>
-            <div class="progress-step disabled" id="step-import" onclick="showPage('import-search-page')" style="cursor: pointer; transition: 0.3s;">4. Import/Search</div>
-            <div class="progress-step disabled" id="step-abstract" onclick="showPage('abstract-screen-page')" style="cursor: pointer; transition: 0.3s;">5. Abstract Screening</div>
-            <div class="progress-step disabled" id="step-fulltext" onclick="showPage('full-text-screen-page')" style="cursor: pointer; transition: 0.3s;">6. Full-Text Screening</div>
-            <div class="progress-step disabled" id="step-data" onclick="showPage('data-extraction-page')" style="cursor: pointer; transition: 0.3s;">7. Data Extraction</div>
+            <div class="progress-step disabled" id="step-home" onclick="showPage('home-page')" style="cursor: pointer; transition: 0.3s;">1. Project Home</div>
+            <div class="progress-step disabled" id="step-pico" onclick="showPage('pico-page')" style="cursor: pointer; transition: 0.3s;">2. Criteria Setup</div>
+            <div class="progress-step disabled" id="step-import" onclick="showPage('import-search-page')" style="cursor: pointer; transition: 0.3s;">3. Import/Search</div>
+            <div class="progress-step disabled" id="step-abstract" onclick="showPage('abstract-screen-page')" style="cursor: pointer; transition: 0.3s;">4. Abstract Screening</div>
+            <div class="progress-step disabled" id="step-fulltext" onclick="showPage('full-text-screen-page')" style="cursor: pointer; transition: 0.3s;">5. Full-Text Screening</div>
+            <div class="progress-step disabled" id="step-data" onclick="showPage('data-extraction-page')" style="cursor: pointer; transition: 0.3s;">6. Data Extraction</div>
         </div>
     </div>
 
@@ -1753,11 +1813,11 @@
             </div>
             <div class="card" id="pico-setup-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 id="pico-setup-title" style="margin: 0;">Enter the PICOS Elements</h3>
-                    <span id="current-project-type-badge" class="type-badge spico">Intervention (PICOS)</span>
+                    <h3 id="pico-setup-title" style="margin: 0;">Enter the SPICO Elements</h3>
+                    <span id="current-project-type-badge" class="type-badge spico">Intervention (SPICO)</span>
                 </div>
 
-                <div id="fields-PICOS" class="pico-fields-group">
+                <div id="fields-SPICO" class="pico-fields-group">
                     <div class="form-group"><label>Study Design (S)</label><input id="spico-s" type="text" placeholder="e.g. Randomized controlled trials, Cohort studies"></div>
                     <div class="form-group"><label>Population (P)</label><input id="spico-p" type="text" placeholder="e.g. Patients with type 2 diabetes"></div>
                     <div class="form-group"><label>Intervention (I)</label><input id="spico-i" type="text" placeholder="e.g. Metformin treatment"></div>
@@ -1781,10 +1841,6 @@
             </div>
             <div class="card">
                 <h3>Systematic Review Protocol</h3>
-                <div class="form-group">
-                    <label for="research-objective">Research Objectives</label>
-                    <textarea id="research-objective" placeholder="Enter your research objectives"></textarea>
-                </div>
                 <div class="form-group">
                     <label for="additional-criteria">Additional Inclusion & Exclusion Criteria</label>
                     <textarea id="additional-criteria" placeholder="e.g. Include papers published after 1995. Exclude case reports and non-English studies."></textarea>
@@ -1825,6 +1881,25 @@
             
             <!-- 搜索标签页（完全还原Figure12：关键词、最大数量、搜索按钮） -->
             <div id="search-section" class="card" style="display: none;">
+                
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="font-size: 13px; color: #86868b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: block;">Data Sources</label>
+                    <div id="database-selector" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <div class="db-chip active" data-db="pubmed">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                            PubMed
+                        </div>
+                        <div class="db-chip active" data-db="openalex">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            OpenAlex
+                        </div>
+                        <div class="db-chip active" data-db="wos">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                            Web of Science
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="search-keywords">Search Keywords (separated by space, support Boolean: AND/OR/NOT)</label>
                     <input type="text" id="search-keywords" placeholder="e.g. diabetes AND metformin OR glipizide NOT animal study">
@@ -2031,8 +2106,8 @@
             <div style="text-align: left; margin-bottom: 32px;">
                 <label style="font-size: 11px; letter-spacing: 1px; color: #86868b; display: block; margin-bottom: 12px; text-align: center; font-weight: 600;">SELECT ANALYSIS TYPE</label>
                 <div class="type-selector">
-                    <div class="type-option active" data-type="PICOS" onclick="selectProjectType(this, 'PICOS')">
-                        <div class="type-title">Intervention (PICOS)</div>
+                    <div class="type-option active" data-type="SPICO" onclick="selectProjectType(this, 'SPICO')">
+                        <div class="type-title">Intervention (SPICO)</div>
                         <div class="type-desc">Study, Population, Intervention, Comparison, Outcome</div>
                     </div>
                     <div class="type-option" data-type="PECO" onclick="selectProjectType(this, 'PECO')">
@@ -2396,7 +2471,7 @@
         // ==========================================
         // 🌟 2. 项目类型选择与界面动态渲染引擎
         // ==========================================
-        let selectedProjectType = 'PICOS'; // 默认状态
+        let selectedProjectType = 'SPICO'; // 默认状态
 
         // 弹窗内的点击选择特效
         function selectProjectType(element, type) {
@@ -2432,18 +2507,23 @@
             const titleEl = document.getElementById('pico-setup-title');
             const badgeEl = document.getElementById('current-project-type-badge');
 
-            if (type === 'PICOS') {
-                titleEl.textContent = "Enter the PICOS Elements";
-                badgeEl.textContent = "Intervention (PICOS)";
+            const navStepPico = document.getElementById('step-pico'); // 👈 获取导航栏元素
+
+            if (type === 'SPICO' || type === 'PICOS') {
+                titleEl.textContent = "Enter the SPICO Elements";
+                badgeEl.textContent = "Intervention (SPICO)";
                 badgeEl.className = "type-badge spico";
+                if (navStepPico) navStepPico.textContent = "2. SPICO Setup"; // 🌟 动态变身
             } else if (type === 'PECO') {
                 titleEl.textContent = "Enter the PECO Elements";
                 badgeEl.textContent = "Prognosis (PECO)";
                 badgeEl.className = "type-badge peco";
+                if (navStepPico) navStepPico.textContent = "2. PECO Setup"; // 🌟 动态变身
             } else if (type === 'PIRO') {
                 titleEl.textContent = "Enter the PIRO Elements";
                 badgeEl.textContent = "Diagnosis (PIRO)";
                 badgeEl.className = "type-badge piro";
+                if (navStepPico) navStepPico.textContent = "2. PIRO Setup"; // 🌟 动态变身
             }
         }
 

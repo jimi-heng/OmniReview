@@ -59,112 +59,119 @@ function updateProgressStep(activeStepId) {
 // 2. 通用页面切换函数（所有按钮跳转核心）
 // 2. 通用页面切换函数（所有按钮跳转核心）
 // 2. 通用页面切换函数（所有按钮跳转核心）
+// ====== 新增：记录页面层级，用于苹果风滑动动画 ======
+let activePageId = 'login-page';
+const pageLevel = {
+    'home-page': 1,
+    'profile-page': 2,
+    'pico-page': 2,
+    'import-search-page': 3,
+    'abstract-screen-page': 4,
+    'full-text-screen-page': 5,
+    'data-extraction-page': 6
+};
+
+// 2. 通用页面切换函数（所有按钮跳转核心）
 function showPage(pageId) {
-    // ========== 新增：导航路由守卫 (Navigation Guards) ==========
-    
-    // 规则 1: 用户未登录时，绝对不能跳转到除登录/注册外的任何页面
+    // 🌟 核心拦截：如果切回主页，就把导航栏名字重置为通用的 Criteria Setup
+    if (pageId === 'home-page') {
+        const navPico = document.getElementById('step-pico');
+        if (navPico) navPico.textContent = '2. Criteria Setup';
+    }
+
+    // ========== 导航路由守卫 ==========
     if (!currentUser && pageId !== 'login-page' && pageId !== 'register-page') {
         alert('Access denied. Please log in first.');
-        return; // 拦截执行，拒绝跳转
+        return;
     }
-    
-    // 规则 2: 用户已登录时，不能通过点击导航栏强行回到登录页 
-    // (注：如果是点击 Logout 按钮，currentUser 会先被设为 null，所以不受此规则限制)
     if (currentUser && (pageId === 'login-page' || pageId === 'register-page')) {
-        return; // 静默拦截
+        return; 
     }
-    
-    // 规则 3: 用户如果在 Project Home 界面（未进入具体项目），不能点击导航栏直接往后跳
     const projectPages = ['pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
     if (currentUser && !currentProject && projectPages.includes(pageId)) {
         alert('Please select "Continue" or "Create New Project" from the Home dashboard first.');
-        return; // 拦截执行，拒绝跳转
+        return;
     }
-    // =========================================================
+    // ===================================
 
-    // 隐藏所有页面 (已加入全新的 profile-page)
+    // 🌟 核心动效：判断滑动方向 (Forward: 从右向左滑; Backward: 从左向右滑)
+    let isForward = true;
+    if (pageLevel[pageId] !== undefined && pageLevel[activePageId] !== undefined) {
+        isForward = pageLevel[pageId] >= pageLevel[activePageId];
+    }
+    // 强制规定：只要是回到 home-page，必定是后退
+    if (pageId === 'home-page') isForward = false;
+
+    // 隐藏所有页面，并清除旧的动画类
     const allPages = ['login-page', 'register-page', 'home-page', 'profile-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
     allPages.forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.style.display = 'none';
+        if (el && id !== pageId) {
+            el.style.display = 'none';
+            el.classList.remove('ios-slide-in-forward', 'ios-slide-in-backward');
+        }
     });
     
     // 显示目标页面 (兼容全新平移空间架构)
     if (pageId === 'login-page' || pageId === 'register-page') {
         const megaWrapper = document.getElementById('auth-mega-wrapper');
         if (megaWrapper) {
-            megaWrapper.style.display = 'block'; // 必须是 block
+            megaWrapper.style.display = 'block';
             megaWrapper.className = 'state-cover';
             document.body.classList.add('hide-nav');
         }
     } else {
         const targetEl = document.getElementById(pageId);
-        if(targetEl) targetEl.style.display = 'block';
+        if (targetEl) {
+            targetEl.style.display = 'block';
+            
+            // 🌟 触发苹果风滑入动画 (排除从封面刚进来的第一次，保持原样)
+            if (activePageId !== 'login-page' && activePageId !== 'register-page') {
+                targetEl.classList.remove('ios-slide-in-forward', 'ios-slide-in-backward');
+                void targetEl.offsetWidth; // 魔法：瞬间触发重绘，重启 CSS 动画
+                targetEl.classList.add(isForward ? 'ios-slide-in-forward' : 'ios-slide-in-backward');
+            }
+        }
         
-        // 离开封面空间后，关掉 mega-wrapper 并显示导航栏
         const megaWrapper = document.getElementById('auth-mega-wrapper');
         if (megaWrapper) megaWrapper.style.display = 'none';
         document.body.classList.remove('hide-nav');
     }
 
-    // =========================================================
-    // 🌟 新增：智能底图隔离逻辑 (将华丽底图严格限制在登录/注册页)
-    // =========================================================
+    activePageId = pageId; // 更新当前所处页面的记忆
+
+    // 智能底图隔离逻辑
     const loginBg = document.querySelector('.login-background');
     if (loginBg) {
-        if (pageId === 'login-page' || pageId === 'register-page') {
-            loginBg.style.display = 'block'; // 开启华丽动态医学底图
-        } else {
-            loginBg.style.display = 'none'; // 彻底隐藏华丽底图，露出原版经典的静谧渐变
-        }
+        loginBg.style.display = (pageId === 'login-page' || pageId === 'register-page') ? 'block' : 'none';
     }
-    // =========================================================
 
-    // 【核心新增】：如果用户切换到了数据提取页面，静默检查是否已有提取结果
+    // 检查数据提取结果
     if (pageId === 'data-extraction-page' && currentProject) {
         checkExtractionStatus();
     }
-
-
-    // 【核心新增】：如果用户切换到了数据提取页面，静默检查是否已有提取结果
-    if (pageId === 'data-extraction-page' && currentProject) {
-        checkExtractionStatus();
-    }
-
     
     // 根据页面执行对应的初始化和导航高亮
     switch (pageId) {
         case 'login-page':
-        case 'register-page': 
-            updateProgressStep('step-login'); 
-            break;
+        case 'register-page': updateProgressStep('step-login'); break;
         case 'home-page':
             updateProgressStep('step-home');
-            // 【神来之笔】：如果用户主动点击导航栏回到 Home 页，立刻清空当前项目状态
-            // 这样既防止了数据串号，也完美配合了上面的“规则3”
             currentProject = null;
             sessionStorage.removeItem('currentProject');
-            if (currentUser) {
-                loadUserProjects();
-            }
+            if (currentUser) loadUserProjects();
             break;
-        case 'pico-page': 
-            updateProgressStep('step-pico'); 
-            break;
+        case 'pico-page': updateProgressStep('step-pico'); break;
         case 'import-search-page':
             updateProgressStep('step-import');
             setTimeout(loadLiteratureList, 100);
             break;
-        case 'abstract-screen-page': 
-            updateProgressStep('step-abstract'); 
-            break;
+        case 'abstract-screen-page': updateProgressStep('step-abstract'); break;
         case 'full-text-screen-page': 
             updateProgressStep('step-fulltext'); 
             setTimeout(loadFullTextScreening, 100);
             break;
-        case 'data-extraction-page': 
-            updateProgressStep('step-data'); 
-            break;
+        case 'data-extraction-page': updateProgressStep('step-data'); break;
     }
 }
 
@@ -416,7 +423,56 @@ function parseBibFile(text) {
   });
   return literatures;
 }
+// ====== 新增：解析 .ris 和 .txt (标准标签格式) 的核心函数 ======
+function parseRisFile(text) {
+  const literatures = [];
+  // RIS 格式以 "ER  - " 作为每条文献的结束标记
+  const entries = text.split(/ER\s+-/);
 
+  entries.forEach(entry => {
+    if (!entry.trim()) return;
+
+    const lines = entry.split(/\n|\r\n/);
+    let lit = { title: '', author: [], journal: '', year: null, doi: '', abstract: '' };
+    let currentTag = '';
+
+    lines.forEach(line => {
+      // 匹配标准的 "TAG  - Value" 格式 (如 TI  - 文章标题)
+      const match = line.match(/^([A-Z0-9]{2})\s+-\s+(.*)$/);
+      if (match) {
+        currentTag = match[1];
+        const val = match[2].trim();
+        
+        // 解析各类标签 (兼容不同文献管理软件的微小差异)
+        if (currentTag === 'TI' || currentTag === 'T1') lit.title = val;
+        else if (currentTag === 'AU' || currentTag === 'A1') lit.author.push(val);
+        else if (currentTag === 'JO' || currentTag === 'T2' || currentTag === 'JF') lit.journal = val;
+        else if (currentTag === 'PY' || currentTag === 'Y1') {
+          const yearMatch = val.match(/\d{4}/);
+          if (yearMatch) lit.year = parseInt(yearMatch[0]);
+        }
+        else if (currentTag === 'DO') lit.doi = val;
+        else if (currentTag === 'AB' || currentTag === 'N2') lit.abstract = val;
+      } else if (currentTag === 'AB' || currentTag === 'N2') {
+         // 处理摘要中可能存在换行符的情况
+         lit.abstract += ' ' + line.trim();
+      }
+    });
+
+    // 只要成功提取到标题，就视为有效文献
+    if (lit.title) {
+      literatures.push({
+        title: lit.title,
+        author: lit.author.join('; '), // 将多个作者用分号拼接
+        journal: lit.journal,
+        year: lit.year,
+        doi: lit.doi,
+        abstract: lit.abstract
+      });
+    }
+  });
+  return literatures;
+}
 // 2. 多文件上传处理逻辑
 document.addEventListener('DOMContentLoaded', () => {
   // 绑定上传按钮点击事件
@@ -461,12 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
           reader.readAsText(file);
         });
 
-        // 解析文件（仅完善bib解析，ris/txt暂提示）
+        // 🌟 核心升级：全面解析 bib, ris 和 txt 文件
         let literatures = [];
         if (fileExt === 'bib') {
           literatures = parseBibFile(fileContent);
+        } else if (fileExt === 'ris' || fileExt === 'txt') {
+          literatures = parseRisFile(fileContent); // 完美接管 ris 和 txt
         } else {
-          errorFiles.push(`${file.name} (.ris/.txt not fully supported yet)`);
+          errorFiles.push(`${file.name} (unsupported format)`);
           continue;
         }
 
@@ -622,45 +680,38 @@ document.addEventListener('DOMContentLoaded', () => {
         searchPubmedBtn.addEventListener('click', async () => {
             const keywords = document.getElementById('search-keywords').value.trim();
             const maxPapers = document.getElementById('max-papers').value;
+            
+            // 🌟 核心修复 1：提取当前所有处于 active 状态的胶囊按钮
+            const activeChips = document.querySelectorAll('.db-chip.active');
+            const selectedDBs = Array.from(activeChips).map(chip => chip.getAttribute('data-db'));
 
             if (!keywords) {
-                alert('Please enter search keywords!');
+                alert('Please enter search keywords.');
                 return;
             }
             if (!currentProject || !currentProject.id) {
-                alert('Error: No active project found.');
+                alert('Please create or select a project first.');
                 return;
             }
 
-            // 1. 按钮变为 Loading 状态
-            const originalText = searchPubmedBtn.textContent;
-            searchPubmedBtn.textContent = 'Searching PubMed... Please wait...';
-            searchPubmedBtn.disabled = true;
-
-            // 2. 【核心修复】：立即清空下方表格，显示正在加载的状态
-            const tableBody = document.getElementById('literature-table-body');
-            if (tableBody) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty-data" style="color: #2c6ecb; font-weight: bold;">
-                            Searching PubMed database... This might take a few seconds...
-                        </td>
-                    </tr>
-                `;
-            }
+            const btn = document.getElementById('search-pubmed-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Searching... (May take a while)';
+            btn.disabled = true;
 
             try {
-                // 3. 发送请求给后端
                 const response = await fetch(`${API_BASE_URL}/api/search-pubmed`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         project_id: currentProject.id,
                         keywords: keywords,
-                        max_papers: parseInt(maxPapers)
+                        max_papers: parseInt(maxPapers),
+                        databases: selectedDBs // 👈 核心修复 2：把选中的数据库数组发给后端
                     })
                 });
-
                 const result = await response.json();
 
                 if (result.success) {
@@ -767,8 +818,9 @@ function renderProjects(projects) {
         let projectsHtml = headerHtml;
         
         projects.forEach(project => {
-            // 解析后端传来的类型并渲染正确的角标
-            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'PICOS';
+            // 解析后端传来的类型并渲染正确的角标 (拦截并强制显示为 SPICO)
+            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'SPICO';
+            if (pType === 'PICOS') pType = 'SPICO';
             let badgeClass = pType.toLowerCase();
 
             projectsHtml += `
@@ -808,7 +860,7 @@ async function createNewProject(projectName) {
     try {
         // 抓取用户选中的类型
         const activeOption = document.querySelector('.type-option.active');
-        const projectType = activeOption ? activeOption.getAttribute('data-type') : 'PICOS';
+        const projectType = activeOption ? activeOption.getAttribute('data-type') : 'SPICO';
 
         const response = await fetch(`${API_BASE_URL}/api/create-project`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -853,17 +905,17 @@ async function continueProject(projectId) {
             if (result.data.project_type) {
                 currentProject.type = result.data.project_type;
             } else {
-                currentProject.type = 'PICOS'; // 兼容老数据
+                currentProject.type = 'SPICO'; // 默认采用新版 SPICO
             }
-            // 兼容旧数据：SPICO 和 PICOS 是一样的
-            if (currentProject.type === 'SPICO') {
-                currentProject.type = 'PICOS';
+            // 🛡️ 核心兼容：不管后端原来存的是什么，前端一律按 SPICO 渲染
+            if (currentProject.type === 'PICOS') {
+                currentProject.type = 'SPICO';
             }
             renderPicoPageByType(currentProject.type);
 
             // 2. 将数据安全填入对应的输入框
             if (result.data.pico) {
-                if (currentProject.type === 'PICOS') {
+                if (currentProject.type === 'SPICO') {
                     document.getElementById('spico-s').value = result.data.pico.s || '';
                     document.getElementById('spico-p').value = result.data.pico.p || '';
                     document.getElementById('spico-i').value = result.data.pico.i || '';
@@ -884,7 +936,6 @@ async function continueProject(projectId) {
 
             // 加载 Protocol 数据
             if (result.data.protocol) {
-                document.getElementById('research-objective').value = result.data.protocol.objective || '';
                 if (result.data.protocol.criteria !== undefined) {
                     document.getElementById('additional-criteria').value = result.data.protocol.criteria;
                 }
@@ -916,22 +967,7 @@ async function continueProject(projectId) {
     } catch (error) { console.error(error); alert('Failed to load project data'); }
 }
 
-function clearAllInputs() {
-    const textInputs = [
-        'spico-s', 'spico-p', 'spico-i', 'spico-c', 'spico-o',
-        'peco-p', 'peco-e', 'peco-c', 'peco-o',
-        'piro-p', 'piro-i', 'piro-r', 'piro-o',
-        'research-objective', 'additional-criteria', 'search-keywords'
-    ];
-    textInputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    const maxPapers = document.getElementById('max-papers');
-    if (maxPapers) maxPapers.value = 200;
-    const fileUpload = document.getElementById('file-upload');
-    if (fileUpload) fileUpload.value = '';
-}
+
 
 // 编辑项目名称
 async function editProjectName(projectId, buttonElement) {
@@ -1027,10 +1063,10 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
 // 动态保存针对该类型的输入
 async function savePicoData() {
     if (!currentProject || !currentProject.id) return;
-    const type = currentProject.type || 'PICOS';
+    const type = currentProject.type || 'SPICO';
     let picoData = {};
 
-    if (type === 'PICOS') {
+    if (type === 'SPICO') {
         picoData = {
             s: document.getElementById('spico-s').value, p: document.getElementById('spico-p').value,
             i: document.getElementById('spico-i').value, c: document.getElementById('spico-c').value, o: document.getElementById('spico-o').value
@@ -1060,7 +1096,6 @@ async function saveProtocolData() {
     if (!currentProject || !currentProject.id) return;
 
     const protocolData = {
-        objective: document.getElementById('research-objective').value,
         criteria: document.getElementById('additional-criteria').value // 统一合并为 criteria
     };
 
@@ -1291,23 +1326,29 @@ document.getElementById('saveReason').addEventListener('click', async function()
     }
 });
 
+// ====== 统一且唯一的清空输入框函数 ======
 function clearAllInputs() {
-    // 1. 清空 SPICO 和 Protocol 输入框
     const textInputs = [
-        'study_design', 'population', 'intervention', 'comparison', 'outcome',
-        'research-objective', 'additional-criteria',
-        'search-keywords' // 连同搜索界面的关键字一起清空
+        // SPICO 字段
+        'spico-s', 'spico-p', 'spico-i', 'spico-c', 'spico-o',
+        // PECO 字段
+        'peco-p', 'peco-e', 'peco-c', 'peco-o',
+        // PIRO 字段
+        'piro-p', 'piro-i', 'piro-r', 'piro-o',
+        // Protocol 与 Search 字段 (已移除废弃的 research-objective)
+        'additional-criteria', 'search-keywords'
     ];
+    
     textInputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
 
-    // 2. 恢复 Search 界面的 Max Papers 默认值
+    // 恢复 Search 界面的 Max Papers 默认值
     const maxPapers = document.getElementById('max-papers');
     if (maxPapers) maxPapers.value = 200;
 
-    // 3. 清空文件上传框
+    // 清空文件上传框
     const fileUpload = document.getElementById('file-upload');
     if (fileUpload) fileUpload.value = '';
 }
@@ -2269,3 +2310,19 @@ async function submitPasswordChange() {
         btn.disabled = false;
     }
 }
+
+// ====== 新增：数据库胶囊按钮的点击切换逻辑 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const chips = document.querySelectorAll('.db-chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('active');
+            // 🛡️ 防呆设计：保证至少有一个数据库被选中
+            const activeChips = document.querySelectorAll('.db-chip.active');
+            if (activeChips.length === 0) {
+                chip.classList.add('active'); // 强制恢复选中
+                alert('You must select at least one database source.');
+            }
+        });
+    });
+});

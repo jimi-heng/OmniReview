@@ -251,13 +251,14 @@ def api_search_pubmed():
     project_id = data.get('project_id')
     keywords = data.get('keywords')
     max_papers = data.get('max_papers', 200)
+    databases = data.get('databases', ['pubmed', 'openalex', 'wos'])  # 👈 核心修复 1：接收前端传来的胶囊按钮数组
 
     if not project_id or not keywords:
         return jsonify({'success': False, 'message': 'Project ID and keywords are required'})
 
     try:
-        # 1. 调用 AbstractScreening.py 中的函数去 PubMed 抓取数据
-        papers = literature_search_all(keywords, max_papers)
+        # 1. 调用 AbstractScreening.py 中的函数去抓取数据
+        papers = literature_search_all(keywords, max_papers, databases=databases)
 
         if not papers:
             return jsonify({'success': True, 'message': 'No literatures found for these keywords.', 'count': 0})
