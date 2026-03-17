@@ -757,6 +757,38 @@ def csv_to_excel(csv_path: Path, xlsx_path: Path, template_path: Path) -> None:
 # Paper Discovery
 # ============================================================================
 
+def extract_pdf_title(pdf_path: Path) -> str:
+    """Extract article title from PDF metadata or first page content.
+
+    Falls back to the file stem when PyMuPDF is unavailable or extraction fails.
+    """
+    if fitz is None:
+        return pdf_path.stem
+
+    try:
+        with fitz.open(str(pdf_path)) as doc:
+            # Try PDF metadata first
+            metadata = doc.metadata
+            if metadata:
+                meta_title = str(metadata.get("title") or "").strip()
+                # Metadata titles shorter than 6 chars are usually meaningless
+                if len(meta_title) >= 6:
+                    return meta_title
+
+            # Fallback: first substantial line on the first page
+            if doc.page_count > 0:
+                text = doc[0].get_text("text").strip()
+                if text:
+                    for line in text.split("\n"):
+                        line = line.strip()
+                        if len(line) >= 10:
+                            return line[:300]
+    except Exception:
+        pass
+
+    return pdf_path.stem
+
+
 def discover_pdfs(resources_dir: Path) -> List[Paper]:
     """Find all PDF files in resources directory."""
     pdfs = sorted(
@@ -765,7 +797,9 @@ def discover_pdfs(resources_dir: Path) -> List[Paper]:
     )
     out = []
     for i, path in enumerate(pdfs, start=1):
-        out.append(Paper(paper_id=i, path=path.resolve(), title=path.stem))
+        resolved = path.resolve()
+        title = extract_pdf_title(resolved)
+        out.append(Paper(paper_id=i, path=resolved, title=title))
     return out
 
 
