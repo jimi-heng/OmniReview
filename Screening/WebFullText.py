@@ -442,7 +442,7 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
         - Exposure (E): {pico_dict.get('e', '')}
         - Comparison (C): {pico_dict.get('c', '')}
         - Outcome (O): {pico_dict.get('o', '')}
-        - Extra requirements: None
+        - Extra Criteria: {pico_dict.get('es', '')}
 
         Instructions for this task:
         Evaluate the paper below against the Target PECO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, E, C, O, and Extra separately.
@@ -461,7 +461,7 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
         - Indicator (I): {pico_dict.get('i', '')}
         - Reference (R): {pico_dict.get('r', '')}
         - Outcome (O): {pico_dict.get('o', '')}
-        - Extra requirements: None
+        - Extra Criteria: {pico_dict.get('es', '')}
 
         Instructions for this task:
         Evaluate the paper below against the Target PIRO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, R, O, and Extra separately.
@@ -481,8 +481,8 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
                 - Population (P): {pico_dict.get('p', '')}
                 - Intervention (I): {pico_dict.get('i', '')}
                 - Comparison (C): {pico_dict.get('c', '')}
-                -Outcome (O): {pico_dict.get('o', '')}
-                - Extra requirements: None
+                - Outcome (O): {pico_dict.get('o', '')}
+                - Extra Criteria: {pico_dict.get('es', '')}
 
                 Instructions for this task:
                 Evaluate the paper below against the Target PICS Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.

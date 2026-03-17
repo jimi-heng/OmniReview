@@ -47,7 +47,7 @@ You are an expert in biomedical literature evaluation, specializing in evidence-
 
 Goal:
 Determine whether a research paper is potentially relevant based on the provided SPIC framework 
-(considering Study Design, Population, Intervention, and Comparison), the research title, and extra requirements (if any).
+(considering Study Design, Population, Intervention, and Comparison), the research title, and additional criteria (if any).
 
 If the user provides Outcome (O) requirements, include Outcome in the evaluation. 
 If Outcome is not provided, ignore Outcome completely.
@@ -58,7 +58,7 @@ General Screening Principle (High Recall):
 - Do NOT require explicit wording or complete reporting for a component to be considered matched.
 
 Instructions:
-1. Read the Title, Abstract_clean, SPIC information, Outcome (if provided), and Extra requirements (if provided).
+1. Read the Title, Abstract_clean, SPIC information, Outcome (if provided), and Additional Criteria (if provided).
 2. Evaluate the paper using the SPIC framework: Study Design (S), Population (P), Intervention (I), and Comparison (C).
 3. Evaluate Outcome (O) ONLY if it is provided by the user.
 4. Match Chinese PICO terms with English content, allowing for synonyms and equivalent medical concepts.
@@ -114,12 +114,12 @@ Outcome (O) – Only evaluate if provided:
 - Not matched if:
     - None of the reported outcomes relate to the specified outcome.
 
-Extra Requirements (if any):
+Additional Criteria (if any):
 - Matched if:
-    - At least one extra requirement is satisfied.
+    - At least one additional criteria is satisfied.
     - Minor measurement differences are acceptable.
 - Not matched if:
-    - None of the extra requirements are met.
+    - None of the additional criteria are met.
 
 Final Inclusion Rule (Flag):
 - Evaluate the following components:
@@ -128,8 +128,8 @@ Final Inclusion Rule (Flag):
     - Evaluate Extra if provided
 - Count how many components are matched.
 - Do NOT exclude a paper solely because Population or Intervention or Comparison does not match.
-- If ≥ 2 components match → Flag = 1 (Include).
-- If < 2 components match → Flag = 0 (Exclude).
+- If ≥ 3 components match → Flag = 1 (Include).
+- If < 3 components match → Flag = 0 (Exclude).
 
 Output Format (must include all):
 1. ID: the paper ID.
@@ -156,7 +156,7 @@ Task:
 
 3. Outcome (O) should ONLY be evaluated if the user provides an Outcome requirement in the query.
    - If Outcome is not provided, completely ignore Outcome in both evaluation and counting.
-   Extra requirements (if any) should also be evaluated.
+   Additional Criteria (if any) should also be evaluated.
 
 4. Matching rule:
    - A component is considered matched if the paper does NOT explicitly contradict the requirement.
@@ -165,11 +165,11 @@ Task:
 5. Count the number of matched components among:
    - S, P, I, C
    - Outcome (only if provided)
-   - Extra requirements (if provided)
+   - Additional Criteria (if provided)
 
 6. Inclusion rule:
-   - If at least 2 components are matched → Flag = 1 (Include)
-   - If fewer than 2 components are matched → Flag = 0 (Exclude)
+   - If at least 3 components are matched → Flag = 1 (Include)
+   - If fewer than 3 components are matched → Flag = 0 (Exclude)
 """
 
 PICOSuserPromptReason = PICOSuserPromptNoReason + reasonUserPrompt
@@ -181,7 +181,7 @@ You are an expert in biomedical literature evaluation, specializing in evidence-
 
 Goal:
 Determine whether a research paper is potentially relevant based on the provided PECO framework 
-(considering Population, Exposure, Comparison, and Outcome), the research title, and extra requirements (if any).
+(considering Population, Exposure, Comparison, and Outcome), the research title, and additional criteria (if any).
 
 General Screening Principle (High Recall):
 - Default to inclusion unless there is an explicit contradiction.
@@ -189,7 +189,7 @@ General Screening Principle (High Recall):
 - Do NOT require explicit wording or complete reporting for a component to be considered matched.
 
 Instructions:
-1. Read the Title, Abstract_clean, PECO information, and Extra requirements (if provided).
+1. Read the Title, Abstract_clean, PECO information, and Additional Criteria (if provided).
 2. Evaluate the paper using the PECO framework: Population (P), Exposure (E), Comparison (C), and Outcome (O).
 3. Match Chinese PECO terms with English content, allowing for synonyms and equivalent medical concepts.
 
@@ -236,12 +236,12 @@ Outcome (O):
 - Not matched if:
     - None of the reported outcomes relate to the specified outcome.
 
-Extra Requirements (if any):
+Additional Criteria (if any):
 - Matched if:
     - At least one extra requirement is satisfied.
     - Minor measurement differences are acceptable.
 - Not matched if:
-    - None of the extra requirements are met.
+    - None of the additional criteria are met.
 
 Final Inclusion Rule (Flag):
 - Evaluate the following components:
@@ -249,7 +249,7 @@ Final Inclusion Rule (Flag):
     - Exposure (E)
     - Comparison (C)
     - Outcome (O)
-    - Extra (if provided)
+    - Additional Criteria (if provided)
 
 - Count how many components are matched.
 - Do NOT exclude a paper solely because Population or Exposure or Comparison does not match.
@@ -280,7 +280,7 @@ Task:
    - Comparison (C)
    - Outcome (O)
 
-3. Extra requirements (if any) should also be evaluated.
+3. Additional Criteria (if any) should also be evaluated.
 
 4. Matching rule:
    - A component is considered matched if the paper does NOT explicitly contradict the requirement.
@@ -288,7 +288,7 @@ Task:
 
 5. Count the number of matched components among:
    - P, E, C, O
-   - Extra requirements (if provided)
+   - Additional Criteria (if provided)
 
 6. Inclusion rule:
    - If at least 2 components are matched → Flag = 1 (Include)
@@ -304,7 +304,7 @@ You are an expert in biomedical literature evaluation, specializing in evidence-
 
 Goal:
 Determine whether a research paper is potentially relevant based on the provided PIRO framework
-(considering Population, Indicator, Reference, and Outcome), the research title, and extra requirements (if any).
+(considering Population, Indicator, Reference, and Outcome), the research title, and additional ariteria (if any).
 
 General Screening Principle (High Recall):
 - Default to inclusion unless there is an explicit contradiction.
@@ -312,7 +312,7 @@ General Screening Principle (High Recall):
 - Do NOT require explicit wording or complete reporting for a component to be considered matched.
 
 Instructions:
-1. Read the Title, Abstract_clean, PIRO information, and Extra requirements (if provided).
+1. Read the Title, Abstract_clean, PIRO information, and Additional Criteria (if provided).
 2. Evaluate the paper using the PIRO framework: Population (P), Indicator (I), Reference (R), and Outcome (O).
 3. Match Chinese PIRO terms with English content, allowing for synonyms and equivalent medical concepts.
 
@@ -357,12 +357,12 @@ Outcome (O):
 - Not matched if:
     - None of the reported outcomes relate to the specified outcome.
 
-Extra Requirements (if any):
+Additional Criteria (if any):
 - Matched if:
-    - At least one extra requirement is satisfied.
+    - At least one additional criteria is satisfied.
     - Minor measurement differences are acceptable.
 - Not matched if:
-    - None of the extra requirements are met.
+    - None of the additional criteria are met.
 
 Final Inclusion Rule (Flag):
 - Evaluate the following components:
@@ -370,7 +370,7 @@ Final Inclusion Rule (Flag):
     - Intervention (I)
     - Response (R)
     - Outcome (O)
-    - Extra (if provided)
+    - Additional Criteria (if provided)
 
 - Count how many components are matched.
 - Do NOT exclude a paper solely because Population or Intervention does not match.
@@ -401,7 +401,7 @@ Task:
    - Reference (R)
    - Outcome (O)
 
-3. Extra requirements (if any) should also be evaluated.
+3. Additional Criteria (if any) should also be evaluated.
 
 4. Matching rule:
    - A component is considered matched if the paper does NOT explicitly contradict the requirement.
@@ -409,7 +409,7 @@ Task:
 
 5. Count the number of matched components among:
    - P, I, R, O
-   - Extra requirements (if provided)
+   - Additional Criteria (if provided)
 
 6. Inclusion rule:
    - If at least 2 components are matched → Flag = 1 (Include)
@@ -840,6 +840,7 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
             "Exposure": pico_data.get('e', ''),
             "Comparison": pico_data.get('c', ''),
             "Outcome": pico_data.get('o', ''),
+            "Addition Criteria": pico_data.get('es', ''),
         }
 
     elif project_type == 'PIRO':
@@ -855,6 +856,7 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
             "Indicator": pico_data.get('i', ''),
             "Reference": pico_data.get('r', ''),
             "Outcome": pico_data.get('o', ''),
+            "Addition Criteria": pico_data.get('es', ''),
         }
 
     else:
@@ -871,6 +873,7 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
             "Intervention": pico_data.get('i', ''),
             "Comparison": pico_data.get('c', ''),
             "Outcome": pico_data.get('o', ''),
+            "Addition Criteria": pico_data.get('es', ''),
         }
     
     df_list = []
