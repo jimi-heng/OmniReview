@@ -162,6 +162,7 @@ Target PECO Criteria for this Evaluation:
 - Exposure (E): {pico_dict.get('e', '')}
 - Comparison (C): {pico_dict.get('c', '')}
 - Outcome (O): {pico_dict.get('o', '')}
+- Additional Criteria: {pico_dict.get('es', '')}
 
 Data fields to extract:
 {columns_section}
@@ -181,6 +182,7 @@ Target PIRO Criteria for this Evaluation:
 - Indicator (I): {pico_dict.get('i', '')}
 - Reference (R): {pico_dict.get('r', '')}
 - Outcome (O): {pico_dict.get('o', '')}
+- Additional Criteria: {pico_dict.get('es', '')}
 
 Data fields to extract:
 {columns_section}
@@ -192,7 +194,7 @@ The "evidence" is the verbatim sentence from the PDF that supports the value.
 Paper ID: {paper_id}
 """
 
-    else:  # Default PICOS/PICO
+    else:  # Default PICOS/PICO/SPICO
         return f"""Extract the following data fields from the attached PDF.
 
 Target PICOS Criteria for this Evaluation:
@@ -201,6 +203,7 @@ Target PICOS Criteria for this Evaluation:
 - Intervention (I): {pico_dict.get('i', '')}
 - Comparison (C): {pico_dict.get('c', '')}
 - Outcome (O): {pico_dict.get('o', '')}
+- Additional Criteria: {pico_dict.get('es', '')}
 
 Data fields to extract:
 {columns_section}
@@ -211,7 +214,6 @@ The "evidence" is the verbatim sentence from the PDF that supports the value.
 
 Paper ID: {paper_id}
 """
-
 
 # ============================================================================
 # Data Classes
@@ -650,6 +652,8 @@ async def extract_from_paper(
         )
 
         full_prompt = system_prompt + "\n\n" + user_prompt
+        # 👇 插入这行 DEBUG 代码 (只打印前 500 个字符，足够看到条件了)
+        print(f"\n🚀 [DEBUG 数据提取] 最终生成的提示词前500字:\n{full_prompt[:500]}...\n")
 
         # Build payload with PDF Base64 upload
         b64 = base64.b64encode(pdf_bytes).decode("ascii")

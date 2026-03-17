@@ -706,6 +706,14 @@ def run_ai_screening_api():
             return jsonify({'success': False, 'message': 'PICO data not found. Please setup PICO first.'})
 
         pico_data = json.loads(pico_row['data_content'])  # 这是一个字典，包含 population, intervention 等
+        # 🌟 核心修复 1：把 Protocol 里的额外条件读出来，放进 'es' 键里，完美对接组员的代码！
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'protocol'", (project_id,))
+        protocol_row = cursor.fetchone()
+        if protocol_row:
+            protocol_data = json.loads(protocol_row['data_content'])
+            pico_data['es'] = protocol_data.get('criteria', '')
+        else:
+            pico_data['es'] = ''
 
         # 2. 获取所有 Pending 和 Error 状态的文献（允许重新跑失败的）
         cursor.execute(
@@ -996,6 +1004,14 @@ def run_fulltext_ai_api():
                        (project_id,))
         pico_row = cursor.fetchone()
         pico_data = json.loads(pico_row['data_content']) if pico_row else {}
+        # 🌟 核心修复 2：为全文筛选把额外条件读出来放进 'es' 键里
+        cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'protocol'", (project_id,))
+        protocol_row = cursor.fetchone()
+        if protocol_row:
+            protocol_data = json.loads(protocol_row['data_content'])
+            pico_data['es'] = protocol_data.get('criteria', '')
+        else:
+            pico_data['es'] = ''
 
         # 只取出成功下载了 PDF 且还未被判定过的文献
         cursor.execute('''
@@ -1121,6 +1137,14 @@ def run_data_extraction():
         cursor2.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'pico'", (project_id,))
         pico_row = cursor2.fetchone()
         pico_data = json.loads(pico_row['data_content']) if pico_row else {}
+        # 🌟 核心修复 3：为数据提取把额外条件读出来放进 'es' 键里
+        cursor2.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'protocol'", (project_id,))
+        protocol_row = cursor2.fetchone()
+        if protocol_row:
+            protocol_data = json.loads(protocol_row['data_content'])
+            pico_data['es'] = protocol_data.get('criteria', '')
+        else:
+            pico_data['es'] = ''
 
         cursor2.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'project_type'", (project_id,))
         pt_row = cursor2.fetchone()
