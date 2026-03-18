@@ -1,0 +1,110 @@
+# Page 1
+
+Efficacy of one-day quadruple therapy for H pylori infection in Chinese patients
+
+Xiao-Hui Huo, Jian-Kun Chu, Xiu-Fen Yang, Jing Wang, Li-Jing Zhang, Jin-Cheng Ma, Jun Yu
+
+Xiao-Hui Huo, Jian-Kun Chu, Xiu-Fen Yang, Jing Wang, Li-Jing Zhang, Jin-Cheng Ma, Jun Yu, Department of Gastroenterology, First Affiliated Hospital of Hebei Medical University, Shijiazhuang, Hebei Province, China
+Jun Yu, Department of Medicine and Therapeutics, Prince of Wales Hospital, Chinese University of Hong Kong, Hong Kong, China
+Supported by the National Natural Science Foundation of China to Dr Jun Yu, No. 30370637
+Correspondence to: Dr Jun Yu, Department of Medicine and Therapeutics, Prince of Wales Hospital, Shatin, NT, Hong Kong, China. junyu@cuhk.edu.hk
+Telephone: +852-26-321195 Fax: +852-26-321194
+Received: 2006-01-23 Accepted: 2006-02-18
+
+Abstract
+
+AIM: To compare the efficacies of one-day quadruple therapy and seven-day triple therapy in Chinese patients.
+
+METHODS: Sixty consecutive patients with nonulcer dyspepsia and confirmed H pylori infection were randomized to receive either omeprazole 40 mg, amoxycillin 1 g, and furazolidone 100 mg, all twice a day for 7 d or omeprazole 20 mg (at breakfast and dinner), amoxicillin 1 g, furazolidone 200 mg, and colloidal bismuth subcitrate 220 mg four times for only one day. H pylori status was determined before and at least 5 weeks after therapy by endoscopy with antral and corpus biopsies for rapid urease test and histology.
+
+RESULTS: H pylori eradication was successful in 66.67% (20/30) patients in the 7-d group and in 36.67% (11/30) patients in the 1-day group (P = 0.037). Side effects were induced by the treatment in 13.3% (4/30) patients of each group, but these were all self-limiting, short-lasting, and did not require any specific treatment.
+
+CONCLUSION: The one-day quadruple therapy is less effective than the one-week regimen in curing H pylori infection in Chinese patients.
+
+© 2006 The WJG Press. All rights reserved.
+
+Key words: H pylori; Quadruple therapy; Antibiotics; Gastritis; Side effects
+
+Huo XH, Chu JK, Yang XF, Wang J, Zhang LJ, Ma JC, Yu J. Efficacy of one-day quadruple therapy for H pylori infection in Chinese patients. World J Gastroenterol 2006; 12(19):
+
+3105-3107
+
+http://www.wjgnet.com/1007-9327/12/3105.asp
+
+INTRODUCTION
+
+There is clear evidence that H pylori is the main etiologic agent of most gastritis, peptic ulcers and gastric cancer[1,2]. Eradication of infection leads to resolution of the gastritis and to spectacular decreases of ulcer relapses and risk of gastric cancer. Treatment of H pylori infection is widely accepted for patients with dyspepsia[3,4]. Several regimens for treating H pylori infection have been proposed. One-week triple therapies incorporating a proton pump inhibitor (PPI) and two antibiotics are the most frequently recommended treatment for H pylori infection in China. Bacterial susceptibility, cost and patient compliance have been shown to be the important factors in determination of anti-H pylori therapy regimen. Sometimes, cost has to be taken into account and may be the first important factor in determination for eradication of H pylori for patients from poor rural area or countryside. Availability of 1-d quadruple therapies would therefore be of interest, because they will probably reduce cost and side effects and increase tolerance and compliance. A 1-d high-dose quadruple therapy with a combination of amoxycillin (or tetracycline), metronidazole, a bismuth salt and a proton pump inhibitor has led to promising results with eradication rates of 57%-95%[5-8]. However, Wermeille et al[9] indicated that a 1-d administration of PPI-based quadruple therapies yielded significantly lower eradication rates (20%) compared to the 7-d regimens (91%). However, experience is limited and the variant results may come from different patient population. In the present study, we therefore aimed to compare the efficacy of a four-drug 1-d treatment with a three-drug 7-d therapy on of H pylori infection in Chinese patients with dyspepsia.
+
+MATERIALS AND METHODS
+
+Patients
+
+From November 2004 to April 2005, consecutive dyspeptic H pylori-positive patients referred to our hospital for diagnostic upper gastrointestinal tract endoscopy were enrolled in the study. The patients with H pylori infection proven by urease test or histology were included in the study. Exclusion criteria were: (1) age under 18 years or
+
+---
+
+# Page 2
+
+older than 75; (2) allergy to one of the drugs; (3) inability to attend follow-up; (4) previously failed eradication therapy; (5) treatment with antibiotics during the 4 weeks prior to the study; (6) previous ulcer surgery; and (7) liver or kidney disease, severe cardiac or pulmonary disease, alcoholism, drug abuse, or any other conditions associated with poor patient compliance. Eight patients were eventually excluded from the study after randomization. The remaining 60 patients (35 males and 25 female; mean age 54.3 years, range 19-72 years) were included in the study.
+
+**Diagnosis of H pylori infection**
+
+Four biopsy specimens, two from the antrum and two from the corpus, were obtained using gastroscopy. Biopsy specimens were stained to assess the presence of H pylori. Rapid urease test was considered positive if any color change occurred. Patients were considered as H pylori-positive when H pylori was positive on either histology and/or rapid urease test.
+
+**Therapy**
+
+Patients were randomized to receive a 7-d course of omeprazole (40 mg), amoxycillin (1 g), and furazolidone (100 mg), all twice daily with meals, or a 1-d course of omeprazole (20 mg, at breakfast and dinner), amoxycillin (1 g), furazolidone (200 mg), and colloidal bismuth subcitrate 220 mg four times a day. During the treatment period, the patients were asked to refer to their study doctor if they had side effects, or the side effects were recorded by means of a structured clinical interview immediately after the end of therapy.
+
+**Assessment of H pylori eradication**
+
+The efficacy of treatment was evaluated at least 5 weeks after therapy. Endoscopy was performed and a further four biopsy specimens (two from the antrum and two from the corpus) were obtained to assess the H pylori eradication status and histology. A patient was considered to be cured if all two tests were negative at the follow-up endoscopy. To evaluate possible recrudescence, a 14C-urea breath test was performed at least 6 mo after eradication therapy. The Medical Ethics Committee of the institution approved the study design. Informed consent was taken from all patients.
+
+**Statistical analysis**
+
+Proportions were compared using the chi-squared test. Calculations were performed using the SPSS (10.0) for Windows statistical package.
+
+**RESULTS**
+
+Sixty patients entered the study. Clinical characteristics of the patients are mentioned in Table 1. There were no significant differences between the 1-d quadruple therapy and 7-d triple therapy groups with respect to age, gender, tobacco and alcohol consumption.
+
+**Eradication of H pylori**
+
+As shown in Table 2, eradication rate in the 1-d group (36.7%) was significantly lower than that in the 7-d group (66.7%). The study was subsequently stopped. The upper gastrointestinal symptoms had improved in 93.3% (21/30) of patients in the 7-d group and in 90% (15/30) of patients in 1-d group.
+
+**Side-effects and compliance**
+
+As shown in Table 3, there was no difference between the incidences of side-effects in the two groups. Symptoms were almost always mild and not interfering with daily activities. Compliance was 100% in the 1-d therapy as well as in the 7-d therapy group.
+
+**DISCUSSION**
+
+The optimal anti-H pylori treatment should reach high eradication rates with only few and tolerant side-effects, short duration to assure good compliance and lower costs. Three European studies have first stated an effective one-day quadruple therapy for H pylori eradication with cure rates being comparable to one-week standard regimen[5-7]. Recently, Lara et al[8] showed more optimal eradication rates (95%) for the 1-d therapy group in the United States patients. One-day therapeutic protocols, to our knowledge, have not been studied in Chinese patients. An important consideration is the significantly lower cost of the 1-d regimen compared to the 7-d regimen of the standard regimen. The aim of our study was to investigate the potential advantages of the 1-d quadruple therapy by comparing to a standard 7-d triple therapy.
+
+Unlike the previous reports[5-8], the eradication rate obtained with the 1-d therapy in our study was significantly lower than that obtained with the standard 7-d therapy. Side-effects were minor and did not interfere their daily
+
+---
+
+# Page 3
+
+activities in the both therapy groups. Compliance and antibiotic resistance are the major factors contributing to the failure of H pylori treatment. In our study, the compliance was reached 100% in the 1-d therapy group as well as in 7-d therapy group. However, culture was not performed in this study, so we do not know the status of H pylori susceptibility to metronidazole and/or furazolidone; therefore, we cannot exclude the possibility of an antibiotic resistance as the reason for our disappointing results. Nevertheless, to date, resistance to amoxycillin and furazolidone are lower as compared with clarithromycin and metronidazole. Smoking and drinking do not appear to be the factors in treatment failure with either one-day quadruple therapy or seven-day triple therapy in Chinese patients.
+
+In conclusion, although a 1-d quadruple therapy is less expensive and has fewer side effects, due to the low efficacy obtained in this study, we do not suggest recommending this regimen to be used in Chinese patients for eradication therapy of H pylori infection.
+
+REFERENCES
+
+1. Hentschel E, Brandstätter G, Dragosics B, Hirschl AM, Nemec H, Schütze K, Taufer M, Wurzer H. Effect of ranitidine and amoxicillin plus metronidazole on the eradication of Helicobacter pylori and the recurrence of duodenal ulcer. N Engl J Med 1993; 328: 308-312
+2. Valle J, Seppälä K, Sipponen P, Kosunen T. Disappearance of gastritis after eradication of Helicobacter pylori. A morphometric study. Scand J Gastroenterol 1991; 26: 1057-1065
+3. Sung JJ, Chung SC, Ling TK, Yung MY, Leung VK, Ng EK, Li MK, Cheng AF, Li AK. Antibacterial treatment of gastric ulcers associated with Helicobacter pylori. N Engl J Med 1995; 332: 139-142
+4. Lind T, Veldhuyzen van Zanten S, Unge P, Spiller R, Bayerdörffe E, O’Morain C, Bardhan KD, Bradette M, Chiba N, Wrangstadh M, Cederberg C, Idström JP. Eradication of Helicobacter pylori using one-week triple therapies combining omeprazole with two antimicrobials: the MACH I Study. Helicobacter 1996; 1: 138-144
+5. Tucci A, Corinaldesi R, Stanghellini V, Paparo GF, Gasperoni S, Biasco G, Varoli O, Ricci-Maccarini M, Barbara L. One-day therapy for treatment of Helicobacter pylori infection. Dig Dis Sci 1993; 38: 1670-1673
+6. de Boer WA, van Etten RJ, Schade RW, Ouwehand ME, Schneeberger PM, van Unnik AJ, Tytgat GN. One-day intensified lansoprazole-quadruple therapy for cure of Helicobacter pylori infection. Aliment Pharmacol Ther 1997; 11: 109-112
+7. Dobrucali A, Tuncer M, Eralp YT, Goksel S, Altin M, Dinc I. One-day high-dose combined therapy of Helicobacter pylori infection. Dig Dis Sci 1997; 42: 2169-2170
+8. Lara LF, Cisneros G, Gurney M, Van Ness M, Jarjoura D, Moauro B, Polen A, Rutecki G, Whittier F. One-day quadruple therapy compared with 7-day triple therapy for Helicobacter pylori infection. Arch Intern Med 2003; 163: 2079-2084
+9. Wermeille J, Cunningham M, Armenian B, Zelger G, Buri P, Merki H, Hadengue A. Failure of a 1-day high-dose quadruple therapy for cure of Helicobacter pylori infection. Aliment Pharmacol Ther 1999; 13: 173-177
+10. Graham DY, Lew GM, Malaty HM, Evans DG, Evans DJ Jr, Klein PD, Alpert LC, Genta RM. Factors influencing the eradication of Helicobacter pylori with triple therapy. Gastroenterology 1992; 102: 493-496
+11. Bell GD, Powell K, Burridge SM, Pallecaros A, Jones PH, Gant PW, Harrison G, Trowell JE. Experience with ‘triple’ anti-Helicobacter pylori eradication therapy: side effects and the importance of testing the pre-treatment bacterial isolate for metronidazole resistance. Aliment Pharmacol Ther 1992; 6: 427-435
+12. Labenz J, Leverkus F, Börsch G. Omeprazole plus amoxicillin for cure of Helicobacter pylori infection. Factors influencing the treatment success. Scand J Gastroenterol 1994; 29: 1070-1075
+13. Noach LA, Langenberg WL, Bertola MA, Dankert J, Tytgat GN. Impact of metronidazole resistance on the eradication of Helicobacter pylori. Scand J Infect Dis 1994; 26: 321-327
+14. Godoy AP, Ribeiro ML, Benvengo YH, Vitiello L, Miranda Mde C, Mendonça S, Pedrazzoli J Jr. Analysis of antimicrobial susceptibility and virulence factors in Helicobacter pylori clinical isolates. BMC Gastroenterol 2003; 3: 20
+15. Queiroz DM, Dani R, Silva LD, Santos A, Moreira LS, Rocha GA, Corrêa PR, Reis LF, Nogueira AM, Alvares Cabral MM, Esteves AM, Tanure J. Factors associated with treatment failure of Helicobacter pylori infection in a developing country. J Clin Gastroenterol 2002; 35: 315-320
+
+S- Editor Wang J L- Editor Wang XL E- Editor Ma WH

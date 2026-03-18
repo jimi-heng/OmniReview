@@ -1,0 +1,153 @@
+# Page 1
+
+含呋喃唑酮三联和四联方案根除
+幽门螺杆菌感染的疗效观察
+
+吕志发 谢勇 吕农华 周虹 刘志坚 朱萱 陈幼祥 何星星 刘东升 马久红
+
+【摘要】 目的 观察含呋喃唑酮的三联和四联方案对幽门螺杆菌（H. pylori）感染根除治疗的效果及不良反应。方法 2010年6至12月，以南昌大学附属第一医院因上胃肠道症状而接受胃镜检查确诊为H. pylori感染阳性的十二指肠溃疡患者为研究对象，将符合入选标准的357例初治患者[男200例，女157例，年龄（42±12）岁]按计算机随机数字表随机分成4组：三联7d组89例，给予阿莫西林1000mg+呋喃唑酮100mg+雷贝拉唑10mg，2次/d，疗程7d；三联10d组91例，与三联7d组相同方案，疗程10d；四联7d组88例，给予阿莫西林1000mg，呋喃唑酮100mg，雷贝拉唑10mg，枸橼酸铋钾220mg，2次/d，疗程7d；四联10d组89例，方案与四联7d组相同，疗程10d。各组疗程结果4周后，复查C-尿素呼气试验，结果阴性者判断为H. pylori根除成功。结果 323例患者按方案完成了治疗（其中三联7d和10d组各有7例未完成，四联7d和10d组分别有9和11例未完成）。按意向性分析（ITT分析），三联7d、三联10d、四联7d、四联10d组的根除率分别为71.91%（64/89）、81.32%（74/91）、78.41%（69/88）、83.15%（74/89）；总体差异无统计学意义（P>0.05）。按符合方案分析（PP分析），各组的根除率分别为78.05%（64/82）、88.10%（74/84）、87.34%（69/79）、94.87%（74/78），总体差异有统计学意义（P=0.017）；四联10d组的根除率明显高于三联7d组（P=0.002），其他各组两两相比，差异均无统计学意义（均P>0.05）。总的不良反应发生率为7.00%（25/357），各组之间比较不良反应发生率差异无统计学意义（P>0.05）。结论 含呋喃唑酮四联10d疗法较三联7d疗法具有更高的根除率；10d疗程与7d疗程的根除率相似；含呋喃唑酮三联或者四联，疗程7d还是10d不良反应发生率相似。
+
+【关键词】 螺杆菌，幽门；十二指肠溃疡；呋喃唑酮；随机对照试验；根除率
+
+Efficacy of triple versus quadruple furazolidone-based eradication regimens for Helicobacter pylori infection
+Li Zhifa, Xie Yong, Liu Nonghua, Zhou Hong, Liu Zhijian, Zhu Xuan, Chen Youxiang, He Xingxing, Liu Dongsheng, Ma Jiuhong. Department of Gastroenterology, First Affiliated Hospital, Nanchang University, Nanchang 330006, China
+Corresponding author: Xie Yong, Email: xieyong_med@163.com
+
+【Abstract】 Objective To explore the eradication efficacies of triple versus quadruple furazolidone-based regimens for Helicobacter pylori (H. pylori) infection. Methods A total of 357 outpatients with H. pylori infection were enrolled from June to December 2010. There were 200 males and 157 females with an average age of (42 ± 12) years. A diagnosis of duodenal ulcer was made according to their endoscopic examination results. They were randomly assigned into 4 treatment groups: 7-day triple (n = 89) and 10-day triple (n = 91), rabeprazole 10 mg, amoxicillin 1 000 mg and furazolidone 100 mg twice daily for 7 and 10 days respectively. 7-day quadruple (n = 88) and 10-day quadruple (n = 89), rabeprazole 10 mg, bismuth 220 mg, amoxicillin 1 000 mg and furazolidone 100 mg twice daily for 7 and 10 days respectively. H. pylori status was re-assessed with ¹⁴C-urea breath test after 4-week therapy. Results Among them, 323 cases completed the study. According to the analysis of intention-to-treat (ITT), the H. pylori eradication rates were 71.91% (64/89) in 7-day triple, 81.32% (74/91) in 10-day triple, 78.41% (69/88) in 7-day quadruple and 83.15% (74/89) in 10-day quadruple groups. No significant deviation existed among all groups (P > 0.05). According the per-protocol (PP) analysis, H. pylori eradication rates were 78.05%
+
+DOI:10.3760/cma.j.issn.0376-2491.2014.08.004
+基金项目：国家“十二五”科技重大专项（2011ZX09302-007-03）
+作者单位：330006 南昌大学第一附属医院消化科
+通信作者：谢勇，Email: xieyong_med@163.com
+
+---
+
+# Page 2
+
+中华医学杂志 2014 年 3 月 4 日第 94 卷第 8 期 Natl Med J China, March 4, 2014, Vol. 94, No. 8
+
+(64/82) in 7-day triple, 88.10% (74/84) in 10-day triple, 87.34% (69/79) in 7-day quadruple and 94.87% (74/78) in 10-day quadruple groups. Significant deviation existed among all groups (P = 0.017). The H. pylori eradication rate in 10-day quadruple group was significantly higher than that in 7-day triple group (P = 0.002). The total adverse reaction rate was 7.00% (25/357). No significant difference existed among all groups (P > 0.05). Conclusions Quadruple treatments provide higher H. pylori eradication rates than triple therapies. A 10-day treatment may improve H. pylori eradication rate. And 10-day quadruple regimen with furazolidone and bismuth may be effective for H. pylori infection.
+
+【Key words】 Helicobacter pylori; Duodenal ulcer; Furazolidone; Randomized controlled trial; Eradication rate
+
+幽门螺杆菌 (H. pylori) 与多种胃肠疾病相关, 如慢性胃炎、消化性溃疡、胃癌、胃黏膜相关淋巴瘤等[1]。随着标准三联方法的广泛使用, 对 H. pylori 根除率正在下降, 这主要与其对甲硝唑或克拉霉素的耐药率增高有关; 研究表明中国很多地区 H. pylori 对甲硝唑的平均耐药率达到了 75.6%, 对克拉霉素的耐药率达到了 27.6%[2]。呋喃唑酮由我国学者首先用于消化性溃疡的治疗, 目前 H. pylori 对其耐药率极低, 多项研究也证实了含呋喃唑酮方案能够获得较好的根除率[3,4], 但有荟萃分析显示, 含呋喃唑酮方案并没有达到很好的根除率, 治疗意向性分析 (ITT) 和符合方案分析 (PP) 分别为 75.7% 和 79.6%[5]。我国第四次全国幽门螺杆菌感染共识指出三联方案可能不适合推荐为首选根除方案, 并推荐含呋喃唑酮的四联方案作为抗 H. pylori 治疗的首选方案之一[6]。对于 H. pylori 根除的适当疗程, 目前没有统一的推荐, Masstracht IV 共识指出延长疗程可以提高根除率[7-8]。为此, 进行前瞻性随机对照试验以比较含呋喃唑酮三联和四联方案 7 d、10 d 疗程对 H. pylori 的根除效果, 以期为 H. pylori 的根除治疗提供一些有用的信息。
+
+对象与方法
+
+一、对象
+
+2010 年 6 至 12 月至南昌大学附属第一医院门诊就诊, 经胃镜检查及快速尿素酶试验 (RUT) 或胃镜检查前后 1 周内尿素呼气试验 (UBT) 诊断为 H. pylori 阳性的十二指肠溃疡患者。研究方案经南昌大学第一附属医院伦理委员会批准, 患者均签署知情同意书。
+
+入选标准: H. pylori 阳性的十二指肠球部溃疡患者; 年龄 16 ~ 70 岁, 男女不限; RUT 或胃镜检查前后 1 周内 UBT 阳性者; 诊断必须通过胃镜检查获得; 既往未接受过 H. pylori 根除治疗的初治患者。
+
+排除标准: 治疗前 4 周内使用过抗生素、铋剂或治疗前 2 周用过 H2 受体拮抗剂或质子泵抑制剂者; 妊娠或哺乳期妇女; 对研究药物过敏者; 患者同时存在其他影响本研究的严重疾病, 如酒精中毒、严重肝病、心脏病、肾脏病、恶性肿瘤等; 使用研究药物前 3 个月内参加过其他药物研究; 患者不能正确表达自己主诉, 如患精神病、严重神经官能症而不能合作者; 长期服用非甾体抗炎药者。
+
+共有 357 例患者入选, 其中男 200 例, 女 157 例; 平均年龄 (42 ± 12) 岁。按计算机生成的随机数字表随机分成 4 组: 三联 7 d 组 89 例, 其中男 46 例, 女 43 例, 年龄 (41 ± 12) 岁; 三联 10 d 组 91 例, 其中男 53 例, 女 38 例, 年龄 (41 ± 11) 岁; 四联 7 d 组 88 例, 其中男 48 例, 女 40 例, 年龄 (41 ± 12) 岁; 四联 10 d 组 89 例, 其中男 53 例, 女 36 例, 年龄 (44 ± 13) 岁; 各组患者一般情况比较, 差异均无统计学意义 (均 P > 0.05), 具有可比性。
+
+终止试验标准: 试验期间出现严重不良反应, 患者无法耐受者; 试验期间出现其他疾病干扰本试验者; 失访者; 试验期间妊娠者; 病情恶化或出现穿孔、梗阻等严重并发症者。
+
+二、方法
+
+1. 各组治疗方案: 三联方案: 阿莫西林 1 000 mg (广东珠海联邦制药厂) + 呋喃唑酮 100 mg (天津力生制药有限公司生产) + 雷贝拉唑 10 mg (江苏豪森药业生产), 2 次/d; 四联方案: 阿莫西林 1 000 mg, 呋喃唑酮 100 mg, 雷贝拉唑 10 mg, 枸橼酸铋钾 220 mg (广东丽珠制药集团生产), 2 次/d; 各组治疗结束后继续给予雷贝拉唑维持治疗 14 d。
+
+2. H. pylori 感染及根除的判断方法: H. pylori 感染的诊断方法: 凡内镜下 RUT 阳性或胃镜检查前后 1 周呼吸试验阳性者可判为 H. pylori 感染。H. pylori 根除判断方法: 患者停药后 4 周, 进行[14] C-UBT 试验检查, 阴性为 H. pylori 根除成功。呼气试验试剂及 HTY1001 H. pylori 测试仪为深圳海得威生物科技有限公司生产。
+
+3. 不良反应评估: 随访记录用药过程中及用药结束后不良反应的发生情况, 描述不良反应发生的
+
+---
+
+# Page 3
+
+频率、严重程度、与用药的关系以及结局等。
+
+三、统计学分析
+
+使用 SPSS 17.0 软件。符合正态分布的计量资料用 \(\bar{x} \pm s\) 表示，计数资料用例（%）表示。对计量资料符合参数检验的采用方差分析；对不符合参数检验条件计量资料和等级资料采用多组秩和检验完成分析，对计数资料采用 \(\chi^2\) 检验或精确概率法检验或秩和检验。H. pylori 根除率以 ITT 分析和 PP 分析。\(P < 0.05\) 为差异有统计学意义。
+
+结果
+
+一、各组完成情况
+
+357 例患者中 323 例完成研究，其中三联 7 组完成 82 例，失访 4 例，因不良反应终止 2 例（皮疹 1 例，头晕 1 例），1 例自行退出；三联 10 d 组完成 84 例，失访 4 例，1 例因药物不良反应退出研究，2 例因合并用药而退出试验（1 例合并使用氨苄西林，1 例合并使用头孢菌素）；四联 7 d 组完成 79 例，失访 5 例，因不良反应终止 4 例（乏力 1 例，胸痛 1 例，头晕 1 例，腹胀加重 1 例）；四联 10 d 组 78 例，失访 6 例，因药物不良反应退出 3 例（恶心、呕吐 1 例，头晕 2 例），1 例因合并妊娠退出；1 例因体检发现肝脏占位性病变，未能完成研究。
+
+二、各组 H. pylori 根除率
+
+完成研究 323 例中复查 H. pylori 阳性 42 例，阴性 281 例。根据 ITT 分析，各组根除率差异无统计学意义（\(\chi^2 = 3.875, P = 0.275\)）；根据 PP 分析，差异有统计学意义（\(\chi^2 = 10.178, P = 0.017\)）（表 1）。
+
+三联和四联比较：根据 ITT 分析和 PP 分析，7 d 疗程两组根除率差异均无统计学意义（\(\chi^2 = 1.001, 2.419, P = 0.317, 0.120\)；校正 \(\alpha = 0.008 3\)）；10 d 疗程两组差异也均无统计学意义（\(\chi^2 = 0.103, 2.235, P = 0.749, 0.125\)；校正 \(\alpha = 0.008 3\)）（表 1）。
+
+7 d 和 10 d 疗程比较：根据 ITT 分析和 PP 分析，三联两组根除率差异均无统计学意义（\(\chi^2 = 2.26, 2.987, P = 0.136, 0.084\)；校正 \(\alpha = 0.008 3\)）；四联两组差异也均无统计学意义（\(\chi^2 = 0.248, 2.740, P = 0.618, 0.098\)；校正 \(\alpha = 0.008 3\)）（表 1）。
+
+根据 PP 分析，四联 10 d 组根除率明显高于三联 7 d 组（\(\chi^2 = 9.540, P = 0.002\)，校正 \(\alpha = 0.008 3\)），而根据 ITT 分析差异则无统计学意义（\(\chi^2 = 3.225, P = 0.073\)，校正 \(\alpha = 0.008 3\)）（表 1）。
+
+三、不良反应
+
+357 例患者中共有 25 例（7.00%）出现不良反应，主要表现为头晕 12 例（三联 7, 10 d 组和四联 7, 10 d 组分别为 5, 2, 3, 2 例），乏力 7 例（三联 7, 10 d 组和四联 7, 10 d 组分别为 2, 2, 1, 2 例），恶心呕吐 3 例（三联 10 d 组 1 例，四联 10 d 组 2 例），胸痛 1 例（四联 7 d 组），皮疹 1 例（三联 7 d 组）及精神神经症状 1 例（四联 7 d 组）；大多数症状轻微，疗程结束后自行缓解，消失；三联 7 d 组有 1 例患者因出现皮疹退出试验，停药后皮疹消失，其他 9 例患者自行退出。三联 7 d 组、三联 10 d 组、四联 7 d 组、四联 10 d 组不良反应发生率分别为 8.99%（8/89）、5.49%（5/91）、6.82%（6/88）、6.74%（6/89），各组差异无统计学意义（\(\chi^2 = 0.871, P = 0.832\)）。
+
+讨论
+
+各地对于根除 H. pylori 的首选方案推荐不一。目前 H. pylori 对呋喃唑酮、阿莫西林耐药仍较低[2,9,10]，因而含呋喃唑酮、阿莫西林方案在 H. pylori 根除中的作用日益突出。世界范围内许多国家和地区对呋喃唑酮抗 H. pylori 治疗进行了广泛的研究，结果显示含呋喃唑酮方案有较好的根除效果，认为其可代替克拉霉素在各种根治方案中的作用[11,14]。国内陈兴玲等[15]分析了 1 515 例包含 13 种根除 H. pylori 方案的资料显示，含呋喃唑酮方案的 H. pylori 根除率 > 80%；一项使用含呋喃唑酮的四联方案治疗三联方案根除失败者的研究显示 H. pylori 根除率为 82.4%[16]。
+
+本研究按 PP 分析，除三联 7 d 组根除率为 78.05%外，其他各组的根除率均在 86%以上，其中含铋剂、呋喃唑酮的四联 10 d 方案的根除率明显优于含呋喃唑酮的三联 7 d 方案，与国内外的多项报道大致相同[17]。Ghadir 等[18]报道显示含奥美拉唑、阿莫西林、呋喃唑酮、铋剂的四联方案对 H. pylori 根除率优于奥美拉唑、阿莫西林、呋喃唑酮三联方案，这与本结果一致。
+
+按 ITT 分析，各组根除率比较差异无统计学意义。7 d 疗程的三联、四联方案组 ITT 均低于 80%，
+
+---
+
+# Page 4
+
+未达到理想的根除率，而 10 d 疗程方案三联、四联组，根除率按 Graham 等 \[^{19}\] 提出的根除 H. pylori 疗效分级为 D 级，尚可接受。其中四联 7 d 方案组根除率低于 80% \[^{5,16}\]，可能因未完成研究的比例相对较高（9.52%，34/357），因此提高患者的依从性是提高 H. pylori 根除率的重要策略之一。
+
+另外，含呋喃唑四联 10 d 组根除率明显高于三联 7 d 疗法，而两组的不良反应发生率相似（6.74% 和 8.99%）。这也表明含呋喃唑四联 10 d 疗法具有较好的安全性、较高的根除率，是值得被推荐的一线根除方案之一。无论 ITT 分析还是 PP 分析，三联 7 d 方案根除率低于 80%，这也提示三联 7 d 方案可能不再满足一线根除 H. pylori 的需要 \[^{2}\]。
+
+呋喃唑酮除引起常见的胃肠道等不良反应外，还可引起多发性神经炎 \[^{20}\]。多发性神经炎的发生则认为同呋喃唑酮的剂量有关，大剂量的呋喃唑酮可增加其发生的机会 \[^{5}\]。铋剂主要不良反应有黑便、便秘，严重的可导致神经系统病变，如铋剂脑病等 \[^{21}\]。本研究不良反应率为 7.00%，多数较轻微，多能耐受；共 10 例因不良反应退出研究，其中 1 例因出现皮疹由研究者提出终止研究外，其余 9 例并无严重不良反应；不良反应的发生率与标准三联等疗法大致相同，与文献报道的相仿 \[^{5}\]。未出现多发性神经炎、溶血、铋剂脑病等严重不良反应。这可能和本研究中呋喃唑酮的剂量为 100 mg，相对较小，以及铋剂使用疗程短、剂量较小有关。但是对于呋喃唑酮和铋剂可能出现的严重不良反应，也应该引起重视；在根除 H. pylori 过程中，针对不同患者的个体差异要选择合理的根除方案、合适的剂量、适当的疗程，避免严重不良反应的发生。
+
+综上所述，含呋喃唑酮、阿莫西林、铋剂和质子泵抑制剂四联 10 d 方案可获得满意的根除率，可作为首选根除 H. pylori 的治疗方案之一；呋喃唑酮、阿莫西林加质子泵抑制剂三联 7 d 方案已经不能满足 H. pylori 根除的要求，不再适合作为一线治疗。本研究也显示含呋喃唑酮方案具有较好的安全性。
+
+### 参考文献
+
+\[1\] Graham DY, Fischbach L. Helicobacter pylori infection \[J\]. N Engl J Med, 2010, 363:595-596.
+
+\[2\] 全国幽门螺杆菌科研协作组中华医学会消化病学分会幽门螺杆菌学组, 成虹, 胡伏莲, 等. 中国幽门螺杆菌耐药状况以及耐药对治疗的影响——全国多中心临床研究 \[J\]. 胃肠病学, 2007, 12:525-530.
+
+\[3\] Ma HJ, Wang JL. Quadruple therapy for eradication of Helicobacter pylori \[J\]. World J Gastroenterol, 2013, 19:931-935.
+
+\[4\] Eisig JN, Silva FM, Barbuti RC, et al. Efficacy of a 7-day course of furazolidone, levofloxacin, and lansoprazole after failed Helicobacter pylori eradication \[J\]. BMC Gastroenterol, 2009, 9:38.
+
+\[5\] Zullo A, Ierardi E, Hassan C, et al. Furazolidone-based therapies for Helicobacter pylori infection: a pooled-data analysis \[J\]. Saudi J Gastroenterol, 2012, 18:11-17.
+
+\[6\] 中华医学会消化病分会幽门螺杆菌学组/全国幽门螺杆菌研究协作组. 第四次全国幽门螺杆菌感染处理共识报告. 中华内科杂志, 2012, 51:832-837.
+
+\[7\] Malfertheiner P, Megraud F, O’Morain CA, et al. Management of Helicobacter pylori infection-the Maastricht IV/Florence Consensus Report \[J\]. Gut, 2012, 61:646-664.
+
+\[8\] Fuccio L, Minardi ME, Zagari RM, et al. Meta-analysis: duration of first-line proton-pump inhibitor based triple therapy for Helicobacter pylori eradication \[J\]. Ann Intern Med, 2007, 147:553-562.
+
+\[9\] 成虹, 胡伏莲. 北京地区幽门螺杆菌耐药情况及其变化趋势. 中华医学杂志, 2005, 85:2754-2757.
+
+\[10\] Liu G, Xu X, He L, et al. Primary antibiotic resistance of Helicobacter pylori isolated from Beijing children \[J\]. Helicobacter, 2011, 16:356-362.
+
+\[11\] Riahiizadeh S, Malekzadeh R, Agah S, et al. Sequential metronidazole-furazolidone or clarithromycin-furazolidone compared to clarithromycin-based quadruple regimens for the eradication of Helicobacter pylori in peptic ulcer disease: a double-blind randomized controlled trial \[J\]. Helicobacter, 2010, 15:497-504.
+
+\[12\] O’Connor A, Gisbert JP, Mcnamara D, et al. Treatment of Helicobacter pylori infection 2010 \[J\]. Helicobacter, 2010, 15 Suppl 1:46-52.
+
+\[13\] 祝莉, 吕农华. 含呋喃唑酮的治疗方案在幽门螺杆菌根除治疗中的应用 \[J\]. 中华医学杂志, 2012, 92:662-663.
+
+\[14\] 高文, 胡伏莲, 王晓敏. 含呋喃唑酮的四联疗法联合口腔洁治对幽门螺杆菌根除多次失败的补救治疗 \[J\]. 中华医学杂志, 2011, 91:836-839.
+
+\[15\] 陈兴玲, 胡毓秀, 周惠莉, 等. 1515 例幽门螺杆菌根除治疗分析 \[J\]. 解放军医学杂志, 2009, 452-454.
+
+\[16\] Abbas Z, Yakoob J, Abid S, et al. Furazolidone, co-amoxiclav, colloidal bismuth subcitrate, and esomeprazole for patients who failed to eradicate Helicobacter pylori with triple therapy \[J\]. Dig Dis Sci, 2009, 54:1953-1957.
+
+\[17\] Cheng H, Hu FL. Furazolidone, amoxicillin, bismuth and rabeprazole quadruple rescue therapy for the eradication of Helicobacter pylori \[J\]. World J Gastroenterol, 2009, 15:860-864.
+
+\[18\] Ghadir MR, Shafaghi A, Iranikhah A, et al. Furazolidone, amoxicillin and omeprazole with or without bismuth for eradication of Helicobacter pylori in peptic ulcer disease \[J\]. Turk J Gastroenterol, 2011, 22:1-5.
+
+\[19\] Graham DY, Lu H, Yamaoka Y. A report card to grade Helicobacter pylori therapy \[J\]. Helicobacter, 2007, 12:275-278.
+
+\[20\] Njeiveth AA, Shcherbakov PL, Sataev VU, et al. Helicobacter pylori eradication in childhood after failure of initial treatment: advantage of quadruple therapy with nifuratel to furazolidone \[J\]. Aliment Pharmacol Ther, 2005, 22:881-887.
+
+\[21\] Slikkerveer A, de Wolff FA. Pharmacokinetics and toxicity of bismuth compounds bismuth compounds. Med Toxicol Adverse Drug Exp, 1989, 4:303-323.
+
+（收稿日期：2013-12-28）
+
+（本文编辑：李伟）

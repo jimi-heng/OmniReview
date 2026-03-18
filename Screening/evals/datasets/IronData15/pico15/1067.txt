@@ -1,0 +1,190 @@
+# Page 1
+
+Addition of bismuth to standard triple therapy for Helicobacter pylori eradication: a randomised controlled trial
+
+Muhammad Asim, Khurram Baqai, Zaigham Abbas, Nasir Laique, Shoukat Ali Samejo
+
+Abstract
+
+Objective: To compare the effect of addition of bismuth to the standard triple therapy for eradication of Helicobacter pylori (H. pylori) in a randomised controlled trial.
+
+Methods: The study was performed from June 2018-May 2019, in the two outpatient departments located at two different campuses of Ziauddin university hospitals (ZUH) Karachi. Ethical approval was obtained from the Ethics Review Committee of ZUH. It was designed as a randomized control trial in a parallel fashion. Arm A received triple therapy including amoxicillin, clarithromycin, and omeprazole for two weeks and Arm B received quadruple therapy adding colloidal bismuth subcitrate to the triple therapy. A stool antigen test was done six weeks post-treatment to confirm H. pylori eradication.
+
+Results: A total of 196 participants were included, out of which 102(52%) were males and 94(48%) were females. Among the patients receiving quadruple therapy, 92/98(93.8%) had negative post-treatment stool antigen results, while among triple therapy recipients 83/98(84.6%) had negative stool antigen results, according to intention-to-treat analysis (p value=0.038; odds ratio 2.77, 95% CI 1.03-7.47). However, p-value changed to 0.082 (odds ratio 2.40, 95% CI 0.87-6.60) in per-protocol analysis as stool antigen results were not available in two patients in the triple therapy arm. No difference in the side-effect profiles of either arm was noted.
+
+Conclusion: Eradication rates of H. pylori may be modestly improved by addition of bismuth to the standard triple therapy.
+
+Clinical Trial Number: 03968302 (clinicaltrials.gov)
+
+Keywords: Helicobacter pylori, Eradication, Amoxicillin, Clarithromycin, Omeprazole, Colloidal bismuth subcitrate. (JPMA 70: 1334; 2020). https://doi.org/........../JPMA.............
+
+Introduction
+
+In many parts of the world, the prevalence of Helicobacter Pylori (H. Pylori) remains more than 50%.1 Once H. Pylori infects the mucosa of the stomach, it can live in the acidic environment for decades, where it disrupts gastric mucosa, alter the pattern of hormones and finally may cause chronic active gastritis and peptic ulcer disease.2,3 Gastric carcinoma is one of the most hazardous condition associated with H. pylori infection.2 In order to reduce the high risk of gastric carcinogenesis, it's early eradication is essential.4,5 This situation warrants appropriate actions so that the prevalence of this organism can be reduced.
+
+Multiple combinations of antibiotics have been used to eradicate H. pylori. The standard triple therapy with antibiotics samoxicillin and clarithromycin, and a proton pump inhibitor (PPI) for 7-14 days has remained as first line regimen.6 However, widespread occurrence of antibiotic resistance with standard triple therapy has been reported, which has led to a decrease in eradication rate to an unacceptable level of 66.9%.7 An alternative to standard therapy is bismuth-containing quadruple therapy which includes amoxicillin, oxytetracycline, and a PPI that has an additional benefit of cost-effectiveness., but the data related to the addition of a bismuth compound to the triple therapy is scarce.8 The rationale of the current study was to identify improvement in a cure rate of H. pylori after addition of colloidal bismuth subcitrate to standard triple therapy, and then compare the rate of eradication in a randomised controlled trial.
+
+---
+
+# Page 2
+
+Methods
+The study was approved by the ethical review committee of ZUH. It was a prospective, 2-arm, randomised, open-label trial, done in a parallel design. [RCT NO.03968302 (clinicaltrials.gov)]. The primary end point was negative stool antigen test for H. pylori after triple or quadruple therapy post-treatment. Secondary endpoints included the nature and frequency of side-effects which were compared between the two arms. Arm A received triple therapy including amoxicillin, clarithromycin, and omeprazole for two weeks and Arm B received quadruple therapy adding colloidal bismuth subcitrate to the triple therapy.
+
+Patients with dyspeptic symptoms who had H. pylori infection, diagnosed through positive stool antigen for H. pylori or detection of the organism in the histopathology of gastric mucosal biopsy, attending outpatient department of two campuses of the ZUH, were included in this study. Exclusion criteria were patients with age less than 12 years or more than 80 years; recent antibiotic use; treatment-experienced patients, where H. pylori could not be eradicated after therapy; patients with chronic illnesses and multiple comorbid for example, chronic liver disease, chronic kidney disease or terminal illness; pregnancy; and allergy to any of the regimen components. Purpose, procedure, risks, and benefits were explained in detail to each participant before taking their informed consent for inclusion in the study. Relevant history was taken from patients and complete physical examination was performed.
+
+Subjects were randomised into two groups through computer generated numbers and treatment was allocated by sealed envelope method. Group A received standard triple therapy for a total of 14 days while group B received bismuth-based quadruple therapy for the same period. The triple regimen was defined as a combination of peroral amoxicillin one gram twice a day, peroral clarithromycin 500 mg twice a day and peroral omeprazole 40 mg twice a day. Quadruple therapy included colloidal bismuth subcitrate 240 mg twice daily in addition to the standard treatment. H. pylori elimination status was checked routinely at six weeks post-treatment by stool sampling for H. pylori antigen. Subjects were counselled to stop taking PPI or any antibiotic 2 weeks before stool H. pylori antigen testing. Eradication was defined as a lack of detection of H. pylori antigen in the stool via enzyme-linked immunosorbent assay (ELISA) method after triple or quadruple therapy. Primary end point was defined as presence or absence of the H. pylori antigen in the stool at 6 weeks post treatment. Adverse events associated with either triple or quadruple therapy were taken as a secondary end point.
+
+SPSS version 22 (IBM SPSS Statistics for Windows, Version 22.0. Armonk, NY: IBM Corp.) was used for date analysis. Frequency and percentages were calculated in each arm for the eradication of H. pylori. Chi-square test was applied in the analysis of post-treatment results between the two arms, with a p-value of < 0.05 taken as significant. The sample size was calculated by the method defined by Kelsey et al. Assuming that response rate to bismuth based quadruple therapy is 93% and to that of standard triple therapy is 79%, with an alpha level of 5% (two sided), a sample size of 194 (97x2) will be required to ascertain 80% probability of attaining a statistically significant χ² test result. After exclusion (Figure 1), 196 subjects were finally recruited from the initial count of 206 participants.
+
+Results
+The analysis was performed on 196 subjects after randomisation (Figure-1). A total of 102 (52 %) participants were males and 94 (48%) were females, with a male-to-female ratio of 1.08:1. Presenting symptoms are outlined in Table-1. Diagnosis of H. pylori infection.
+
+![Figure-1: CONSORT diagram of recruited patients.](image-url)
+
+---
+
+# Page 3
+
+was made by histopathology in 152 (77.6%) subjects and by stool antigen test in 44 (22.4%) subjects. In the triple therapy arm, two subjects were lost-to-follow-up. In patients who had undergone endoscopy for diagnosis, histopathology revealed mild gastritis in Table-1: Presenting symptoms of the subjects enrolled in the study of Helicobacter pylori eradication, as per triple and quadruple therapy.
+
+| Symptoms                  | Triple therapy¹ (n=98) | Quadruple therapy² (n=98) | p-value* |
+|---------------------------|----------------------|--------------------------|----------|
+| Abdominal pain            | 86(87.7%)            | 74(75.5%)                | 0.027    |
+| Nausea                    | 36(36.7%)            | 30(30.6%)                | 0.360    |
+| Anorexia                  | 23(23.4%)            | 23(23.4%)                | >0.999   |
+| Bloating                  | 19(19.3%)            | 29(29.5%)                | 0.097    |
+| Belching                  | 16(16.3%)            | 22(22.4%)                | 0.360    |
+| Diarrhoea                 | 17(17.3%)            | 17(17.3%)                | >0.999   |
+| Heartburn                 | 21(21.4%)            | 11(11.2%)                | 0.081    |
+| Weightloss                | 3(3.1%)              | 2(2.04%)                 | 0.190    |
+| Upper gastrointestinal bleeding | 5(5.1%) | 10(10.2%)              | 0.179    |
+
+¹Per oral amoxicillin 1 gram twice a day, peroral clarithromycin 500 mg twice a day and per oral omeprazole 40mg twice a day, for a total of 14 days; ²Peroral amoxicillin 1 gram twice a day, per oral clarithromycin 500 mg twice a day, per oral omeprazole 40mg twice a day, and colloidal bismuth subcitrate 240 mg twice a day, for a total of 14 days.
+
+*p-value < 0.05 was taken as significant.
+
+Table-2: Endoscopic manifestations of the subjects undergoing diagnostic endoscopy for Helicobacter pylori (n=152).
+
+| Symptoms                  | Triple therapy¹ (n=64) | Quadruple therapy² (n=88) | p-value* |
+|---------------------------|----------------------|--------------------------|----------|
+| Hiatus                    | 11(17.1%)            | 15(17.0%)                | 0.98     |
+| Oesophagitis              | 10(15.6%)            | 16(18.1%)                | 0.67     |
+| Pangastric erythema       | 36(56.2%)            | 40(45.4%)                | 0.18     |
+| Antralerythema            | 38(59.3%)            | 53(82.8%)                | 0.916    |
+| Antral granularity        | 21(32.8%)            | 28(31.8%)                | 0.89     |
+| Gastric erosions          | 3(4.6%)              | Nil (0%)                  | 0.073    |
+| Duodenal ulcer             | 10(15.6%)            | 13(14.7%)                | >0.999   |
+| Duodenal erosions         | 11(17.1%)            | 7(7.9%)                  | 0.12     |
+| Duodenal erythema         | 2(3.1%)              | 12(13.6%)                | 0.04     |
+
+¹Per oral amoxicillin 1 gram twice a day, per oral clarithromycin 500 mg twice a day and per oral omeprazole 40mg twice a day, for a total of 14 days; ²Per oral amoxicillin 1 gram twice a day, per oral clarithromycin 500 mg twice a day, per oral omeprazole 40mg twice a day, and colloidal bismuth subcitrate 240 mg twice a day, for a total of 14 days.
+
+*p-value < 0.05 was taken as significant; Where the values were <5, Fisher’s exact test was applied.
+
+Table-3: Adverse events; triple v/s quadruple arm.
+
+| Symptoms                  | Triple therapy¹ (n=98) | Quadruple therapy² (n=98) | Total (n=196) |
+|---------------------------|----------------------|--------------------------|---------------|
+| No adverse effects        | 83                   | 81                      | 164          |
+| Nausea                    | 11                   | 11                      | 22           |
+| Vomiting                  | 2                    | 3                       | 5            |
+| Diarrhoea                 | 1                    | 2                       | 3            |
+| Distaste                  | 1                    | 1                       | 2            |
+
+¹Per oral amoxicillin 1 gram twice a day, per oral clarithromycin 500 mg twice a day and per oral omeprazole 40mg twice a day, for a total of 14 days; ²Per oral amoxicillin 1 gram twice a day, per oral clarithromycin 500 mg twice a day, per oral omeprazole 40mg twice a day, and colloidal bismuth subcitrate 240 mg twice a day, for a total of 14 days.
+
+63/152 (41.4 %) subjects, moderate gastritis in 77/152 (50.6 %) subjects and severe gastritis in 12/152 (7.8%). Metaplasia or dysplasia was not seen in any case (Table-2).
+
+Overall, 21/196 (10.1%) subjects had positive stool test for H. pylori antigen post-treatment. Among those who received quadruple therapy, 92/98 (93.8%) had negative stool antigen results post-treatment triple therapy, while among triple therapy recipients, 83/98 (84.6%) had negative stool antigen results post-treatment (Figure-2), according to intention-to-treat analysis (p-value=0.038; Odds ratio 2.77, 95% CI 1.03-7.47). In intention-to-treat analysis, absolute risk reduction is about 9.18 % and 10.9 is the number needed to prevent 1 adverse event that would have happened with the triple therapy. However, p-value changed to 0.082 (Odds ratio 2.40, 95% CI 0.87-6.60) in per-protocol analysis as stool antigen results were not available in two patients in the triple therapy arm. No significant difference was noted between male and female subjects in response to the treatment (p value=0.6).
+
+When comparing the side-effect profile of the two treatment arms, no significant difference was noted (p value=0.9) (Table-3).
+
+Discussion
+
+H. pylori remains a chronic and wide spread infection
+
+---
+
+# Page 4
+
+worldwide. The recommended first-line standard triple therapy for *H. pylori* eradication over the last two decades includes amoxicillin, clarithromycin or metronidazole, and a PPI. However, the initial efficacy of 90% has declined to 57-73% in many parts of the world. Furthermore, there is an increasing risk of antibiotic resistance. For clarithromycin alone, resistance has shown to be around 67-82%. In fact, the history of previous macrolide use especially for duration of more than two weeks can be a tell-tale for the failure of triple therapy. To circumvent these issues, along with the novel regimens, future management may rely upon individualised approaches like treatment after antibiotics resistance testing or CYP2C19 genotyping.
+
+Eradication rates have shown to be improved by the addition of bismuth to triple therapy as evidenced by studies. A prospective Thai study noted 100% eradication rates when the standard triple therapy was combined with bismuth and probiotics. An Italian study also concluded that bismuth subcitrate (as 240 mg twice a day) acted as valuable adjuvant when added to the triple therapy but its triple therapy regimen included pantoprazole 20 mg twice a day, amoxicillin 1000 mg twice day and moxifloxacin 400 mg twice a day, for 10 days. Eradication rate was 93.8% in per-protocol and 92% in intention-to-treat analysis with the addition of bismuth, which decreased to 78.5% and 71.8% respectively, without its addition. A study done in China on 101 patients noted similar results, with an 88% eradication rate with bismuth-containing therapy.
+
+We set 14 days duration each for triple and quadruple regimen in the light of multiple meta-analyses that showed this to be an optimal duration. The 7-day standard triple therapy with addition of bismuth if combined with probiotic, could also give satisfactory eradication rates provided the clarithromycin resistance was low, but we did not check for individual antibiotic resistance. Sun et al. concluded that *H. pylori* resistance to clarithromycin could be overcome with the supplementation of bismuth and prolongation of treatment duration and therefore improve eradication rates. We used a similar treatment regimen, except their study used omeprazole 20 mg twice a day. The eradication rates were 97.4% in the intention-to-treat analysis and 97.4% in the per-protocol analysis for 14-day therapy as compared to 80% and 82% in the 7-day regimen respectively with significant p value.
+
+containing quadruple therapy has better eradication rates as compare to bismuth-containing levofloxacin-based triple therapy and clarithromycin-based triple therapy. But a prospective study has also shown that bismuth when combined with levofloxacin as a rescue therapy achieves effective eradication rates in those subjects with previous history of triple or non-bismuth based quadruple therapy.
+
+Some studies show similar eradication rates for both triple and quadruple regimens. Luther et al conducted a meta-analysis which noted that similar cure rates were produced by triple and quadruple therapies as primary therapy; however, the quadruple therapy consisted of a PPI, bismuth, tetracycline, and metronidazole. Another meta-analysis comparing high dose dual therapy and bismuth quadruple therapy connoted similar eradication rates. A Turkish study noted no significant difference in the outcome after the addition of bismuth to the standard triple regimen. As far as reinfection rates are concerned, a study done in Korea observed that choice of the second line treatment was not affected by reinfection, stayed low in both of bismuth-containing quadruple therapy and moxifloxacin-based triple therapy. Another study noted that four bismuth and PPI-containing quadruple therapies, including combination of tetracycline-metronidazole, tetracycline-furazolidone, tetracycline-amoxicillin, or amoxicillin-furazolidone, reached more than 90% cure rates in patients who did not respond to previous treatment. In a Turkish study, two different bismuth-containing quadruple groups achieved high eradication rates as compared to triple therapy. At per-protocol analysis, the eradication rates were 64.7% with the triple therapy (n = 504), 95.4% with the clarithromycin containing bismuth group and 93.9% with the metronidazole containing bismuth group. In our study, a modest increase in the response rate was observed in patients receiving bismuth compound in addition to the triple therapy. As the response rate was already reasonable in the triple therapy arm, the addition of bismuth sub-citrate could not augment much of the response rate in the quadruple arm. Therefore, the utility of this treatment may be more useful in areas with a low response to the standard triple therapy in the treatment-naïve patients.
+
+The American College of Gastroenterology (ACG) 2017 guidelines strongly recommend testing for eradication after *H. pylori* treatment and state that all the three
+
+---
+
+# Page 5
+
+available methods, including stool detection, urea breath test, and histopathology are sensitive and specific, provided that they should be done with appropriate considerations and can be individualised accordingly. Testing for eradication can prevent recurrent ulcer-related haemorrhage, resulting in fewer complications, therefore making it cost-effective. In our study, we used stool for H. pylori antigen to document eradication as it is more economical and easily available.
+
+Bismuth for the treatment of H. pylori is safe and well-tolerated. We did not find any major adverse event that would have led to cessation of the treatment.
+
+The strength of our study is that this the first study from Pakistan to the best of our knowledge to address the efficacy of addition of bismuth containing the compound to the standard triple therapy. However, the main limitation is that only a modest edge over the efficacy was observed due to a relatively small number of participants recruited in the study - better results might have been observed with a larger sample size.
+
+Conclusion
+Eradication rates of H. pylori may be modestly improved by addition of bismuth, which is a well-tolerated drug, to the standard triple therapy.
+
+Disclaimer: None.
+Conflicts of interest: None.
+Financial disclosure: None.
+
+References
+1. Eusebi LH1, Zagari RM, Bazzoli F. Epidemiology of Helicobacter pylori infection. Helicobacter. 2014; 19:1-5.
+2. Hernandez C, Serrano C, Einisman H, Villagran A, Pena A, Duarte I, et al. Peptic ulcer disease in Helicobacter pylori-infected children: Clinical findings and mucosal immune response. J Pediatr Gastroenterol Nutr. 2014; 59:773-78.
+3. Sung JJ, Kuipers EJ, El-Serag HB. Systematic review: the global incidence and prevalence of peptic ulcer disease. Aliment Pharmacol Ther. 2009; 29: 938-46.
+4. Wang F, Meng W, Wang B, Qiao L. Helicobacter pylori-induced gastric inflammation and gastric cancer. Cancer Lett. 2014; 345:196-202.
+5. Take S, Mizuno M, Ishiki K, Hamada F, Yoshida T, Yokota K, et al. Seventeen-year effects of eradicating Helicobacter pylori on the prevention of gastric cancer in patients with peptic ulcer; a prospective cohort study. J Gastroenterol. 2015; 50:638-44.
+6. Perri F, Festa V, Clemente R, Villani MR, Quitadamo M, Caruso N, et al. Randomized study of two 'rescue' therapies for Helicobacter pylori-infected patients after failure of standard triple therapies Am J Gastroenterol. 2001; 96:58-62.
+7. Dacoll C, Balter H, Varela L, Buenavida G, Gonzalez N, Silveria A, et al. Evolution of the response to the first-line therapy for Helicobacter pylori infection in Uruguay. Acta Gastroenterol Latinoam. 2014; 44:88-93.
+8. Xu MH, Zhang G, Li CJ. Efficacy of bismuth-based quadruple therapy as first-line treatment for Helicobacter pylori infection. Zhejiang Da XueXue Bao Yi Xue Ban. 2011; 40:327-31.
+9. Kelsey JL, Whittemore AS, Evans AS, Thompson WD. Methods of sampling and estimation of sample size. In: Kelsey JL, Whittemore AS, Evans AS, Thompson WD, eds. Methods in Observational Epidemiology. 2nd ed. New York, NY: Oxford University Press; 1996.
+10. Ciccaglione AF, Cellini L, Grossi L, Marzio L. Quadruple therapy with moxifloxacin and bismuth for first-line treatment of Helicobacter pylori. World J Gastroenterol. 2012; 18:4386-90.
+11. Dib J Jr, Alvarez B, Mendez L, Cruz ME. Efficacy of PPI, levofloxacin and amoxicillin in the eradication of Helicobacter pylori compared to conventional triple therapy at a Venezuelan hospital. Arab J Gastroenterol. 2013;14:123-5.
+12. Wolle K, Malfertheiner P. Treatment of Helicobacter pylori. Best Pract Res Clin Gastroenterol. 2007; 21:315-24.
+13. McNulty CA, Lasseter G, Shaw I, Nichols T, D'Arcy S, Lawson AJ, et al. Is Helicobacter pylori antibiotic resistance surveillance needed and how can it be delivered? Aliment Pharmacol Ther. 2012; 35:1221-30.
+14. Fallone CA, Chiba N, van Zanten SV, Fischbach L, Gisbert JP, Hunt RH, et al. The Toronto Consensus for Treatment of Helicobacter pylori infection in adults. Gastroenterology. 2016; 151:51-69.
+15. Lim SG, Park RW, Shin SJ, Yoon D, Kang JK, Hwang JC, et al. The relationship between the failure to eradicate Helicobacter pylori and previous antibiotics use. Dig Liver Dis. 2016; 48:385-90.
+16. Bang CS, Baik GH. Attempts to enhance the eradication rate of Helicobacter pylori infection. World J Gastroenterol. 2014; 20:5252-62.
+17. McNicholl AG, Bordin DS, Lucendo A, Fadeenko G, Fernandez MC, Voynovan I, et al. Combination of bismuth and standard triple therapy eradicates Helicobacter pylori infection in more than 90% of patients. Clin Gastroenterol Hepatol. 2020; 18:89-98.
+18. McNicholl AG, O'Morain CA, Megraud F, Gisbert JP As Scientific Committee of the Hp-Eureg on Behalf of the National Coordinators. Protocol of the European Registry on the management of Helicobacter pylori infection (Hp-EuReg). Helicobacter. 2019; 24:e12630.
+19. Varga M, Drácz L, Kolbenheyer E, Varga F, Patai ÁV, Solymosi N, et al. [Comparison of the traditional triple and a new bismuth-containing quadruple therapy in the first-line eradication of Helicobacter pylori]. Orv Hetil. 2019; 160:1340-5.
+20. Srenarang C, Siramlopiwat S, Wangcha-um A, Mahachai V, Vilarchone R. Improved eradication rate of standard triple therapy by adding Bismuth and probiotic supplement for Helicobacter Pylori treatment in Thailand. Asia Pac J Cancer Prev. 2014; 15:9909-13.
+21. Guo T, Wang Q, Wu X, Li XQ, Li Y, Fei GJ, et al. [Amoxicillin-clarithromycin-containing bismuth quadruple therapy for primary eradication of Helicobacter pylori]. Zhongguo Yi Xue Ke Xue Yuan Xue Bao. 2019; 41:75-9.
+22. Yuan Y, Ford AC, Khan KJ, Gisbert JP, Forman D, Leontiadis GI, et al. Optimum duration of therapy for H. pylori eradications. Cochrane Database Syst Rev. 2013; 12:CD008337.
+23. Salazar CO, Cardenas VM, Reddy RK, Dominguez DC, Snyder LK, Graham DY. Greater than 95% success with 14 days bismuth quadruple anti H pylori therapy: a study in US Hispanics. Helicobacter. 2012; 17:382-90.
+24. Sun Q, Liang X, Zheng Q, Liu W, Xiao S, Gu W, et al. High efficacy of 14-day triple therapy-based, bismuth-containing quadruple therapy for initial H. pylori eradication. Helicobacter. 2010; 15:233-8.
+
+---
+
+# Page 6
+
+25. Gokcan H, Oztas E, Onal IK. Different bismuth-based therapies for eradicating Helicobacter pylori: randomized clinical trial of efficacy and safety. Clin Res Hepatol Gastroenterol. 2016; 40:124-31.
+
+26. Gisbert JP, Romano M, Gravina AG, Solís-Muñoz P, Bermejo F, Molina-Infante J, et al. Helicobacter pylori second-line rescue therapy with levofloxacin- and bismuth-containing quadruple therapy, after failure of standard triple or non-bismuth quadruple treatments. Aliment Pharmacol Ther. 2015; 41:768-75.
+
+27. Luther J, Higgins PD, Schoenfeld PS, Luther J, Moayyedi P, Vakil N, et al. Empiric quadruple vs. triple therapy for primary treatment of Helicobacter pylori infection: systematic review and meta-analysis of efficacy and tolerability. Am J Gastroenterol. 2010; 105:65-73.
+
+28. Yang X, Wang JX, Han SX, Gao CP. High dose dual therapy versus bismuth quadruple therapy for Helicobacter pylori eradication treatment. A systematic review and meta-analysis. Medicine (Baltimore). 2019; 98:e14396.
+
+29. Çekin AH, Tükel NT, Çekin Y, Sezer C, Ta?demir E. Effect of bismuth addition to the triple therapy of Helicobacter pylori eradication. Dicle Med J. 2012; 39:54-7.
+
+30. Kim MS, Kim N, Kim SE, Jo HJ, Shin CM, Park YS, et al. Long-term follow up Helicobacter Pylori reinfection rate after second-line treatment: bismuth-containing quadruple therapy versus moxifloxacin-based triple therapy. BMC Gastroenterol. 2013; 13:138.
+
+31. Liang X, Xu X, Zheng Q, Zhang W, Sun Q, Liu W, et al. Efficacy of bismuth-containing quadruple therapies for clarithromycin-, metronidazole-, and fluoroquinolone-resistant Helicobacter pylori infections in a prospective study. Clin Gastroenterol Hepatol. 2013; 11:802-7.
+
+32. Kekilli M, Onal IK, Ocal S, Dogan Z, Tanoglu A. Inefficacy of triple therapy and comparison of two different bismuth-containing quadruple regimens as a first-line treatment option for helicobacter pylori. Saudi J Gastroenterol. 2016; 22:366-9.
+
+33. Chey WD, Leontiadis GI, Howden CW, Moss SF. ACG Clinical Guideline: treatment of Helicobacter pylori infection. Am J Gastroenterol. 2017; 112:212-39.
+
+34. Ofman ,Wallace J, Badamgarav E, Chiou CF, Henning J, Laine L. The cost-effectiveness of competing strategies for the prevention of recurrent peptic ulcer hemorrhage. Am J Gastroenterol. 2002; 97:1941-50.
+
+35. Ford AC, Malfertheiner P, Giguere M, Santana J, Khan M, Moayyedi P. Adverse events with bismuth salts for Helicobacter pylori eradication: systematic review and meta-analysis. World J Gastroenterol. 2008; 14:7361-70.

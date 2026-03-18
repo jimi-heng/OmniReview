@@ -1,0 +1,124 @@
+# Page 1
+
+# 左氧氟沙星联合雷贝拉唑及果胶铋治疗幽门螺杆菌的疗效
+
+张喜梅，张振玉
+
+张喜梅，张振玉，南京医科大学附属南京第一医院消化科 江苏省南京市 210006  
+作者贡献分布：此课题为张喜梅主要贡献；张振玉与张喜梅共同设计；研究过程在张振玉指导下由张喜梅操作完成；数据分析由张喜梅完成；本论文写作由张喜梅完成。  
+通讯作者：张喜梅，主治医师，210006，江苏省南京市，南京医科大学附属南京第一医院消化科，zcc518@vip.sina.com  
+电话：025-52271260 传真：025-52271260  
+收稿日期：2010-02-23 修回日期：2010-04-27  
+接受日期：2010-05-10 在线出版日期：2010-06-28
+
+## Efficacy and safety of levofloxacin-based triple regimen and bismuth-based quadruple regimen in the management of Helicobacter pylori infection
+
+Xi-Mei Zhang, Zhen-Yu Zhang
+
+Xi-Mei Zhang, Zhen-Yu Zhang, Department of Gastroenterology, Nanjing First Hospital Affiliated to Nanjing Medical University, Nanjing 210006, Jiangsu Province, China  
+Correspondence to: Xi-Mei Zhang, Department of Gastroenterology, Nanjing First Hospital Affiliated to Nanjing Medical University, Nanjing 210006, Jiangsu Province, China. zcc518@vip.sina.com  
+Received: 2010-02-23  Revised: 2010-04-27  
+Accepted: 2010-05-10  Published online: 2010-06-28
+
+## Abstract
+
+**AIM:** To evaluate the efficacy and safety of levofloxacin-based triple regimen and bismuth-based quadruple regimen in the eradication of *Helicobacter pylori* (*H. pylori*) infection.
+
+**METHODS:** One hundred and ninety-six patients with *H. pylori* infection were randomly divided into four groups: those undergoing levofloxacin-based triple therapy (levofloxacin, clarithromycin and rabeprazole), bismuth-based quadruple therapy (levofloxacin, clarithromycin, rabeprazole and bismuth), tinidazole-based triple therapy (tinidazole, clarithromycin and rabeprazole), and tinidazole-based quadruple therapy (tinidazole, clarithromycin, rabeprazole and bismuth). *H. pylori* infection was detected in each group one month after a 7-day treatment.
+
+**RESULTS:** The eradication rates of *H. pylori* infection in levofloxacin-based treatment groups were significantly higher than those in tinidazole-based treatment groups (triple regimen: 82.8% vs 70.6%; quadruple regimen: 86.9% vs 73.2%; both \( P < 0.05 \)). The eradication rates of *H. pylori* infection in bismuth-based quadruple regimen groups were higher than those in the corresponding triple regimen groups but showed no significant differences between these groups (both \( P > 0.05 \)).
+
+**CONCLUSION:** Levofloxacin-based triple regimen and bismuth-based quadruple regimen therapy are effective and safe in the eradication of *H. pylori* infection.
+
+**Key Words:** Levofloxacin; Bismuth; *Helicobacter pylori*
+
+Zhang XM, Zhang ZY. Efficacy and safety of levofloxacin-based triple regimen and bismuth-based quadruple regimen in the management of *Helicobacter pylori* infection. Shijie Huaren Xiaohua Zazhi 2010; 18(18): 1951-1953
+
+## 摘要
+
+目的：讨论含左氧氟沙星、雷贝拉唑的三联方案及加入果胶铋的四联方案对根除幽门螺杆菌 (*H. pylori*) 的效果及不良反应。
+
+方法：将门诊确诊 *H. pylori* 感染者196例，随机分为左氧氟沙星、雷贝拉唑组、克拉霉素三联组及加入果胶铋的四联组；以替硝唑代替左氧氟沙星作为对照三、四联组，四种不同方案治疗7d，1mo后进行 *H. pylori* 检测。
+
+结果：无论是三联方案还是四联方案，含左氧氟沙星组的 *H. pylori* 根除率要高于替硝唑组，且均有显著性差异 (82.8% vs 70.6%, 86.9% vs 73.2%, 均 \( P < 0.05 \))；加入果胶铋的四联方案较之相应的三联方案 *H. pylori* 根除率要高，但无显著性差异 (\( P > 0.05 \)).
+
+结论：含有左氧氟沙星的三联方案及加入果胶铋的四联方案 *H. pylori* 的根除率效果较好，安全性高，值得在临床上推广应用。
+
+**关键词：** 左氧氟沙星；果胶铋；幽门螺杆菌
+
+---
+
+*同刊评述*  
+沈薇，教授，重庆医科大学附属第二医院消化内科
+
+www.wjgnet.com
+
+(C)1994-2021 China Academic Journal Electronic Publishing House. All rights reserved. http://www.cnki.net
+
+---
+
+# Page 2
+
+# 1 引言
+
+幽门螺杆菌(H.pylori)感染是消化性溃疡、慢性胃炎的重要致病因素，与胃癌、胃黏膜相关淋巴组织淋巴瘤的发生密切相关[1]。因此根除H.pylori对治愈消化性溃疡、预防溃疡复发、缓解临床症状、预防癌变均有重要意义。本文探讨了左氧氟沙星联合雷贝拉唑三联及加入果胶铋的四联方案初次根除H.pylori的作用。
+
+## 1 材料和方法
+
+1.1 材料 收集自2008-01/2009-04来我院消化内科就诊的门诊患者，经胃镜确诊的胃、十二指肠溃疡、慢性萎缩性胃炎患者，其中H.pylori阳性作为入选对象，排除严重肝、肾、肺等器官功能障碍，排除相关药物过敏史、孕妇和哺乳期妇女以及近4 wk内已接受PPI、抗生素、H\(_2\)受体拮抗剂(H\(_2\)RA)及铋剂治疗的患者，共196例，年龄20-66岁，随机分为A组：左氧氟沙星、克拉霉素、雷贝拉唑组；B组：克拉霉素、替硝唑、雷贝拉唑组；C组：左氧氟沙星、克拉霉素、雷贝拉唑、果胶铋组；D组：克拉霉素、替硝唑、雷贝拉唑、果胶铋组。各组在年龄、性别及胃、十二指肠球部溃疡和慢性胃炎比例等方面均无显著性差异(P>0.05)。
+
+1.2 方法
+
+1.2.1 H.pylori检测：采用快速尿素酶试验、胃黏膜组织学检查和\(^{13}\)C-尿素呼气试验(\(^{13}\)C-UBT)。胃镜检查时，于胃窦和胃体各取2块进行快速尿素酶试验或胃黏膜组织学检查，试验阳性者即诊断H.pylori感染，阳性者即诊断为H.pylori感染。
+
+1.2.2 治疗：各类药物均使用相同厂家及剂量，具体药量如下：雷贝拉唑10 mg，每日2次；左氧氟沙星：0.2 g，每日2次；克拉霉素0.5 g，每日2次；替硝唑：0.4 g，每日2次；果胶铋：0.2 g，每日2次。各组疗程均为6 d。
+
+1.2.3 疗效判定：治疗结束后至少4 wk以上进行\(^{13}\)C-尿素呼气试验检测，结果为阴性，确定为H.pylori已根除。
+
+统计学处理 采用SPSS11.5，对计量资料采用\(\chi^2\)检验，\(P<0.05\)有显著性差异。
+
+## 2 结果
+
+2.1 各组方案对H.pylori的根除率比较 分别将A组与B组；C组与D组作比较，结果显示含有左氧氟沙星除菌方案的H.pylori根除效果较替硝唑明显，无论是三联方案还是四联方案，且均有显著性差异(P<0.05，表1)。分别将C组与A组，B组与D组进行统计学分析，结果显示加入果胶铋的四联除菌方案较之经典的三联除菌方案有效率要高，但无显著性差异(P>0.05，表1)。
+
+2.2 各组方案的安全性比较 本研究中仅少数患者有头晕、头痛、恶心、腹泻和腹胀，患者依从性好，未影响治疗。治疗组中仅少数出现头晕、恶心、腹泻等症状，患者依从性好，未影响治疗。其中A方案出现恶心2例，头晕1例，腹胀3例(10.3%)。B方案出现恶心3例，腹痛2例，腹泻2例，占(13.7%)；C方案出现恶心腹泻各2例，头痛、头晕各1例(13.0%)；D方案出现恶心2例，腹痛2例，头痛3例(17.1%)。组间不良反应发生率无统计学意义(P>0.05)。全部不良反应发生较轻，无需特殊处理，服药期间或疗程结束停药后自行消失。
+
+## 3 讨论
+
+目前我国推荐的使用最为广泛的一线治疗方案为PPI(质子泵抑制剂)+克拉霉素+阿莫西林(加或不加用铋剂)[2,3]，但随着根除H.pylori治疗的广泛开展，耐药菌的出现，使原来共识所推荐的治疗方案的H.pylori根除失败率逐渐升高，因此寻找更有效的方案是目前临床所急需解决的问题。
+
+左氧氟沙星是氧氟沙星的左旋体，其作用机制是通过抑制细菌的DNA旋转酶活性，阻止细菌DNA的合成和复制导致细菌死亡；具有抗菌谱广、半衰期长、性质稳定、口服易吸收等特点。实验表明，左氧氟沙星对H.pylori的杀菌活性强于克拉霉素，耐药率低于克拉霉素[4]。目前，左氧氟沙星多被用于初次根除失败后的补救方案，而在初次根除的疗效虽有不少报道认为较理想，但缺少大规模的循证医学证据，因此目前还处
+
+---
+
+# Page 3
+
+张喜梅, 等. 左氧氟沙星联合雷贝拉唑及果胶铋治疗幽门螺杆菌的疗效
+
+于摸索阶段。本研究认为目前H.pylori对左氧氟沙星的耐药率较低，因此初次根治H.pylori的效果较之经典的方案更好，可以用于初次根治。
+
+目前我国的专家共识意见认为四联疗法（PPI+铋剂+两种抗生素）仍为首选。铋剂在酸性环境下变成铋酸衍生物，可以直接杀灭H.pylori，但副作用发生率高，患者耐受性差，且疗效受pH影响较大。而胶体果胶铋是以生物大分子果胶酸取代了传统剂的中、小分子酸根，如枸橼酸根、碳酸根，提高了铋制剂的稳定性和胶体特性，在胃内pH升至5的弱酸环境中仍能发挥其疗效。本研究采用加入铋剂的四联疗法较之三联疗法对H.pylori的根除率更高，但无明显统计学差异，而不良反应无明显增加，因此对身体及经济条件较好的患者可以推荐使用。
+
+因此，本研究认为左氧氟沙星、雷贝拉唑及克拉霉素不仅可作为初次H.pylori根除失败的补救方案，也可作为初次H.pylori根治方案；而加入果胶铋的四联抗菌方案由于对H.pylori的根除率高，不良反应无明显增加趋势，可作为一线的抗H.pylori初治方案在临床推广。而上述两种方案在临床上大规模的推广有待国内、外循证医学证据的支持。
+
+4 参考文献
+
+1. Current European concepts in the management of Helicobacter pylori infection. The Maastricht Consensus Report. European Helicobacter Pylori Study Group. Gut 1997; 41: 8-13
+2. Malfertheiner P, Megraud F, O'Morain C, Bazzoli F, El-Omar E, Graham D, Hunt R, Rokkas T, Vakil N, Kuipers EJ. Current concepts in the management of Helicobacter pylori infection: the Maastricht III Consensus Report. Gut 2007; 56: 772-781
+3. 张万岳, 蒋树东, 胡伏莲, 林三仁, 胡晶, 刘文忠, 王继德, 徐智民. 幽门螺杆菌若干临床方面的共识意见（2003）. 安徽病院. 中华内科杂志 2004; 43: 316-317
+4. 邹军, 李欣欣, 杨昭铭, 张磊. 左氧氟沙星对幽门螺杆菌体外抗菌活性的评价. 中国抗生素杂志 2003; 28: 292
+5. 中华医学会消化病学分会, 幽门螺杆菌学组/幽门螺杆菌科. 第三次全国幽门螺杆菌感染若干问题共识报告(2007年8月)中华医学杂志 2008; 88: 652-656
+
+编辑 曹丽鸥 电编 何基才
+
+ISSN 1009-3079 CN 14-1260/R 2010年版权归世界华人消化杂志
+
+• 消息 •
+
+《世界华人消化杂志》正文要求
+
+本刊讯 本刊正文标题层次为0引言; 1材料和方法, 1.1材料, 1.2方法; 2结果; 3讨论; 4参考文献. 序号一律左顶线号, 后空1格写标题; 2级标题后空1格接正文. 以下逐条陈述: (1)引言 应包括该研究的目的和该研究与其他相关研究的关系. (2)材料和方法 应尽量简短, 但应让其他有经验的研究者能够重复该实验. 对新的方法应该详细描述, 以前发表过的方法引用参考文献即可, 有关文献中或试剂手册中的方法的改进仅描述改进之处即可. (3)结果 实验结果应合理采用图表和文字表示, 在结果中应避免讨论. (4)讨论 要简明, 应集中对所得的结果做出解释而不是重复叙述, 也不应是大量文献的回顾. 图表的数据要精选. 表应有表序和表题, 并有足够具有自明性的信息, 使读者不查阅正文即可理解该表的内容. 表内每一栏均应有表头, 表内非公知通用缩写应在表注中说明, 表格一律使用三线表(不用竖线), 在正文中该出现的地方应注出. 图应有图序, 图题和图注, 以使其容易被读者理解, 所有的图应在正文中该出现的地方注出. 同一个主题内容的彩色图、黑白图、线条图, 统一用一个注解分别叙述. 如: 图1 萎缩性胃炎治疗前后病理变化. A: …; B: …; C: …; D: …; E: …; F: …; G: … 曲线图可按●、○、■、□、▲、△顺序使用标准的符号. 统计学显著性用: *P<0.05, *P<0.01(P>0.05不注). 如同一表中另有一套P值, 则*P<0.05, *P<0.01; 第3套为*P<0.05, *P<0.01. P值后注明何种检验及其具体数字, 如P<0.01, t=4.56 vs 对照组等, 注在表的左下方. 表内采用阿拉伯数字, 共同的计量单位符号应注在表的右上方, 表内个位数、小数点、±、-应上下对齐. “空白”表示无此项或未测, “-”代表阴性未发现, 不能用同左、同上等. 表图勿与正文内容重复. 表图的标目尽量用t/min, c/(mol/L), p/kPa, V/mL, t/℃表达. 黑白图请附黑白照片, 并转入光盘内; 彩色图请提供冲洗的彩色照片, 请不要提供计算机打印的照片. 彩色图片大小7.5 cm×4.5 cm, 必须使用双面胶条粘贴在正文内, 不能使用浆糊粘贴. (5)志谢 后加冒号, 排在讨论后及参考文献前, 左齐.
+
+www.wjgnet.com
+
+(C)1994-2021 China Academic Journal Electronic Publishing House. All rights reserved. http://www.cnki.net

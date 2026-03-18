@@ -1,0 +1,45 @@
+# Page 1
+
+P07.05 | Comparison of the efficacy of triple therapy-based, bismuths-ranitidine-containing quadruple therapy with triple therapy and sequential therapy of Helicobacter Pylori
+
+B. S. Moon*; H. Lim*; S. Lee*; Y. Lee†
+
+*Yongin Severance Hospital, Yonsei Univ., Seoul, Korea
+†Severance Hospital, Yonsei Univ., Seoul, Korea
+
+Background/Aim: In recent studies of the first-line therapy, the eradication rate is decreasing and as another option for Helicobacter pylori (HP) eradication, triple therapy-based, bismuth-containing quadruple therapy is tried. Albis is a compound drug composed of Ranitidine (84 mg), Sucralfate (300 mg), Bismuth Subcitrate (100 mg) and use to treat peptic ulcers in Korea. The aim of this study was to compare the efficacy of triple therapy based Albis containing quadruple therapy (ACQ) with the standard therapy and sequential therapy for HP eradication.
+
+Methods: From 2013 to 2015, 498 patients with HP infections allocated 3 groups. Standard triple therapy group: Lansoprazole (LPZ) 30 mg bid, Amoxicillin (AMX) 1000 mg bid, Clarithromycin (CLA) 500 mg bid. ACQ therapy group: Esomeprazole magnesium 40 mg bid, AMX 1000 mg bid, CLA 500 mg bid and Albis 4T bid (triptoassiumdicitrato-bismuthate 400 mg bid) for 7 days. Sequential therapy group: LPZ 30 mg bid, AMX 1000 mg bid for the first 5 days, followed LPZ 30 mg bid, CLA 500 mg bid, Metronidazole 500 mg tid for 5 days. The eradication of HP was assessed by urea breathing test and the side effects were assessed after 4 weeks.
+
+Results: The eradication rate of ACQ therapy group was higher than standard triple therapy and sequential therapy group in PP analysis 91.7% (188/205) versus 55.2% (100/181) versus 75% (84/112) (p < 0.05).
+
+Conclusion: ACQ therapy including for 7 days was effective to eradicate HP as first line therapy in Korea.
+
+P07.06 | Empiric 4-drug non-bismuth Helicobacter pylori therapies promote misuse (overuse) of antibiotics
+
+D. Y. Graham*; H. Lu†; M. P. Dore‡
+
+*Baylor College of Medicine, Houston, TX, USA
+†Ren Ji Hospital, School of Medicine, Shanghai, China
+‡University of Sassari, Sassari, Italy
+
+Background: There is great concern worldwide regarding overuse of antibiotics. Traditionally, and practically, all infectious disease therapy is susceptibility-based with the goal of achieving reliable high cure rates. Hp therapy is an aberration in that currently the attempt is to provide high cure rates despite the increasing presence of resistant infections requiring administration of antibiotics not required for the majority of patients.
+
+Method: Consider use of concomitant therapy in a population where clarithromycin resistance is 20% and metronidazole resistance is 40%.
+
+Results: Overall 80% of the subjects with clarithromycin susceptible infections would be cured by clarithromycin triple therapy. One would also expect 40% of the 20/100 subjects with clarithromycin resistant strains to have dual clarithromycin-metronidazole resistance leaving only 12 with clarithromycin resistance to be cured by metronidazole triple therapy. While the overall cure rate would be approximately 89%, approximately 92% of the subjects would have received an unnecessary antibiotic (either metronidazole or clarithromycin) with no potential for benefit. With susceptibility-based therapy (for example) 80% would receive clarithromycin triple therapy, 12% metronidazole triple therapy, and 8% (those with dual resistance) an effective non-clarithromycin and metronidazole containing regimen.
+
+Conclusion: Susceptibility-based therapy identifies the most efficient treatment regimens that will reliably produce the highest cure rates. It also obviates misuse of antibiotics (i.e., use of antibiotics which add little if anything to the overall cure rate). When one considers the cost of susceptibility testing, one must also consider the potential for harm associated with using empiric regimens in the presence of antimicrobial resistance.
+
+P07.07 | The effectiveness of Helicobacter pylori eradication and frequency of adverse events within a “search-and-treat” approach: GISTAR pilot study results in latvia
+
+M. Leja*†‡; I. Zandberga*; J. Y. Park§; I. Polaka*; S. Parshutin*; A. Rudule*; P. Krike*; I. Lasina*; I. Daugule*; R. Herrero§
+
+*University of Latvia, Riga, Latvia
+†Digestive Diseases Centre GASTRO, Riga, Latvia
+‡Riga East University Hospital, Riga, Latvia
+§International Agency for Research on Cancer, Lyon, France
+
+Background: Success of H. pylori eradication is critical for effective management of the infection, in particular within “Search-and-treat” strategy.
+
+Objectives: We aimed to analyse the success of first-line H. pylori eradication therapy and the frequency of adverse events of eradication.

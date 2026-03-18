@@ -1,0 +1,229 @@
+# Page 1
+
+Ten-day bismuth-containing quadruple therapy is effective as first-line therapy for Helicobacter pylori–related chronic gastritis: a prospective randomized study in China
+
+L. Wang 1,2,10, Z. Lin 2,3,10, S. Chen 2,3, J. Li 3, C. Chen 4, Z. Huang 5, B. Ye 6, J. Ding 7, W. Li 8, L. Wu 1,2, Y. Jiang 1,2, L. Meng 9, Q. Du 1, J. Si 2,3,*
+
+1 Department of Gastroenterology, Second Affiliated Hospital, School of Medicine, Zhejiang University, Hangzhou, Zhejiang Province, China
+2 Institute of Gastroenterology, Zhejiang University, Hangzhou, Zhejiang Province, China
+3 Department of Gastroenterology, Sir Run Run Shaw Hospital, School of Medicine, Zhejiang University, Hangzhou, Zhejiang Province, China
+4 Department of Gastroenterology, First Affiliated Hospital, School of Medicine, Zhejiang University, Hangzhou, Zhejiang Province, China
+5 Department of Gastroenterology, First Affiliated Hospital of Wenzhou Medical University, Wenzhou, Zhejiang Province, China
+6 Department of Gastroenterology, Central Hospital of Lishui City, Lishui, Zhejiang Province, China
+7 Department of Gastroenterology, Central Hospital of Jinhua City, Jinhua, Zhejiang Province, China
+8 Department of Gastroenterology, Taizhou Hospital of Zhejiang Province, Taizhou, Zhejiang Province, China
+9 Department of Gastroenterology, First Affiliated Hospital of Zhejiang Chinese Medical University, Hangzhou, Zhejiang Province, China
+
+A R T I C L E I N F O
+
+Article history:
+Received 30 July 2016
+Received in revised form 25 December 2016
+Accepted 28 December 2016
+Available online 7 January 2017
+
+Editor: M. Paul
+
+Keywords:
+Bismuth-containing quadruple therapy
+Chronic gastritis
+First-line therapy
+Helicobacter pylori
+Omeprazole-based triple therapy
+
+Abstract
+
+Objectives: To investigate the effectiveness of 10-day bismuth-containing quadruple (B-quadruple) treatment as first-line therapy in patients with Helicobacter pylori–related chronic gastritis.
+
+Methods: A randomized controlled trial was conducted from October 2011 to December 2013 in Zhejiang, China, including patients with H. pylori–related chronic gastritis who were randomly provided either 10-day omeprazole-based triple therapy (OM-triple; omeprazole 20 mg twice daily, clarithromycin 500 mg twice daily and amoxicillin 1 g twice daily) or 10-day B-quadruple therapy (OM-triple + bismuth subcitrate 120 mg four times daily). H. pylori status, pathologic findings and dyspeptic symptoms were assessed at baseline and after 3 months. The primary outcome was H. pylori eradication rates by intention-to-treat (ITT) and per-protocol (PP) analyses. The secondary outcomes were the histologic and symptomatic benefits from H. pylori eradication.
+
+Results: A total of 351 patients with H. pylori–related chronic gastritis were recruited. The eradication rates of the OM-triple and B-quadruple groups were 58.4% (108/185) and 86.1% (143/166) respectively according to ITT analysis (p <0.01). PP rates of H. pylori eradication were 63.2% (108/171) and 92.3% (143/155) respectively (p <0.01). According to the PP analysis, active and chronic inflammation in gastric mucosa was substantially improved in all treated patients (n = 326). However, pathologic atrophic gastritis and intestinal metaplasia did not regress in both groups (n = 326). The reduction of dyspeptic symptoms score was significantly higher in the B-quadruple group than in the OM-triple group (0.59 ± 0.057 vs. 0.39 ± 0.046) (p <0.01).
+
+Conclusions: Ten-day B-quadruple therapy is more effective than OM-triple therapy as first-line therapy for patients with H. pylori–induced chronic gastritis in China. L. Wang, Clin Microbiol Infect 2017;23:391
+
+© 2017 The Authors. Published by Elsevier Ltd on behalf of European Society of Clinical Microbiology and Infectious Diseases. This is an open access article under the CC BY-NC-ND license (http://creativecommons.org/licenses/by-nc-nd/4.0/).
+
+Introduction
+
+Helicobacter pylori has been reported to affect more than 50% of the world population [1]. A large population trial in Linqu County, an area at high risk of gastric cancer in China, found a H. pylori prevalence of 57.6% [2]. Among individuals infected with H. pylori, approximately 10% develop peptic ulcers and 1 to 3% subsequently
+
+---
+
+# Page 2
+
+progress to gastric malignancies [3]. Increasing evidence shows that *H. pylori* infection might cause dyspeptic symptoms [4,5]. McColl et al. [6] assessed the resolution of dyspeptic symptoms in subjects who were provided with *H. pylori* eradication therapy and found it conducive to long-term relief of symptoms. Recently the 2015 Kyoto global consensus on *H. pylori*—related gastritis has been published, and *H. pylori*—related dyspepsia was proposed as a new disease classification [7].
+
+Triple therapy, including a proton pump inhibitor and two anti-microbial agents (mainly containing clarithromycin and amoxicillin or metronidazole) usually prescribed for 7 to 14 days, has been the standard first-line eradication therapy since 1996 [8,9]. However, largely due to the increased rate of clarithromycin or metronidazole resistance, standard triple therapy has no longer been effective in regions with high antibiotic resistance; its eradication rate varies from 50 to 70% [10]. Four-drug regimens (quadruple, sequential, concomitant and hybrid) and levofloxacin-containing regimens have been studied with variable success [11–13]. Treatment based on bismuth, also known as bismuth-containing quadruple (B-quadruple) therapy, was lately proposed by the Maastricht IV consensus as an alternative first-line treatment, particularly in populations with high rates of antibiotic resistance [10].
+
+In China, *H. pylori* resistance rates of 50% to clarithromycin and 60 to 70% to metronidazole have been described [14]. As a result, B-quadruple therapy was considered to be a promising first-line treatment.
+
+We evaluated the effect of standard triple versus B-quadruple therapy on *H. pylori*—related chronic gastritis. By conducting a randomized multicentre study, we aimed to answer this issue and provide credible support for clinical decisions.
+
+**Methods**
+
+**Patients and study design**
+
+This was a prospective, open-label, randomized, controlled trial (registration ChiCTR-IPR-16009411, http://www.chictr.org.cn/showproj.aspx?proj=15119) performed in eight medical centres in Zhejiang Province, China. Consecutive patients with *H. pylori*—related chronic gastritis were recruited from October 2011 to December 2013. Patients were recruited if they were aged 18 years or older and had confirmed *H. pylori*—positive chronic gastritis. All patients underwent gastroscopy, and biopsy specimens were obtained for histologic examination at the beginning of the study. The diagnosis of chronic gastritis was determined according to the updated Sydney classification system [15]. Subjects with pathologic inflammation in any site of gastric antrum or corpus were enrolled.
+
+*H. pylori* infection was diagnosed by $^{13}C$ urea breath test and reassessed 3 months after the completion of the assigned treatment. The main exclusion criteria were age <18 years; patients who had gastrointestinal disorders with other causes or diseases in other organs; those who had received anti–*H. pylori* treatment or antisecretory therapy; use of antibiotics, bismuth salts, proton pump inhibitor or nonsteroidal anti-inflammatory drugs within 2 months; and history of gastrectomy. Pathologic findings and dyspeptic symptoms were evaluated at baseline and at the end point. Physicians were not blinded to which treatment the subjects received. Outcome assessors were unaware of the clinical data when evaluating the result of the $^{13}C$ urea breath test, histology and clinical symptoms (Fig. 1).
+
+**Sample size estimation and randomization**
+
+On the basis of previous studies, the eradication rates of omeprazole-based triple therapy (OM-triple) were estimated to be 70% and for B-quadruple 85% [16,17]. With an $α$ error of 0.05 and a $β$ error of 0.10, at least 317 subjects (158 in each group) were required to detect a difference of 15%. Eligible patients were then randomly assigned to either the 10-day OM-triple or 10-day B-quadruple group (1:1 simple randomization) using a central computer–generated randomization sequence. OM-triple therapy consisted of omeprazole 20 mg twice daily, clarithromycin 500 mg twice daily and amoxicillin 1g twice daily for 10 days. B-quadruple therapy consisted of omeprazole 20 mg twice daily, bismuth subcitrate 120 mg four times daily, clarithromycin 500 mg twice daily and amoxicillin 1 g twice daily for 10 days.
+
+**Histologic assessment**
+
+On the basis of the Sydney classification system, five biopsy samples from the gastric mucosa (angulus, small curvature and large curvature of corpus, small curvature and large curvature of antrum) were obtained by endoscopy [15]. Pathologists documented histologic grading of chronic gastritis at baseline and the end point of the study. Histologic evaluation combined the findings in biopsy specimens from both antrum and corpus locations. The following items were evaluated: active inflammation (infiltration of neutrophil cells) or chronic inflammation (infiltration of lymphocytes and plasma cells), gastric atrophy and intestinal metaplasia (IM). All of these items were scored as 0 (absent), 1 (mild to moderate) and 2 (severe) according to the Sydney classification system [15]. For controversial cases, consensus was reached by discussing with one or more senior pathologist.
+
+**Evaluation of dyspeptic symptoms**
+
+The symptomatic assessment was performed at baseline and 3 months after therapy. Five dyspeptic symptoms—epigastric pain, acid regurgitation, postprandial fullness, early satiation and belching—were identified [18]. The intensity of each individual symptom was rated on a 4-point scale, from 0 (none), to 1 (mild), 2 (moderate) or 3 (severe). Total scores ranged from 0 to 15, with higher scores suggesting more severe dyspepsia.
+
+**Outcomes and statistical analysis**
+
+The primary outcomes were *H. pylori* eradication rates by intention-to-treat (ITT) and per-protocol (PP) analyses; the secondary outcomes were the histologic and symptomatic benefits from both eradication treatments. Comparison of continuous data was conducted by Student’s $t$ test, and categorical data were compared by the chi-square test or Fisher’s exact test where appropriate. In the ITT analysis, data from all randomized patients were calculated, and
+
+---
+
+# Page 3
+
+patients who did not complete the study were counted as treatment failures. In the PP analysis, patients who violated the study protocol or who were noncompliant with the assigned therapy were excluded. The differences between OM-triple and B-quadruple therapy with respect to histologic or symptom scores were calculated by the Mann-Whitney U test. SPSS 20.0 for Windows (IBM SPSS, Chicago, IL, USA) was used for all statistical analysis, and a two-sided p value of <0.05 was regarded as statistically significant.
+
+**Ethics**
+
+Participants provided written informed consent before enrolment onto the study. Ethics approval was provided by the Clinical Research Ethics Committee of the Institute of Gastroenterology of Zhejiang University.
+
+**Results**
+
+**Patient data**
+
+A total of 415 subjects were initially screened for the trial, and 64 were excluded (Fig. 2). Among the 351 recruited patients, 185 and 166 were provided OM-triple and B-quadruple therapy respectively. A total of 326 patients completed the study, while 14 patients (7.6%) in the OM-triple group and 11 patients (6.6%) in the B-quadruple group dropped out. There was no significant difference in the baseline characteristics of the two groups (Table 1).
+
+**Eradication rate**
+
+ITT rates of *H. pylori* eradication were 58.4% (108/185) for OM-triple and 86.1% (143/166) for B-quadruple therapy, with a difference of 27.7% (p <0.01). On the basis of PP analysis, the eradication rates in the OM-triple and B-quadruple groups were 63.2% (108/171) and 92.3% (143/155) respectively (p <0.01) (Table 2). No significant difference was found in the eradication rates between subset of patients with atrophic or nonatrophic gastritis (Supplementary Table S1).
+
+**Impact of *H. pylori* eradication on gastritis pathology**
+
+The majority (305/351, 86.9%) of patients had active chronic gastritis in pretreatment biopsy samples. According to the PP analysis, the scores of active and chronic inflammation significantly decreased in both treatment groups (p <0.01) (Table 3). The B-quadruple group showed a more substantial improvement in active inflammation than the OM-triple group regardless of final *H. pylori* status (0.41 ± 0.40 vs. 0.25 ± 0.33, p <0.01). However, lesions with gastric atrophy or IM did not remarkably regress in patients receiving both *H. pylori* eradication treatments during the 3-month follow-up (p >0.05) (Supplementary Table S2).
+
+**Change of dyspeptic symptoms after eradicating *H. pylori***
+
+The total scores of dyspeptic symptoms were significantly lower in both *H. pylori* therapy groups compared to those at baseline (p <0.01) (Table 4). In terms of individual dyspeptic symptoms, greater
+
+| Characteristic                  | OM-triple (n = 185) | B-quadruple (n = 166) | p   |
+|--------------------------------|---------------------|-----------------------|-----|
+| **Age (years)**                | 50.11 ± 11.13        | 52.19 ± 12.14         | 0.096|
+| **Gender**                     |                     |                       | 0.836|
+| **Male**                       | 99 (53.5%)           | 87 (52.4%)             |       |
+| **Female**                    | 86 (46.5%)           | 79 (47.6%)             |       |
+| **Alcohol**                    | 23 (12.40%)          | 26 (15.70%)            | 0.383|
+| **Smoking**                    | 18 (9.7%)            | 14 (8.4%)              | 0.674|
+| **Family history of GC**        | 18 (9.7%)            | 12 (7.2%)              | 0.403|
+| **Major pathologic findings**   |                     |                       |       |
+| **Active inflammation**        | 1.04 ± 0.037         | 1.02 ± 0.045           | 0.681|
+| **Chronic inflammation**       | 0.61 ± 0.052         | 0.57 ± 0.052           | 0.778|
+| **Atrophy**                    | 0.29 ± 0.041         | 0.38 ± 0.049           | 0.194|
+| **Intestinal metaplasia**       | 0.48 ± 0.042         | 0.63 ± 0.057           | 0.095|
+| **Major dyspeptic symptoms**    |                     |                       |       |
+| **Epigastric pain**             | 1.02 ± 0.055         | 1.05 ± 0.055           | 0.738|
+| **Acid regurgitation**          | 0.74 ± 0.057         | 0.75 ± 0.064           | 0.899|
+| **Postprandial fullness**       | 0.75 ± 0.056         | 0.66 ± 0.062           | 0.146|
+| **Early satiation**             | 1.00 ± 0.063         | 0.90 ± 0.064           | 0.274|
+| **Belching**                   | 0.12 ± 0.029         | 0.10 ± 0.027           | 0.680|
+
+Data are n (%) unless otherwise indicated.
+
+B-quadruple, bismuth-containing quadruple therapy; GC, gastric cancer; OM-triple, omeprazole-based triple therapy.
+
+a Data are presented as mean ± SD.
+
+b Data are presented as mean ± SE.
+
+**Table 2**
+
+**Helicobacter pylori** eradication rates in the OM-triple and B-quadruple groups
+
+| Treatment | OM-triple | B-quadruple | p   |
+|-----------|----------|------------|-----|
+| ITT       | 108/185 (58.4%) | 143/166 (86.1%) | <0.01 |
+| PP        | 108/171 (63.2%) | 143/155 (92.3%) | <0.01 |
+
+B-quadruple, bismuth-containing quadruple therapy; ITT, intention to treat; OM-triple, omeprazole-based triple therapy; PP, per protocol.
+
+**Fig. 2.** Patient flowchart. B-quadruple, bismuth-containing quadruple therapy; ITT, intention to treat; OM-triple, omeprazole-based triple therapy; PP, per protocol.
+
+---
+
+# Page 4
+
+symptom relief was observed for epigastric pain and acid regurgitation. By PP analysis, 49% (76/155) of patients receiving B-quadruple therapy experienced symptoms relief, which is significantly higher than the 32% (55/171) in the OM-triple group (p <0.01). The reduction of the dyspepsia sum score from baseline to the last visit was more remarkable in the B-quadruple compared to the OM-triple group, regardless of the final H. pylori status (0.59 ± 0.057 vs. 0.39 ± 0.046, p <0.01) (Supplementary Table S3).
+
+Adverse effects and compliance
+
+Four patients in each group dropped out because of adverse effects. The rates of overall adverse effects were reported to be 10.3% (19/185) in the OM-triple group and 13.9% (23/166) in the B-quadruple group (p >0.05). Adverse events included vomiting, diarrhoea, anorexia, dizziness, headache and skin rash. The reported adverse effects were self-limited and had no major influence on the compliance rate of either group (171/185, 92.4%, for OM-triple vs. 155/166, 93.4%, for B-quadruple, p >0.05).
+
+Discussion
+
+The recent Kyoto global consensus categorized H. pylori—induced gastritis as an infectious disease and recommended that H. pylori eradication be performed before preimplantant changes develop to prevent gastric carcinogenesis [7]. The present study was a head-to-head trial to compare OM-triple or B-quadruple treatment for curing H. pylori—related chronic gastritis. Although several studies have discussed triple and quadruple H. pylori eradication treatments, to our knowledge, our study is the first to provide comprehensive evidence to show the effectiveness of these two treatments on eradication rates, as well as the pathologic and dyspeptic symptom changes. We demonstrated that 10-day B-quadruple therapy is better than 10-day OM-triple therapy as first-line treatment for patients with H. pylori—related chronic gastritis. B-quadruple therapy had higher H. pylori eradication rates, higher reduction of active inflammation and better relief of dyspeptic symptoms.
+
+A critical challenge for eradicating H. pylori is the emergence of antibiotic resistance worldwide. The prevalence of drug resistance in developing countries is higher than in developed countries. Antibiotic resistance has increased rapidly in China. Clarithromycin resistance was reported to increase from 8.6 to 20.7% between 2000 and 2009 in Shanghai [19] and from 14.8 to 65.4% in Beijing [20]. Zhang et al. [21] recently reported resistance rates of 26.5% to clarithromycin and 45.5% to metronidazole in Shanghai. H. pylori eradication rates have declined primarily as a result of increased antibiotic resistance [22]. In the present study, we found eradication rates of OM-triple therapy of 58.4% (108/185) and 63.2% (108/171) by ITT analysis and PP analysis respectively. The strikingly low eradication rate of the OM-triple eradication might be due to the high clarithromycin resistance in Zhejiang Province, which is near Shanghai.
+
+It is crucial to identify regimens to overcome aggravating antibiotic resistance. Bismuth is commonly used for eradicating H. pylori in China [17,22]. When combined with other antimicrobial agents, bismuth-based quadruple therapy exerts synergistic effects to improve eradication rates [22,23]. Our results showed that B-quadruple therapy was effective in H. pylori eradication, with 86.1% (143/166) and 92.3% (143/155) eradication rates according to ITT and PP analysis respectively. The eradication rate of B-quadruple in our study was similar to that of 92.7% by ITT analysis in another clinical trial in China [24]. Recent studies from other countries suggested that the use of B-quadruple therapy is remarkably effective even in the presence of antibiotic resistance and prior treatment failures [25,26]. Nevertheless, there are concerns about the safety of the bismuth. Use of bismuth did not increase adverse effects in our trial. In addition, the adverse effects in both groups were mild and had no major influence on patient compliance.
+
+In this study, B-quadruple therapy conferred an advantage for patients with active gastritis compared to the standard triple therapy. However, no histologic changes with atrophy and IM in our study were observed in both groups within the relatively short-term surveillance period (3 months). It is still controversial whether anti–H. pylori therapy prevents or reverses gastric pre-malignant lesions. Ito et al. [27] followed 22 patients for up to 5
+
+---
+
+# Page 5
+
+years and reported that atrophy and IM are reversible in patients with successful eradication therapy. On the other hand, Forbes et al. [28] demonstrated that both atrophy and IM remained unchanged after 7.1 years’ follow-up after H. pylori eradication. Another 1-year follow-up study revealed that changes in atrophy and IM were similar between H. pylori—eradicated and -infected groups [29]. B-quadruple H. pylori treatment showed a greater relief of dyspeptic symptoms than that with OM-triple therapy in our study. More frequent symptom resolution was found in epigastric pain and acid regurgitation. Gastric mucosal inflammation induced by H. pylori might lead to abnormalities in pain sensitivity [30]. Thus, it is reasonable to expect more epigastric pain symptom relief in patients provided B-quadruple therapy, who have a significant reduction in active gastritis. However, eradication treatment had a minimal impact on postprandial distress syndrome, including symptoms of postprandial fullness, early satiation and belching.
+
+Our study has several limitations. Firstly, this study was not double blinded, and it had a short-term follow-up period. Secondly, pretreatment susceptibility testing of H. pylori was not performed. The drug susceptibility test is costly. It would definitely be beneficial if data on antibiotic resistance were also available, which should be considered in further studies.
+
+In conclusion, our study adds more evidence that 10-day B-quadruple therapy is as effective as first-line therapy in Chinese patients with chronic gastritis. Cure of H. pylori infection may play a protective role by halting disease progression in its initial stages.
+
+Acknowledgements
+
+For their support, we thank our patients and colleagues at Sir Run Shaw Hospital, Zhejiang University, the Second Affiliated Hospital of Zhejiang University, the First Affiliated Hospital of Zhejiang University, the First Affiliated Hospital of Wenzhou Medical University, the Central Hospital of Lishui City, the Central Hospital of Jinhua City, Taizhou Hospital of Zhejiang Province and the First Affiliated Hospital of Zhejiang Chinese Medical University.
+
+Transparency Declaration
+
+This work was funded by the National Natural Science Foundation of China (81302070, 81372623 and 81101838), the Zhejiang Province Key Science and Technology Innovation Team (2013TD13) and the Zhejiang Province Medicine Health Platform and Study Plan (YH52013004). All authors report no conflicts of interest relevant to this article.
+
+Appendix A. Supplementary data
+
+Supplementary data related to this article can be found at http://dx.doi.org/10.1016/j.cmi.2016.12.032.
+
+References
+
+[1] Eusebi LH, Zagari RM, Bazzoli F. Epidemiology of Helicobacter pylori infection. Helicobacter 2014;19(Suppl. 1):1–5.
+[2] Pan KF, Zhang L, Gerhard M, Ma V, Liu WD, Ulm K, et al. A large randomised controlled intervention trial to prevent gastric cancer by eradication of Helicobacter pylori in Linqu County, China: baseline results and factors affecting the eradication. Gut 2016;65:9–18.
+[3] Noto JM, Peek Jr RM. Helicobacter pylori: an overview. Methods Mol Biol 2012;921:7–10.
+[4] Rosenstock S, Kay L, Rosenstock C, Andersen LP, Bonnevie O, Jorgensen T. Relation between Helicobacter pylori infection and gastrointestinal symptoms and syndromes. Gut 1997;41:169–76.
+[5] Malfertheiner P, Mossner J, Fischbach W, Layer P, Leodolter A, Stolte M, et al. Helicobacter pylori eradication is beneficial in the treatment of functional dyspepsia. Aliment Pharmacol Ther 2003;18:615–25.
+[6] McColl K, Murray L, El-Omar E, Dickson A, El-Nujumi A, Wirz A, et al. Symptomatic benefit from eradicating Helicobacter pylori infection in patients with nonulcer dyspepsia. N Engl J Med 1998;339:1869–74.
+[7] Sugano K, Tack J, Kuipers EJ, Graham DY, El-Omar EM, Miura S, et al. Kyoto global consensus report on Helicobacter pylori gastritis. Gut 2015;64:1353–67.
+[8] Lind T, Veldhuizen van Zanten S, Unge P, Spiller R, Bayerdorffer E, O’Morain C, et al. Eradication of Helicobacter pylori using one-week triple therapies combining omeprazole with two antimicrobials: the MACH I study. Helicobacter 1996;1:138–44.
+[9] Chey WD, Wong BC, Practice Parameters Committee of the American College of Gastroenterology. American College of Gastroenterology guideline on the management of Helicobacter pylori infection. Am J Gastroenterol 2007;102:1808–25.
+[10] Malfertheiner P, Megraud F, O’Morain CA, Atherton J, Axon AT, Bazzoli F, et al. Management of Helicobacter pylori infection—the Maastricht IV/Florence Consensus Report. Gut 2012;61:646–64.
+[11] Liou JM, Lin JT, Chang CY, Chen MJ, Cheng TY, Lee YC, et al. Levofloxacin-based and clarithromycin-based triple therapies as first-line and second-line treatments for Helicobacter pylori infection: a randomised comparative trial with crossover design. Gut 2010;59:572–8.
+[12] Greenberg ER, Anderson GL, Morgan DR, Torres J, Chey WD, Bravo LE, et al. 14-day triple, 5-day concomitant, and 10-day sequential therapies for Helicobacter pylori infection in seven Latin American sites: a randomised trial. Lancet 2011;378:507–14.
+[13] Vaira D, Zullo A, Vakil N, Gatta L, Ricci C, Perna F, et al. Sequential therapy versus standard triple-drug therapy for Helicobacter pylori eradication: a randomized trial. Ann Intern Med 2007;146:556–63.
+[14] Thung I, Aramin H, Vavinskaya V, Gupta S, Park JY, Crowe SE, et al. Review article: the global emergence of Helicobacter pylori antibiotic resistance. Aliment Pharmacol Ther 2016;43:514–33.
+[15] Dixon MF, Genta RM, Yardley JH, Correa P. Classification and grading of gastritis. The updated Sydney System. International Workshop on the Histopathology of Gastritis, Houston, 1994. Am J Surg Pathol 1996;20:1161–81.
+[16] Liang J, Li J, Han Y, Xia J, Yang Y, Li W, et al. Helicobacter pylori eradication with ecabet sodium, omeprazole, amoxicillin, and clarithromycin versus bismuth, omeprazole, amoxicillin, and clarithromycin quadruple therapy: a randomized, open-label, phase IV trial. Helicobacter 2012;17:458–65.
+[17] Lu H, Zhang W, Graham DY. Bismuth-containing quadruple therapy for Helicobacter pylori: lessons from China. Eur J Gastroenterol Hepatol 2013;25:1134–40.
+[18] Tack J, Talley NJ, Camilleri M, Holtmann G, Hu P, Malagelada JR, et al. Functional gastroduodenal disorders. Gastroenterology 2006;130:1466–79.
+[19] Sun QJ, Liang X, Zheng Q, Gu WQ, Liu WZ, Xiao SD, et al. Resistance of Helicobacter pylori to antibiotics from 2000 to 2009 in Shanghai. World J Gastroenterol 2010;16:5118–21.
+[20] Gao W, Cheng H, Hu F, Li J, Wang L, Yang G, et al. The evolution of Helicobacter pylori antibiotics resistance over 10 years in Beijing, China. Helicobacter 2010;15:460–6.
+[21] Zhang W, Chen Q, Liang X, Liu W, Xiao S, Graham DY, et al. Bismuth, lansoprazole, amoxicillin and metronidazole or clarithromycin as first-line Helicobacter pylori therapy. Gut 2015;64:1715–20.
+[22] Gerrits MM, van Vliet AH, Kuipers EJ, Kusters JG. Helicobacter pylori and antimicrobial resistance: molecular mechanisms and clinical implications. Lancet Infect Dis 2006;6:699–709.
+[23] Dore MP, Lu H, Graham DY. Role of bismuth in improving Helicobacter pylori eradication with triple therapy. Gut 2016;65:870–8.
+[24] Liu KS, Hung IF, Seto WK, Tong T, Hsu AS, Lam FY, et al. Ten day sequential versus 10 day modified bismuth quadruple therapy as empirical firstline and secondline treatment for Helicobacter pylori in Chinese patients: an open label, randomised, crossover trial. Gut 2014;63:1410–5.
+[25] Ciccaglione AF, Tavani R, Grossi L, Cellini L, Manzoli L, Marzio L. Rifabutin containing triple therapy and rifabutin with bismuth containing quadruple therapy for third-line treatment of Helicobacter pylori infection: two pilot studies. Helicobacter 2016;21:375–81.
+[26] Muller N, Amiot A, Le Thuat A, Bastuji-Garin S, Deforges L, Delchier JC. Rescue therapy with bismuth-containing quadruple therapy in patients infected with metronidazole-resistant Helicobacter pylori strains. Clin Res Hepatol Gastroenterol 2016;40:517–24.
+[27] Ito M, Haruma K, Kamada T, Mihara M, Kim S, Kitadai Y, et al. Helicobacter pylori eradication therapy improves atrophic gastritis and intestinal metaplasia: a 5-year prospective study of patients with atrophic gastritis. Aliment Pharmacol Ther 2002;16:1449–56.
+[28] Forbes GM, Warren JR, Glaser ME, Cullen DJ, Marshall BJ, Collins BJ. Long-term follow-up of gastric histology after Helicobacter pylori eradication. J Gastroenterol Hepatol 1996;11:670–3.
+[29] Sung JJ, Lin SR, Ching JY, Zhou LY, To KF, Wang RT, et al. Atrophy and intestinal metaplasia one year after cure of H. pylori infection: a prospective, randomized study. Gastroenterology 2000;119:7–14.
+[30] Suzuki H, Moayyedi P. Helicobacter pylori infection in functional dyspepsia. Nat Rev Gastroenterol Hepatol 2013;10:168–74.

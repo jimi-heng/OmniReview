@@ -1,0 +1,160 @@
+# Page 1
+
+# 10 d 含呋喃唑酮三联、四联疗法补救治疗幽门螺杆菌感染的比较研究
+
+黄海辉\* 陈德强  
+广东省河源市源城区人民医院消化内科(517000)
+
+**背景**: 近年随着抗菌药物的耐药率逐渐上升, 标准三联疗法对幽门螺杆菌(Hp)的根除率不断下降。目的: 比较含呋喃唑酮的三联、四联疗法补救治疗Hp阳性慢性胃炎患者的疗效和安全性。方法: 选取标准三联疗法(质子泵抑制剂+阿莫西林+克拉霉素或甲硝唑)根除失败的Hp阳性病例80例, 将患者随机分为对照组和治疗组。对照组患者给予埃索美拉唑20 mg bid+阿莫西林1 g bid+呋喃唑酮0.1 g bid, 疗程10 d; 治疗组给予埃索美拉唑20 mg bid+阿莫西林1 g bid+呋喃唑酮0.1 g bid+枸橼酸钾220 mg bid, 疗程10 d。治疗结束至少4周后行\(^{14}C\)-尿素呼气试验, 评估Hp根除率、症状缓解情况和不良反应。结果: 与对照组相比, 治疗组PP分析和ITT分析Hp根除率均显著升高(PP: 94.7%对73.7%, \(P=0.012\); ITT: 90.0%对70.0%, \(P=0.025\)), 症状缓解率显著升高(92.1%对65.8%, \(P<0.05\)), 而不良反应发生率无明显差异(12.5%对10.0%, \(P>0.05\))。结论: 含呋喃唑酮的四联疗法对Hp根除失败者的疗效明显高于三联疗法, 且不良反应无明显增加, 可作为一线方案用于临床根除Hp。
+
+**关键词**: 三联疗法; 四联疗法; 补救治疗; 幽门螺杆菌; 呋喃唑酮
+
+---
+
+# A Comparative Study of 10-day Furazolidone-containing Triple and Quadruple Therapy as Rescue Therapy for Helicobacter pylori Infection
+
+HUANG Haihui, CHEN Deqiang. Department of Gastroenterology, Yuancheng People's Hospital of Heyuan, Heyuan, Guangdong Province (517000)
+
+**Background**: With the increase of incidence of antibiotic resistance, *Helicobacter pylori* (Hp) eradication rate of standard triple therapy has gradually decreased in recent years. **Aims**: To compare the efficacy and safety of furazolidone-containing triple and quadruple therapy as rescue therapy for Hp-positive chronic gastritis patients. **Methods**: Eighty Hp-positive patients in whom standard triple therapy (proton pump inhibitor + amoxicillin + clarithromycin or metronidazole) failed were enrolled, and were randomly divided into two groups. Patients in the control group received esomeprazole 20 mg bid + amoxicillin 1 g bid + furazolidone 0.1 g bid for 10 days, while patients in the treatment group received esomeprazole 20 mg bid + amoxicillin 1 g bid + furazolidone 0.1 g bid + colloidal bismuth subcitrate 220 mg bid for 10 days. \(^{14}C\)-urea breath test was conducted at least 4 weeks after completion of the treatment course, Hp eradication rate, symptom relief and side-effects were evaluated. **Results**: Compared with the control group, PP and ITT analysis of Hp eradication rates were significantly increased in the treatment group (PP: 94.7% vs. 73.7%, \(P=0.012\); ITT: 90.0% vs 70.0%, \(P=0.025\)), symptom relief rate was significantly increased (92.1% vs. 65.8%, \(P<0.05\)), however, no significant difference in incidence of side-effects was found between the two groups (12.5% vs. 10.0%, \(P>0.05\)). **Conclusions**: Furazolidone-containing quadruple therapy is more efficient for patients with failed Hp eradication than triple therapy, and side-effects is not significantly increased, which can be used as a first-line treatment for Hp eradication.
+
+**Key words**: Triple Therapy; Quadruple Therapy; Rescue Therapy; *Helicobacter pylori*; Furazolidone
+
+---
+
+幽门螺杆菌(Hp)感染是慢性胃炎、消化性溃疡的主要致病因素, 并与胃黏膜相关淋巴样组织淋巴瘤和胃癌的发生密切相关。1994年世界卫生组织/国际癌症研究机构将Hp列为胃癌的I类致癌原。
+
+---
+
+**DOI**: 10.3969/j.issn.1008-7125.2014.06.008  
+*Email*: 2352021376@qq.com
+
+---
+
+据统计, 我国人群中Hp感染率为40%~90%, 现症感染率为42%~64% \(^{1-2}\)。近年随着抗菌药物的耐药率逐渐上升, Hp根除率逐渐下降, 这一现象在复治患者中尤为突出。部分一线治疗失败的患者, 给予二线治疗仍无法达到根除Hp的目的。标准三联疗法因Hp对克拉霉素和甲硝唑的高耐药率, 其根
+
+---
+
+**方方数据**
+
+---
+
+# Page 2
+
+# 胃肠病学 2014 年第 19 卷第 6 期
+
+除率已低于理想值\[^{[3]}\]，国内共识建议可采用呋喃唑酮代替。本研究通过给予首次 Hp 根除失败的慢性胃炎患者 10 d 含呋喃唑酮三联疗法或四联疗法，旨在评估其疗效和不良反应，为临床 Hp 根除方案的选择提供一定依据。
+
+## 对象与方法
+
+### 一、一般资料
+
+收集 2011 年 1 月～2013 年 12 月河源市源城区人民医院门诊诊治的 80 例 Hp 阳性慢性胃炎患者，主要临床症状为上腹痛、上腹胀、恶心、呕吐、纳差等。入选标准：①年龄 18～70 岁；②既往接受过质子泵抑制剂（proton pump inhibitors，PPI）+阿莫西林+克拉霉素或甲硝唑标准三联疗法治疗但根除失败的 Hp 阳性患者；③未接受过含呋喃唑酮方案治疗的患者。排除标准：①初治患者；②近 4 周内服用过铋剂、PPI、H\(_2\)受体阻滞剂和抗菌药物者；③活动性消化性溃疡；④恶性肿瘤患者；⑤伴有严重心、肝、肾功能异常者；⑥有相关药物过敏史；⑦儿童、孕妇和哺乳期妇女。本研究方案由河源市源城区人民医院医学伦理委员会审批通过，入选患者均签署知情同意书。
+
+### 二、方法
+
+1. 分组和处理：本研究为单中心、随机、开放、平行对照临床研究。采用简单随机抽样法将患者分为治疗组和对照组，每组各 40 例。治疗组患者给予埃索美拉唑（阿斯利康制药有限公司）20 mg bid + 阿莫西林（联邦制药国际控股有限公司）1 g bid + 呋喃唑酮（山西云鹏制药有限公司）0.1 g bid + 枸橼酸铋钾（丽珠医药集团股份有限公司）220 mg bid，疗程 10 d。对照组患者给予埃索美拉唑 20 mg bid + 阿莫西林 1 g bid + 呋喃唑酮 0.1 g bid，疗程 10 d。
+
+2. Hp 检测：采用胃黏膜组织快速尿素酶试验（RUT）和\(^{14}\)C-尿素呼气试验（UBT）检测 Hp，任一检查阳性即判断 Hp 感染。根除治疗结束后至少 4 周（停药期间避免服用铋剂、PPI、抗菌药物）行\(^{14}\)C-UBT，阴性判断为成功根除 Hp。
+
+3. 症状和不良反应评估：所有患者治疗期间进行随访，询问并记录患者症状变化和不良反应情况。根据患者症状改善程度分为：①治愈：患者无自觉症状；②好转：患者症状较治疗前减轻；③无效：症状未改善或加重。症状缓解率（%）＝（治愈例数+好转例数）/总例数×100%。依据不良反应对患者日常工作生活的影响程度分为 3 级：轻度，对日常工作生活无影响；中度，有一定影响；重度，无法正常工作生活。
+
+### 三、统计学分析
+
+采用 SPSS 13.0 统计软件，所得数据以 \(\bar{x} \pm s\) 表示，组间比较采用方差分析。Hp 根除率分别以 PP 和 ITT 分析表示，组间比较采用 \(\chi^2\) 检验，\(P<0.05\) 为差异有统计学意义。
+
+## 结果
+
+### 一、一般情况
+
+40 例治疗组患者中，男 22 例，女 18 例；年龄 18～68 岁，平均（41.15±3.34）岁；慢性胃炎平均病程（16.7±4.1）年；饮酒 21 例，吸烟 20 例。40 例对照组患者中，男 21 例，女 19 例，年龄 19～66 岁，平均（42.22±3.07）岁；慢性胃炎平均病程（17.2±2.8）年；饮酒 20 例，吸烟 18 例。两组患者性别、年龄、病程等一般资料相比差异无统计学意义（\(P>0.05\)），具有可比性。
+
+### 二、Hp 根除率
+
+治疗组 2 例患者失访，36 例成功根除 Hp；对照组 2 例失访，28 例成功根除 Hp。两组 PP 和 ITT 根除率相比差异均有统计学意义（\(P<0.05\)）（见表 1）。
+
+### 三、临床症状缓解情况
+
+治疗组 38 例患者中，治愈 30 例，好转 5 例，无效 3 例；对照组 38 例患者中，治愈 20 例，好转 5 例，无效 13 例。两组症状缓解率分别为 92.1%、65.8%，差异有统计学意义（\(P<0.05\)）。
+
+## 表 1 两组 Hp 根除率比较（%）
+
+| 组别   | 纳入例数 | 完成例数 | 根除例数 | PP 根除率（95% CI） | ITT 根除率（95% CI） |
+|---|---|---|---|---|---|
+| 治疗组 | 40    | 38    | 36    | 94.7（87.6～100）*    | 90.0（80.7～99.3）*    |
+| 对照组 | 40    | 38    | 28    | 73.7（59.7～87.7）    | 70.0（55.8～84.2）    |
+
+与对照组比较，* \(P=0.012\)，\(*P=0.025\)
+
+---
+
+# Page 3
+
+四、不良反应
+
+治疗组和对照组分别有 5 例和 4 例患者至少发生 1 种不良反应,发生率分别为 12.5%、10.0%,组间相比差异无统计学意义(\(P > 0.05\))。两组的不良反应主要为恶心、头晕、腹泻、便秘,症状为轻度,未影响治疗,均在停药后消失。
+
+讨论
+
+在 Hp 感染根除失败后补救治疗方案的选择中,为应对日益严重的 Hp 耐药,含铋剂四联方案因其特有的优势越来越引起重视。铋剂可在黏膜表面形成弥散性保护层,促进黏膜再生和损伤愈合;其还具有降低胃蛋白酶活性、增加黏蛋白分泌、促进黏膜释放前列腺素 E2 等作用。铋剂主要通过抑制 Hp 所产生的蛋白酶、尿激酶和磷脂酶来发挥抗菌作用。成虹等\[4\]的研究发现,枸橼酸铋钾对 Hp 标准菌株和临床分离的 Hp 耐药菌株均有体外抑菌和杀菌作用,这为含铋剂方案的临床应用提供了理论依据。Maastricht IV 共识\[5\]指出,不管是克拉霉素高耐药率(\(>15\%\))还是低耐药率地区,均宜选择含铋剂四联疗法作为一线方案(证据等级 I a,推荐级别为 A 级)。一项针对铋剂安全性的 meta 分析\[6\]表明,与三联疗法相比,接受 1~2 周含标准剂量铋剂的四联疗法的患者仅粪便颜色不同,未出现明显不良反应,提示短期服用铋剂的安全性较高。本研究发现,加入铋剂后 Hp 首次根除失败者的根除率提高了约 20%,略高于年方宏等\[7\]和 Lv 等\[8\]的报道,且不良反应发生率与三联疗法相比无明显差异。因此,如在 Hp 初治时选择含铋剂四联方案,或将有益于克服 Hp 的耐药并提高 Hp 根除率,减少耐药菌株的产生,有待今后探讨。魏莉等\[9\]亦认为,含铋剂的四联疗法 Hp 根除率高,且无严重不良反应,在传统一线三联疗法根除率逐年降低的情况下,为克服原发耐药和避免继发耐药,可推荐含铋剂四联疗法作为一线治疗。鉴于含铋剂四联方案中不同抗菌药物的耐药率,PPI 的 CYP2C19 基因多态性以及铋剂的不良反应可能会对 Hp 根除率和患者的依从性产生影响,为提高根除率,选择和搭配方案中的各类药物至关重要。
+
+由于抗菌药物在抗 Hp 和其他治疗中的广泛应用,导致 Hp 耐药率不断升高,耐药可显著影响根除率。据统计,我国 Hp 对甲硝唑的平均耐药率高达 75.6%,克拉霉素为 27.6%\[10\]。本地区 Hp 抗菌药物的耐药率未见流行病学调查报道,估计与上述统计大致相符,故在补救治疗中本研究放弃了克拉霉素和甲硝唑。
+
+目前阿莫西林、呋喃唑酮的耐药率较低(1%~5%)\[10-12\],而且即使 Hp 根除失败也不易产生耐药性,因此这两种药物不仅在初始治疗中宜作为首选药物,在补救治疗中仍可使用。阿莫西林分子中的内酰胺基水解生成肽键与 Hp 菌体的转肽酶结合并使之失活,切断了 Hp 合成细胞壁的惟一途径,从而达到杀菌的作用。由于阿莫西林的抗菌药物后效应较低,故 Hp 对其耐药率较低。我国从上世纪 70 年代开始将呋喃唑酮用于治疗十二指肠溃疡并取得良好效果,可能与其抑制 Hp 有关。呋喃唑酮能抑制细菌内氧化还原酶系统,使 Hp 发生代谢紊乱,从而起抑菌作用。呋喃唑酮价格低廉,但由于既往报道其不良反应较大,近年临床应用较少,因此极少 Hp 菌株对其耐药。黄宜等\[13\]纳入以呋喃唑酮为基础的 Hp 初始根除治疗的随机对照试验行 meta 分析,结果证实该药疗效和安全性均较好,可考虑作为 Hp 的一线治疗方案。王晶桐等\[14\]的研究发现,含呋喃唑酮 10 d 四联疗法对一线、二线方案根除失败的 Hp 感染是一种经济、安全、有效的治疗方法。本研究亦提示,只要严格掌握呋喃唑酮剂量(0.1 g bid)和疗程(不超过 10 d),呋喃唑酮对 Hp 感染的根除率较高,且不良反应发生率较低,未出现多发性神经炎等严重不良反应。此外,多项研究指出,在 Hp 根除过程中联合益生菌,不仅可减少抗菌药物引起的不良反应,还能提高 Hp 根除率\[15-16\]。益生菌能否降低呋喃唑酮的不良反应,今后将进行进一步研究探讨。
+
+抑酸剂可提高 Hp 根除率,但不同种类的 PPI 疗效存在差异\[17\]。由于本地区经济较落后,初始治疗方案患者多选择非专利和非原研 PPI(约 90%),这或许是导致初治失败的原因之一。埃索美拉唑主要通过 CYP3A4 途径代谢,可较大程度地克服 CYP2C19 基因多态性的影响。其在肝脏的首过效应较低,故生物利用度和血药浓度高而持久,与以往 PPI 相比具有更独特的生物学特性和更小的个体差异,抑酸效力更快、更强且更持久\[18\]。故本研究选择埃索美拉唑作为 PPI 药物。有报道指出提高埃索美拉唑剂量可提高 Hp 根除率\[17,19\]。这可能与高
+
+---
+
+# Page 4
+
+胃肠病学 2014 年第 19 卷第 6 期
+
+剂量 PPI 不仅可稳定保持胃内高 pH 值状态使抗菌药物发挥良好抗菌效力, 而且可减少依赖 CYP2C19 的 PPI 被过快过早代谢有关。上述研究结果均有待今后进一步探讨。
+
+由于延长铋剂四联疗法的疗程至 10 d 或 14 d 可提高 Hp 根除率\[8,20\], 故本研究选择疗程为 10 d, 如疗程 ≥ 14 d, 其安全性和疗效尚不明确。
+
+综上所述, 含呋喃唑酮四联疗法对 Hp 根除失败者的疗效高于三联疗法, 不良反应发生率无明显增加, 因此可考虑将含呋喃唑酮四联疗法用于本地区患者 Hp 感染的根除治疗。但由于本研究样本量有限, 其安全性还有待于进一步观察和研究。
+
+参考文献
+
+1 中国幽门螺杆菌科研协作组: 张万岱, 胡伏莲, 萧树东, 等. 中国自然人群幽门螺杆菌感染的流行病学调查[J]. 现代消化及介入诊疗, 2010, 15 (5): 265-270.
+
+2 胡伏莲. 幽门螺杆菌感染流行病学[J]. 中国医刊, 2007, 42 (2): 17-18.
+
+3 中华医学会消化病学分会幽门螺杆菌学组/全国幽门螺杆菌研究协作组. 第四次全国幽门螺杆菌感染处理共识报告[J]. 胃肠病学, 2012, 17 (10): 618-625.
+
+4 成虹, 李江, 胡伏莲. 枸橼酸铋钾对幽门螺杆菌耐药菌株体外抗菌活性研究[J]. 胃肠病学和肝病学杂志, 2008, 17 (7): 543-546, 551.
+
+5 Malfertheiner P, Megraud F, O’Morain CA, et al; European Helicobacter Study Group. Management of Helicobacter pylori infection -- the Maastricht IV/Florence Consensus Report[J]. Gut, 2012, 61 (5): 646-664.
+
+6 Ford AC, Malfertheiner P, Giguere M, et al. Adverse events with bismuth salts for Helicobacter pylori eradication: systematic review and meta-analysis [J]. World J Gastroenterol, 2008, 14 (48): 7361-7370.
+
+7 牟方宏, 胡伏莲, 杨桂彬, 等. 质子泵抑制剂四联疗法作为幽门螺杆菌根除治疗一线方案的临床研究[J]. 胃肠病学, 2007, 12 (9): 531-534.
+
+8 Lv NH, Xie Y, Guo XB, et al. Eradication therapy for Helicobacter pylori infection in patients with duodenal ulcers based on furazolidone triple and quadruple therapy: A multicenter randomized controlled trial[J]. Helicobacter, 2011, 16 (Suppl 1): 87.
+
+9 魏莉, 王林恒, 贾伟, 等. 比较以阿莫西林和呋喃唑酮为基础的抗菌门螺杆菌四联和三联方案[J]. 胃肠病学和肝病学杂志, 2013, 22 (8): 771-773.
+
+10 中华医学会消化病学分会幽门螺杆菌学组/全国幽门螺杆菌科研协作组. 中国幽门螺杆菌耐药状况以及耐药对治疗的影响--全国多中心临床研究[J]. 胃肠病学, 2007, 12 (9): 525-530.
+
+11 Song Z, Zhou L, Wang Y, et al. A study to explore Hp antibiotic resistance and efficacy of eradication therapy in china (multi-center, nation-wide, randomized, control study) (abstract) [J]. Helicobacter, 2011, 16 Suppl 1: 117.
+
+12 Sun QJ, Liang X, Zheng Q, et al. Resistance of Helicobacter pylori to antibiotics from 2000 to 2009 in Shanghai [J]. World J Gastroenterol, 2010, 16 (40): 5118-5121.
+
+13 黄宣, 吕宾, 孟立娜. 呋喃唑酮初治方案治疗幽门螺杆菌感染效果的 Meta 分析[J]. 中国循证医学杂志, 2010, 10 (9): 1048-1052.
+
+14 王晶桐, 刘玉兰. 以耐信、呋喃唑酮为核心的四联疗法治疗一线、二线根治失败的幽门螺杆菌感染[J]. 胃肠病学和肝病学杂志, 2006, 15 (5): 519-521.
+
+15 杨昭徐. 益生菌防治幽门螺杆菌感染的作用[J]. 中华消化杂志, 2006, 26 (12): 850-851.
+
+16 陈云华, 汪春莲, 谢云. 幽门螺杆菌致病机制及益生菌防治作用的研究进展[J]. 世界华人消化杂志, 2007, 15 (25): 2690-2697.
+
+17 Anagnostopoulos GK, Tsiakos S, Margantinis G, et al. Esomeprazole versus omeprazole for the eradication of Helicobacter pylori infection: results of a randomized controlled study[J]. J Clin Gastroenterol, 2004, 38 (6): 503-506.
+
+18 Hunfeld NG, Touw DJ, Mathot RA, et al. A comparison of the acid-inhibitory effects of esomeprazole and rabeprazole in relation to pharmacokinetics and CYP2C19 polymorphism [J]. Aliment Pharmacol Ther, 2012, 35 (7): 810-818.
+
+19 McKeage K, Blick SK, Croxtall JD, et al. Esomeprazole: a review of its use in the management of gastric acid-related diseases in adults [J]. Drugs, 2008, 68 (11): 1571-1607.
+
+20 Sun Q, Liang X, Zheng Q, et al. High efficacy of 14-day triple therapy-based, bismuth-containing quadruple therapy for initial Helicobacter pylori eradication[J]. Helicobacter, 2010, 15 (3): 233-238.
+
+(2014-02-12 收稿; 2014-03-24 修回)

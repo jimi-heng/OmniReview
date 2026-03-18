@@ -1,0 +1,61 @@
+# Page 1
+
+PROSPECTIVE VALIDATION OF ENDOFASTER FOR A REAL-TIME DIAGNOSIS OF H. PYLORI INFECTION DURING UPPER ENDOSCOPY
+
+M.E. Riccioni 1, A. Bizzotto 1, C. Spada 1, C. Marmo 1, A. Repici 2, C. Hassan 3, T.A. Di Rienzo 1, G. Cammarota 1, A. Gasbarrini 1, G. Costamagna 1
+
+1 Policlinico A. Gemelli, Roma, Italy; 2 IRCCS Istituto Clinico Humanitas, Rozzano (MI), Italy; 3 Nuovo Regina Margherita Hospital, Roma, Italy
+
+Background and aim: Endofaster is a new technology based on a real-time analysis of the gastric juice that can provide informations regarding Hp infection and pH value of the gastric contents. In a previous pilot study, the potential accuracy of Endofaster in diagnosing H. pylori infection during upper GI-endoscopy has been shown. Aim of this prospective multicenter study was to validate the efficacy of Endofaster in a wide cohort of patients undergoing upper GI-endoscopy.
+
+Material and methods: Consecutive patients aged 40-75 years undergoing upper GI-endoscopy without either PPI or antibiotic therapies in the previous 4 weeks were prospectively enrolled. Endofaster is an innovative device that is interposed between the endoscope and the suction system. After aspiration of 4-6 ml of gastric juice, Endofaster performs an automatic analysis of the ammonium concentration of gastric juice within 2 minutes. Based on the previous pilot study, the test was considered positive for H. pylori infection when the ammonium concentration was >65 ppm/ml and negative when ≤55 ppm/ml, being indeterminate in the 56-65 ppm/ml interval. Histology with the addition of urea breath testing in discordant cases was considered as the reference standard for assessing H. pylori infection.
+
+Results: Overall, 210 patients were included in the study. However, 26 (12.4%) were excluded, because the aspirated gastric juice was insufficient for determining ammonium concentration. In the remaining 184 patients H. pylori infection was present in 71 (38.6%) patients at reference standard. The test with Endofaster resulted to be positive in 78 (42.4%), negative in 86 (46.7%), and indeterminate in 20 (10.9%) cases, respectively. When excluding the patients with an indeterminate result, sensitivity, specificity, PPV and NPV of Endofaster for H. pylori infection resulted to be 98.5%, 86.7%, 83.3% and 98.8% respectively.
+
+Conclusions: In this validation study, Endofaster showed an overall feasibility of 78.1% and accuracy of 91.5% for a real-time determination of H. pylori status. The test appeared to confirm the high accuracy for H. pylori shown in the previous pilot study.
+
+P.15.2
+
+RIFABUTIN CONTAINING TRIPLE THERAPY VS. RIFABUTIN AND BISMUTH-CONTAINING QUADRUPLE THERAPY FOR THIRD-LINE TREATMENT OF HELICOBACTER PYLORI (H. PYLORI) INFECTION
+
+R. Tavani 1, A.F. Ciccaglione, L. Cellini, L. Grossi, A.M. Di Tullio, M. Pagliaro, S. Cocciolillo, A. Sepe, M. Di Berardino, L. Marzio
+
+Università “G. d’ Annunzio”, Pescara, Italy
+
+Background and aim: The growing antibiotic resistance of the H. pylori justifies the use of susceptibility test, especially in those treated two to three times unsuccessfully for the infection. Despite the preliminary susceptibility test however, eradication rate achieves in this specific cases 60%-70% of treated cases. It has been shown that bismuth subcitrate in conjunction with a triple therapy may increase the success of treatment.
+
+Aim: To compare triple therapy with pantoprazole 20 mg b.i.d., amoxicillin 1g b.i.d and rifabutin 150 mg b.i.d. for 10 days (PAR) vs quadruple therapy with pantoprazole 20 mg b.i.d., amoxicillin 1g b.i.d., rifabutin 150mg b.i.d. and bismuth subcitrate 240 mg b.i.d. for 10 days (PARB) for the third-line treatment of H. pylori infection after preliminary susceptibility test.
+
+Material and methods: Consecutive H. pylori positive patients previously treated unsuccessfully in their past for the infection at least twice times, were randomly treated with PAR or PARB for 10 days. All patients underwent to culture and susceptibility test prior to the start of the study. Successful outcome was confirmed with an UBT performed 8 weeks after the end of treatment with a DOB value less than 5. Chi square analysis was used for statistical comparison. A blood cell count was performed in all patients after 5 days treatment since rifabutin has been shown to inhibit leucocytes growth.
+
+Results: So far 16 patients has been enrolled in the PAR group and 16 in the PARB group. Culture was positive for H. pylori in all patients and susceptibility test showed H. pylori sensitivity to rifabutin and amoxicillin. H. pylori eradication rate was statistically significantly higher in the PARB group vs the PAR group: PARB 100% (19/19), PAR 81.2% (13/16) P<0.04. Both treatment were well tolerated with no reported side effects. Blood cell count was within the range of normality in all patients.
+
+Conclusions: These preliminary results suggest that the adjunction of bismuth subcitrate to a triple therapy that includes proton pump inhibitors, amoxicillin and rifabutin in patients who are treated for the third time for H. pylori infection, achieves higher eradication rates compared with the same triple therapy without bismuth.
+
+P.15.3
+
+VARIATIONS IN THE PREVALENCE OF HELICOBACTER PYLORI INFECTION IN NORTHERN SARDINIA IN THE LAST DECADE
+
+G. Marras 1, C. Rocchi, S. Soro, M.P. Dore
+
+Clinica Medica, Dipto. di Medicina Clinica e Sperimentale, Sassari, Italy
+
+Background and aim: Background: H. pylori is the most common bacterial infection in humans, and is etiologically involved in gastritis, gastric and duodenal ulcer, gastric adenocarcinoma, and primary gastric B-cell lymphoma. The prevalence of the infection varies between developed and developing countries. The highest rates of infection are associated with low socioeconomic status, with crowding, poor sanitation, and unclean water supplies. Infection is typically acquired in childhood when standards of living were lower (a birth cohort phenomenon).
+
+Aim: To investigate the prevalence variation of H. pylori infection in a cohort of patients that underwent upper endoscopy for dyspeptic symptoms.
+
+Material and methods: Data from patient records scheduled for upper endoscopy were acquired. Only patients with gastric histology available for H. pylori identification were included in the study. In order to obtain information about variations in H. pylori infection throughout a decade, data from 1996, 1999, 2000, 2002, 2004, 2006 respectively, were collected including H. pylori status, age, sex, occupation and place of birth. Socioeconomic class was assessed by occupation and education level.
+
+Results: A total of 4854 records were analyzed. The prevalence of H. pylori infection was 41% (1995/4854) in the study population and was higher among male (43%) than female (40%). This difference was consistent within each age specific group. A significant decline in prevalence was observed from 1996 to 2006 (51% vs 32%; p=0.0). Difference in H. pylori infection prevalence was more consistent between age-specific groups of 0-19 years and 60-69 years: 17% vs 44%. No statistical significant difference was observed within each social class for the age specific groups.
+
+Conclusions: The change in the prevalence of H pylori within 10 years among the Sardinian dyspeptic patients is an example of how sensitive H. pylori acquisition is to improvement in standards of living. Increased use of anti-H pylori eradication therapy played an important role in the reduction of the prevalence of H pylori infection.
+
+P.15.4
+
+EFFECT OF THE SUPPLEMENTATION OF A HIGH-DOSE AMOXICILLIN BASED TRIPLE THERAPY WITH FRUCTO OLIGO-SACCHARIDES LACOTFERRIN AND BACILLUS COAGULANS IN PATIENTS UNDERGOING H. PYLORI ERADICATION
+
+F. Franceschi 1, A. Tortora 1, T.A. Di Rienzo 1, G. D’Angelo 1, G. Zuccala 1, G. Gasbarrini 2, A. Gasbarrini 1
+
+1 Gemelli Hospital, Catholic University of Sacred Heart, Rome, Italy; 2 Fondazione Ricerca in Medicina, Bologna, Italy
+
+Background and aim: We have previously demonstrated that increasing the

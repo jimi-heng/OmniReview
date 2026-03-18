@@ -1,0 +1,187 @@
+# Page 1
+
+# 含铋剂和克拉霉素的四联根除方案在幽门螺杆菌一线治疗中的作用*
+
+徐小青 孙钦娟 廖静贤 梁 晓 郑 青 刘文忠 萧树东 陆 红#
+
+上海交通大学医学院附属仁济医院消化内科 上海市消化疾病研究所(200001)
+
+**背景**: 近年经典三联方案对幽门螺杆菌(H. pylori)感染的根除疗效明显下降, 建立新型、安全和高效的一线标准治疗方案是临床工作的当务之急。目的: 评估含铋剂和克拉霉素的四联方案作为H. pylori一线治疗方案的疗效和安全性。方法: 120例胃镜诊断为非溃疡性消化不良的H. pylori感染者随机分为3组: 7d三联组(奥美拉唑20 mg bid+阿莫西林1000 mg bid+克拉霉素500 mg bid, 疗程7d), 7d四联组(7d三联方案+枸橼酸铋钾220 mg bid, 疗程7d)和2周四联组(方案同7d四联组, 疗程2周)。治疗结束后至少4周行13C-尿素呼气试验以评估根除疗效。H. pylori分离菌株行克拉霉素、甲硝唑和阿莫西林药敏试验。结果: 115例患者按方案完成治疗。7d三联组、7d四联组和2周四联组按意向治疗(ITT)分析H. pylori根除率分别为70.0%、75.0%和90.0%, 按方案(PP)分析分别为73.7%、76.9%和94.7%。2周四联组ITT和PP根除率均显著高于7d三联组(P<0.05), PP根除率显著高于7d四联组(P=0.026), 而7d三联组ITT和PP根除率与7d四联组相比均无明显差异。H. pylori对克拉霉素、甲硝唑和阿莫西林的耐药率分别为24.2%、48.3%和0%, 7d三联组、7d四联组和2周四联组对克拉霉素耐药菌株的根除率逐渐升高(37.5%、55.6%、80.0%), 但差异无统计学意义。除2周四联组中1例患者因皮肤过敏而未完成治疗外, 其余患者的不良反应相似且轻微, 耐受性良好。结论: 含铋剂和克拉霉素的2周四联方案可明显提高H. pylori根除疗效, 且安全性较高, 可作为H. pylori一线治疗的标准方案。
+
+**关键词**: 螺杆菌, 幽门; 四联方案; 铋剂; 克拉霉素; 抗药性
+
+---
+
+**Evaluation of Bismuth-clarithromycin-containing Quadruple Therapy for Initial Helicobacter pylori Eradication**
+
+XU Xiaoqing, SUN Qinjuan, LIAO Jingxian, LIANG Xiao, ZHENG Qing, LIU Wenzhong, XIAO Shudong, LU Hong.
+
+Department of Gastroenterology, Renji Hospital, Shanghai Jiaotong University School of Medicine Shanghai Institute of Digestive Disease, Shanghai (200001)
+
+**Correspondence to**: LU Hong, Email: honglu02@yahoo.com
+
+**Background**: Eradication rate of standard triple therapy for Helicobacter pylori (H. pylori) infection is decreasing recently. It is urgent to look for a novel, safe and effective regimen. **Aims**: To assess the efficacy and safety of bismuth-clarithromycin-containing quadruple regimen as a primary therapy for H. pylori eradication. **Methods**: A total of 120 H. pylori-infected patients with non-ulcer dyspepsia diagnosed by gastroscopy were enrolled and randomly assigned into three groups: 7-day triple therapy (omeprazole 20 mg bid, amoxicillin 1000 mg bid and clarithromycin 500 mg bid for 7 days), 7-day quadruple therapy (7-day triple therapy plus bismuth potassium citrate 220 mg bid for 7 days) and 2-week quadruple therapy (7-day quadruple therapy for 2 weeks). At least four weeks after the end of treatment, H. pylori eradication was assessed by 13C-urea breath test. H. pylori strains isolated were tested for clarithromycin, metronidazole and amoxicillin resistance. **Results**: A total of 115 patients completed the study. H. pylori eradication rates by intention-to-treat (ITT) analysis in 7-day triple therapy, 7-day quadruple therapy, 2-week quadruple therapy were 70.0%, 75.0%, 90.0%, respectively; by per-protocol (PP) analysis were 73.7%, 76.9%, 94.7%, respectively. The eradication rate in 2-week quadruple therapy was significantly higher than that in 7-day triple therapy by both ITT and PP analysis (P<0.05), and was significantly higher than that in 7-day quadruple therapy by PP analysis (P=0.026). No significant difference in
+
+---
+
+DOI: 10.3969/j.issn.1008-7125.2012.01.002
+
+*本课题由国家自然科学基金(81170355)资助
+
+# 本文通信作者, Email: honglu02@yahoo.com
+
+---
+
+**万方数据**
+
+---
+
+# Page 2
+
+eradication rate by ITT and PP analysis was found between 7-day triple therapy and 7-day quadruple therapy. The resistance rates of H. pylori to clarithromycin, metronidazole and amoxicillin were 24.2%, 48.3%, 0%, respectively. The eradication rates of 7-day triple therapy, 7-day quadruple therapy and 2-week quadruple therapy in patients with clarithromycin-resistant strains increased stepwisely (37.5%, 55.6%, 80.0%), but not reached statistical significance. Except one patient in 2-week quadruple therapy could not complete the course of treatment due to skin allergy, other patients in all three groups had slight and similar side-effects and all were well tolerated. Conclusions: Two-week bismuth-clarithromycin-containing quadruple therapy can increase the eradication rate of H. pylori with safety, and could be used as the first line eradication regimen.
+
+Key words Helicobacter pylori; Quadruple Therapy; Bismuth; Clarithromycin; Drug Resistance
+
+幽门螺杆菌 (H. pylori) 感染本质上是一种感染性疾病, 仅按意向治疗 (ITT) 分析根除率高于 90% 的方案才应被推荐用于临床实践[1]。近年由于 H. pylori 对甲硝唑和克拉霉素的耐药率快速增加, 多项研究均发现, 经典三联方案质子泵抑制剂 (PPI) + 克拉霉素 + 阿莫西林/甲硝唑的根除率已低于 80%[2,3], 不再适合作为经验性治疗的一线方案。目前国外多项研究推荐以经典四联方案、含喹诺酮方案、序贯方案和不含铋剂的四联方案取代经典三联疗法, 以提高根除疗效[2,4,5], 但其在我国的应用效果和安全性均不理想。
+
+目前试图通过改变抗生素组合、增加 PPI 或抗生素剂量、延长疗程或加用局部药物等方法来提高治疗方案的根除疗效。在我国, 铋剂是一种比较常用的药物, 但难以被人体吸收, 除具有增强胃黏膜屏障的保护作用外, 还可直接抑杀 H. pylori, 且与抗生素具有协同作用[6]。本课题组设计了这一开放、随机、平行试验, 通过比较 7 d 经典三联方案、由上述三联方案加铋剂组成的 7 d 和 2 周四联方案对 H. pylori 根除率的差异, 旨在评估含铋剂和克拉霉素的四联方案是否适合作为经验性 H. pylori 根除治疗的一线方案。
+
+对象与方法
+
+一、研究对象
+
+选取 2010 年 9 月~2011 年 8 月上海交通大学医学院附属仁济医院门诊经胃镜诊断为非溃疡性消化不良的 H. pylori 感染患者。排除标准: 活动性消化性溃疡、曾接受过 H. pylori 根除治疗、有胃手术史、孕妇、哺乳期妇女、患有严重系统性疾病, 过去 4 周内使用过抑酸药、抗生素或铋剂, 或对试验方案中的任何一种药物过敏。胃黏膜组织标本快速尿素酶试验阳性且组织培养阳性和 (或) 病理切片观察到细菌判断为 H. pylori 感染阳性。本研究方案经上海仁济医院伦理委员会批准, 所有患者均填写知情同意书。
+
+二、方法
+
+1. 药物: 奥美拉唑胶囊 (常州四药制药有限公司), 阿莫西林胶囊 (联邦制药国际控股有限公司), 克拉霉素 (丽珠集团丽珠制药厂), 枸橼酸铋钾胶囊 (苏州东瑞制药有限公司)。
+
+2. 治疗方案: 本研究为单中心、随机、开放、平行对照临床研究。患者入选后随机进入三种不同方案治疗组, 7 d 三联组: 奥美拉唑 20 mg + 阿莫西林 1000 mg + 克拉霉素 500 mg bid, 疗程 7 d; 7 d 四联组: 奥美拉唑 20 mg + 阿莫西林 1000 mg + 克拉霉素 500 mg + 枸橼酸铋钾 220 mg bid, 疗程 7 d; 2 周四联组: 奥美拉唑 20 mg + 阿莫西林 1000 mg + 克拉霉素 500 mg + 枸橼酸铋钾 220 mg bid, 疗程 2 周。
+
+3. 细菌培养和抗生素敏感试验: 将胃窦黏膜活检标本接种于含 5% 脱纤维羊血的选择性脑心浸液琼脂培养基 (OXOID 公司) 上, 在 37 ℃ 微需氧条件下 (85% N₂, 10% CO₂, 5% O₂) 培养 4~7 d, 分离菌落传代培养 2~3 d, 经形态学以及尿素酶、触酶和氧化酶试验等生化反应鉴定菌株后, 采用多点接种仪进行琼脂稀释法药敏试验以测定三种抗生素 (克拉霉素、甲硝唑和阿莫西林) 对 H. pylori 的最低抑菌浓度 (MIC)。以 ATCC43504 标准菌株作为对照菌株, 克拉霉素 MIC>2 μg/ml, 甲硝唑 MIC>8 μg/ml, 阿莫西林 MIC>8 μg/ml 分别判断为耐药[7]。
+
+4. H. pylori 根除情况评估: 所有患者在治疗结束至少 4 周后复查 13C-尿素呼气试验, 结果 <4% 为成功根除 H. pylori。停药期间避免服用抗生素和抑酸药。
+
+5. 不良反应评估: 所有患者治疗期间进行随
+
+---
+
+# Page 3
+
+# 胃肠病学 2012 年第 17 卷第 1 期
+
+访,询问患者症状和服药期间的不良反应以评估治疗的安全性。不良反应对日常生活的影响可分为三个等级:轻度,对日常生活无影响;中度,对日常生活有一定影响;重度,日常生活无法进行。
+
+## 三、统计学分析
+
+应用 SPSS 16.0 统计软件, \( H. pylori \) 根除率分别以 ITT 分析和按方案(PP)分析表示,计算 95% CI。各组患者人口统计学资料的比较根据数据类型采用单因素方差分析或 \( \chi^2 \) 检验,根除率和不良反应发生率的比较采用 \( \chi^2 \) 检验,\( P<0.05 \) 为差异有统计学意义。
+
+## 结果
+
+### 一、入选患者一般情况
+
+共计 120 例患者入选,其中男 68 例,女 52 例,年龄 18~75 岁。患者随机分为 7 d 三联组、7 d 四联组和 2 周四联组,每组各 40 例。三组共有 5 例患者未能完成本试验,其中 2 例 7 d 三联组、1 例 7 d 四联组和 1 例 2 周四联组患者失访,1 例 2 周四联组患者因药物不良反应而停药。各组患者性别、年龄等基本资料相比差异无统计学意义。
+
+### 二、\( H. pylori \) 根除率
+
+7 d 三联组、7 d 四联组和 2 周四联组分别有 28 例、30 例和 36 例患者成功根除 \( H. pylori \),各组根除率及其 95% CI 见表 1。2 周四联组的 ITT 和 PP 根除率均显著高于 7 d 三联组(\( P=0.025 \) 和 \( P=0.012 \));2 周四联组的 PP 根除率显著高于 7 d 四联组(\( P=0.026 \)),而 ITT 根除率相比差异无统计学意义(\( P=0.077 \));7 d 三联组的 ITT 和 PP 根除率与 7 d 四联组相比均无明显差异。
+
+### 三、\( H. pylori \) 耐药对根除率的影响
+
+120 例菌株均成功分离。\( H. pylori \) 对克拉霉素、甲硝唑和阿莫西林的耐药率分别为 24.2%(29/120)、48.3%(58/120)和 0%。剔除各组未完成根除治疗的患者后,7 d 三联方案对克拉霉素耐药菌株和敏感菌株的根除率分别为 37.5%(3/8)和 83.3%(25/30);7 d 四联方案对克拉霉素耐药菌株和敏感菌株的根除率分别为 55.6%(5/9)和 83.3%(25/30);2 周四联方案对克拉霉素耐药菌株和敏感菌株的根除率分别为 80.0%(8/10)和 100%(28/28)。7 d 三联组、7 d 四联组和 2 周四联组对克拉霉素耐药菌株的根除率逐渐升高,但差异无统计学意义(\( P=0.079 \))。
+
+### 四、不良反应
+
+7 d 三联组、7 d 四联组和 2 周四联组分别有 4 例、5 例和 6 例患者至少发生一种不良反应,不良反应率分别为 10.0%、12.5%、15.0%,组间不良反应发生率无明显差异。不良反应主要包括腹泻、困倦、皮疹和瘙痒,均在停药后消失,未发生严重不良反应。仅 1 例 2 周四联组患者因服药后出现皮肤过敏反应而中途退出。
+
+## 讨论
+
+\( H. pylori \) 对抗生素耐药是根除失败的主要原因,我国的一项多中心研究显示,\( H. pylori \) 对甲硝唑和克拉霉素的平均耐药率已达到 75.6%和 27.6%。许多地区的耐药率已超过 Maastricht Ⅲ 共识报告建议的使用阈值,经典三联疗法的根除率已低于 80%,因此探索新的 \( H. pylori \) 一线根除方案已成为临床工作的当务之急。
+
+两项意大利研究[10,11]显示 10 d 序贯疗法对成人和儿童 \( H. pylori \) 感染者的疗效均显著优于经典三联方案;但一项韩国研究[12]认为,10 d 序贯疗法的疗效并不理想,与以 PPI 为基础的三联疗法相比无明显差异。不含铋剂的四联方案一般由 PPI、克拉霉素、阿莫西林和甲硝唑/替硝唑组成。一项纳入 9 项临床试验,1054 例患者的荟萃分析[13]显示该方案的平均 ITT 和 PP 根除率分别为 89.7%和 92.9%。最近台湾的研究[14]发现,10 d 序贯疗法、10 d 不含铋剂的四联疗法的 ITT 根除率分别为 92.3%和 93.0%,且克拉霉素和甲硝唑的双重耐药并不影响该四联疗法的效果,而对序贯疗法有显著影响。但
+
+## 表 1 三组 \( H. pylori \) 根除率比较(%)
+
+| 组别    | 纳入例数 | 完成例数 | 根除例数 | ITT 根除率(95% CI) | PP 根除率(95% CI) |
+|---|---|---|---|---|---|
+| 7 d 三联组 | 40    | 38    | 28    | 70.0(55.8~84.2)    | 73.7(59.7~87.7)    |
+| 7 d 四联组 | 40    | 39    | 30    | 75.0(61.6~88.4)    | 76.9(63.7~90.1)    |
+| 2 周四联组 | 40    | 38    | 36    | 90.0(80.7~99.3)*    | 94.7(87.6~100)*    |
+
+与 7 d 三联组比较,\( P=0.025 \),\( P=0.012 \);* 与 7 d 四联组比较,\( P=0.026 \)
+
+---
+
+方方数据
+
+---
+
+方方数据
+
+---
+
+# Page 4
+
+目前并不推荐使用包含两种以上抗生素的疗法。含有铋剂的标准四联疗法包括一种 PPI、铋剂、甲硝唑和四环素。提高甲硝唑剂量（1500 mg/d）能克服 H. pylori 的耐药性，但可引起胃肠道不良反应，且患者依从性差[15]。近年建议采用喹诺酮类药物代替克拉霉素用于 H. pylori 治疗，但 H. pylori 对喹诺酮类药物的耐药率增长迅速，导致含有此类药物的方案疗效较差[16]。
+
+铋剂是局部作用于胃黏膜，难以被人体吸收的药物。铋剂的抗菌作用主要是通过降低黏蛋白黏度，结合 H. pylori 产生的毒素来阻止细菌定植并黏附至胃黏膜上皮而实现的。此外，铋剂与抗生素联合应用后能降低 H. pylori 对抗生素的耐药性，抑制 H. pylori 的生长，从而提高根除疗效[17]。有研究认为大剂量和长期使用铋剂可引起神经毒性等严重不良反应，阻碍了其在部分国家的广泛应用。但一项荟萃分析[18]纳入了 35 项随机对照试验的 4763 例患者，评估铋剂根除 H. pylori 的不良反应，结果显示铋剂安全有效，不会引起严重的不良反应，且耐受性良好。本研究中，部分患者服用铋剂后出现了黑便，停药后均消失。
+
+延长疗程可使细菌进入增殖复制状态，对抗生素较为敏感，更易被杀灭[19]，从而提高 H. pylori 根除率。在治疗过程中，如用药疗程过短，可能造成体内的抗生素浓度不足，未达到 MIC 而导致治疗失败[20]。有研究[21]发现，14 d 经典三联方案的根除率较 7 d 方案高出约 10%，延长疗程能提高含克拉霉素或甲硝唑的三联方案根除率，部分克服细菌对这两种抗生素的耐药。但 Kim 等[22]的研究并未发现延长疗程可提高 H. pylori 根除疗效；一项荟萃分析[23]亦发现以 PPI 为基础的 7 d 和 2 周三联方案根除率无明显差异。目前关于延长四联疗法的疗程是否能提高根除率的研究较少。本课题组的前期研究[24]结果显示，由洋托拉唑、铋剂、甲硝唑和四环素组成的 10 d 四联方案的根除率高于 7 d 方案，但差异无统计学意义，可能由于样本量太小（45 例）所致。
+
+克拉霉素是抗 H. pylori 感染最有效的药物，体外实验证实其具有快速杀菌活性，并能保持 24 h，且能形成高细胞间浓度，因此寄生在此的细菌不能进行复制，从而克服表型耐药[19]。此外，克拉霉素的安全性高，依从性好。但目前克拉霉素的耐药率较高。本研究中，以经典三联方案（PPI+克拉霉素+阿莫西林）为基础的含有铋剂的 2 周四联方案的 ITT 和 PP 根除率均明显高于标准 7 d 三联方案和 7 d 四联方案；而仅添加铋剂并未延长疗程的 7 d 四联方案与 7 d 三联方案 ITT 和 PP 根除率均无明显差异。说明添加铋剂并延长疗程能克服 H. pylori 对克拉霉素耐药，2 周四联方案对克拉霉素耐药菌株的根除率达 80.0%，对克拉霉素敏感菌株的根除率达 100%，明显高于 7 d 三联方案（分别为 37.5% 和 83.3%）和 7 d 四联方案（分别为 55.6% 和 83.3%），但差异无统计学意义，可能由于样本量较小的关系。
+
+目前上海地区 H. pylori 对克拉霉素的耐药率已超过了 Maastricht Ⅲ推荐使用的上限，但含有克拉霉素和阿莫西林的治疗方案仍是临床上根除 H. pylori 感染的首选。铋剂能降低胃内细菌负担，并克服 H. pylori 对克拉霉素的耐药性；延长疗程能提高根除率；且安全性高，依从性好。因此，标准三联方案加用铋剂并延长疗程至 2 周的四联疗法可作为 H. pylori 初次治疗的首选方案。
+
+参考文献
+
+1. Graham DY, Lu H, Yamaoka Y. A report card to grade Helicobacter pylori therapy. Helicobacter, 2007, 12 (4): 275-278.
+2. Malfertheiner P, Bazzoli F, Delchier JC, et al. Helicobacter pylori eradication with a capsule containing bismuth subcitrate potassium, metronidazole, and tetracycline given with omeprazole versus clarithromycin-based triple therapy: a randomised, open-label, non-inferiority, phase 3 trial. Lancet, 2011, 377 (9769): 905-913.
+3. Luther J, Higgins PD, Schoenfeld PS, et al. Empiric quadruple vs. triple therapy for primary treatment of Helicobacter pylori infection: Systematic review and meta-analysis of efficacy and tolerability. Am J Gastroenterol, 2010, 105 (1): 65-73.
+4. Molina-Infante J, Perez-Gallardo B, Fernandez-Bermejo M, et al. Clinical trial: clarithromycin vs. levofloxacin in first-line triple and sequential regimens for Helicobacter pylori eradication. Aliment Pharmacol Ther, 2010, 31 (10): 1077-1084.
+5. Gisbert JP, Calvet X. Review article: non-bismuth quadruple (concomitant) therapy for eradication of
+
+---
+
+# Page 5
+
+Helicobacter pylori. Aliment Pharmacol Ther, 2011, 34 (6): 604-617.
+
+6 Lambert JR, Midolo P. The actions of bismuth in the treatment of Helicobacter pylori infection. Aliment Pharmacol Ther, 1997, 11 Suppl 1: 27-33.
+
+7 Godoy AP, Ribeiro ML, Benvengo YH, et al. Analysis of antimicrobial susceptibility and virulence factors in Helicobacter pylori clinical isolates. BMC Gastroenterol, 2003, 3: 20.
+
+8 Cheng H, Hu FL. Furazolidone, amoxicillin, bismuth and rabeprazole quadruple rescue therapy for the eradication of Helicobacter pylori. World J Gastroenterol, 2009, 15 (7): 860-864.
+
+9 中华医学会消化病学分会幽门螺杆菌学组/全国幽门螺杆菌科研协作组: 成虹, 胡伏莲, 谢勇, 等. 中国幽门螺杆菌耐药状况以及耐药对治疗的影响——全国多中心临床研究. 胃肠病学, 2007, 12 (9): 525-530.
+
+10 Scacciaone G, Hassan C, Panarese A, et al. Helicobacter pylori eradication with either 7-day or 10-day triple therapies, and with a 10-day sequential regimen. Can J Gastroenterol, 2006, 20 (2): 113-117.
+
+11 Francavilla R, Lionetti E, Castellaneta S, et al. Clarithromycin-resistant genotypes and eradication of Helicobacter pylori. J Pediatr, 2010, 157 (2): 228-232.
+
+12 Choi WH, Park DI, Oh SJ, et al. Effectiveness of 10 day-sequential therapy for Helicobacter pylori eradication in Korea (Article in Korean). Korean J Gastroenterol, 2008, 51 (5): 280-284.
+
+13 Essa AS, Kramer JR, Graham DY, et al. Meta-analysis: four-drug, three-antibiotic, non-bismuth-containing " concomitant therapy" versus triple therapy for Helicobacter pylori eradication. Helicobacter, 2009, 14 (2): 109-118.
+
+14 Wu DC, Hsu PI, Wu JY, et al. Sequential and concomitant therapy with four drugs is equally effective for eradication of H pylori infection. Clin Gastroenterol Hepatol, 2010, 8 (1): 36-41. e1.
+
+15 Romano M, Cuomo A. Eradication of Helicobacter pylori: a clinical update. MedGenMed, 2004, 6 (1): 19.
+
+16 Perna F, Zullo A, Ricci C, et al. Levofloxacin-based triple therapy for Helicobacter pylori re-treatment: role of bacterial resistance. Dig Liver Dis, 2007, 39 (11): 1001-1005.
+
+17 Carvalho AF, Fiorelli LA, Jorge VN, et al. Addition of bismuth subnitrate to omeprazole plus amoxycillin improves eradication of Helicobacter pylori. Aliment Pharmacol Ther, 1998, 12 (6): 557-561.
+
+18 Ford AC, Malfertheiner P, Giguere M, et al. Adverse events with bismuth salts for Helicobacter pylori eradication: systematic review and meta-analysis. World J Gastroenterol, 2008, 14 (48): 7361-7370.
+
+19 Graham DY, Shiotani A. New concepts of resistance in the treatment of Helicobacter pylori infections. Nat Clin Pract Gastroenterol Hepatol, 2008, 5 (6): 321-331.
+
+20 Mégraud F, Lamouliatte H. Review article: the treatment of refractory Helicobacter pylori infection. Aliment Pharmacol Ther, 2003, 17 (11): 1333-1343.
+
+21 Filipec Kanizaj T, Katicic M, et al. Helicobacter pylori eradication therapy success regarding different treatment period based on clarithromycin or metronidazole triple-therapy regimens. Helicobacter, 2009, 14 (1): 29-35.
+
+22 Kim BG, Lee DH, Ye'BD, et al. Comparison of 7-day and 14-day proton pump inhibitor-containing triple therapy for Helicobacter pylori eradication: neither treatment duration provides acceptable eradication rate in Korea. Helicobacter, 2007, 12 (1): 31-35.
+
+23 Fuccio L, Minardi ME, Zagari RM, et al. Meta-analysis: duration of first-line proton-pump inhibitor based triple therapy for Helicobacter pylori eradication. Ann Intern Med, 2007, 147 (8): 553-562.
+
+24 郑青, 戴军, 李晓波, 等. 以泮托拉唑为基础的三联和四联疗法根除幽门螺杆菌疗效比较——一项单中心、随机、开放、平行对照研究. 胃肠病学, 2009, 14 (1): 8-11.
+
+(2012-01-04 收稿)

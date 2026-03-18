@@ -1,0 +1,273 @@
+# Page 1
+
+A Triple and Quadruple Therapy with Doxycycline and Bismuth for First-Line Treatment of Helicobacter pylori Infection: A Pilot Study
+
+Antonio Francesco Ciccaglione,* Luigina Cellini,† Laurino Grossi,* Lamberto Manzoli‡ and Leonardo Marzio*
+
+*Digestive Physiopathology Unit, Pescara Civic Hospital, G. d’Annunzio University, Via Fonte Romana 8, 65124 Pescara, Italy, †Department of Drug Sciences, G. d’Annunzio University, Via dei Vestini, 66013 Chieti, Italy, ‡Department of Medicine and Aging Sciences, G. d’Annunzio University, Via dei Vestini, 66013 Chieti, Italy
+
+Keywords
+Helicobacter pylori infection, first-line therapy, quadruple therapy, amoxicillin, DOX, bismuth subcitrate.
+
+Reprint requests to: Leonardo Marzio, Gastroenterology, Digestive Physiopathology Unit, Pescara Civic Hospital, Via Fonte Romana 8, 65124 Pescara, Italy. E-mail: marzio@unich.it
+
+Abstract
+Background: Tetracycline-containing triple therapy has been suggested as an alternative first-line therapy for H. pylori infection.
+
+Aim: To evaluate the effect of two dosages of doxycycline (DOX) associated with amoxicillin and esomeprazole with and without bismuth subcitrate as first-line treatment of H. pylori infection.
+
+Methods: Helicobacter pylori-positive patients underwent a 10-day therapy randomized into four groups: Group A received esomeprazole, amoxicillin, and DOX-100 mg b.i.d. (EAD-100), Group B a quadruple therapy with esomeprazole, amoxicillin, DOX-100 mg b.i.d. and bismuth subcitrate (EADB-100), Group C a triple therapy with esomeprazole, amoxicillin, and DOX-200 mg b.i.d. (EAD-200) and Group D a quadruple therapy with esomeprazole, amoxicillin, DOX-200 mg b.i.d., and bismuth subcitrate (EADB-200). Success was accessed by $^{13}$C urea breath test 2 months after the end of treatment. The number of patients to be recruited for each group had to be at least 50 subjects. Treatment success of 80% or less was considered unacceptable. Stopping rules therefore were anytime six failures had occurred.
+
+Results: In the EAD-100 group and in EAD-200 group, the recruitment was stopped at the 14th and 15th patient, respectively. Fifty-two patients entered in the EADB-100 group and 51 in the EADB-200 group. Intention to treat eradication was in EADB-100 group 46/52 (88.5%, 95% CI 76.6–95.6); in the EADB-200 group 47/51 (92.1%, 95% CI: 81.1–97.8) (n.s.). Side effects were absent.
+
+Conclusion: The adjunction of bismuth subcitrate to a triple therapy that includes esomeprazole, amoxicillin, and DOX in patients who are treated for the first time for the H. pylori infection potentiates the therapeutic effect. This regimen, however, deserves to be optimized in terms of duration and dose of DOX.
+
+Helicobacter pylori has been involved in the development of chronic gastritis and peptic ulcer disease and has been linked to the pathogenesis of gastric lymphoma and gastric cancer; hence, it is recommended that this infection must be cured whenever it is diagnosed [1–3]. Helicobacter pylori is susceptible to several antibiotics including clarithromycin, amoxicillin, metronidazole, tinidazole, tetracycline, rifabutin, and fluoroquinolones [4,5]. This bacterial infection, however, has proven challenging to cure. Antibiotics have been useful in the treatment of H. pylori-related diseases. However, H. pylori may be resistant in various degree to one or more of the above-cited antibiotics even in those subjects never treated specifically for the infection, and antibiotic resistance may become a key factor for treatment failure [6]. Resistance rates vary in different geographic areas, and therefore, the selection of therapeutic regimes needs adjustments according to local resistance pattern if available [7,8]. The prevalence of antibiotic resistance in various regions is correlated with general use of antibiotic
+
+---
+
+# Page 2
+
+in the each region [9,10]. In our region, the resistance rate of *H. pylori* to amoxicillin, clarithromycin, metronidazole, moxifloxacin, levofloxacin and tetracycline is 1.37%, 60.27%, 39.72%, 37%, 38%, and 2.74%, respectively (Marzio L, Ciccaglione AF, Cellini L. Unpublished results).
+
+Several mechanisms are involved in the development of resistance. *Helicobacter pylori* eradication failures may be due to acquiring chromosomal mutations or by acquisition of foreign genes carried on mobile genetic elements (horizontal gene transfer) that cause changes in each drug’s site action [9,11] and cannot be reserved by increasing the dose or duration [12]. The lack of patient compliance is assumed to be a key factor in eradication failure, when adverse events occur, which are relatively frequent, leading to treatment discontinuation [13,14]. Insufficient antibiotic concentration at the site of infection contributes to the spreading of resistant strains [13,14].
+
+Classical triple therapies with proton-pump inhibitors (PPI), clarithromycin, and amoxicillin, or metronidazole are the mainstay of current treatment, but resistance to clarithromycin has been reducing its effectiveness in recent years with an eradication rate below 80% of treated cases [15,16]. In geographic areas with high clarithromycin resistance, bismuth-containing quadruple therapy is superior to standard triple therapy. The original quadruple therapy containing omeprazole, bismuth subcitrate, metronidazole, and tetracycline achieves higher eradication rates compared with the standard triple therapy [17,18]. In a study randomized, open-label, phase 3 trial, a quadruple regimen with a capsule containing bismuth citrate potassium, metronidazole, and tetracycline given with omeprazole was found more efficacious than a clarithromycin-containing triple therapy in patients never treated in their past for the infection [19].
+
+Selection of first-line eradication therapy is important in avoiding primary failure [20]. Some recent works have focused on the of eradication therapy [21,22] and compared various available eradication regimens.
+
+In an Iranian study, an eradication rate of 68% was achieved using the following regime: DOX 100 mg b.i.d., co-amoxiclav 625 mg t.i.d., and omeprazole 20 mg b.i.d. for a duration of 2 weeks, suggesting that could be useful in first-line *H. pylori* eradication [23]. As a synthetic antibiotic in the tetracycline class, DOX has attracted much attention as a possible agent for *H. pylori* eradication. DOX is a widely used tetracycline antibiotic in several infections. With respect to tetracycline, DOX has a simpler dosing schedule, leading to a better compliance in patients undergoing eradication therapies and is more easily absorbed with food.
+
+Furthermore, Heep et al. [24] have found no secondary resistance to DOX in *H. pylori* isolates from patients in which failed one or more eradication therapies.
+
+The aim of the study has been to compare DOX-containing triple therapy at 100 mg b.i.d. or at 200 mg b.i.d. versus DOX at 100 mg b.i.d. or at 200 mg b.i.d. and bismuth-containing quadruple therapy for first-line treatment of *H. pylori* infection.
+
+**Materials and Methods**
+
+**Eligibility Criteria**
+
+Patients were enrolled among those with a positive $^{13}$C urea breath test performed with citric acid and 75 mg of $^{13}$C urea (UBT) within 10 days prior to the start of the study. Exclusion criteria included age: <18 or >80 years; any previous treatment for *H. pylori* infection, treatment with PPI (omeprazole, lansoprazole, pantoprazole, rabeprazole, esomeprazole), H2-blockers (ranitidine, nizatidine, cimetidine, famotidine, roxatidine), and/or antibiotics during the 4 weeks before the study; gastrointestinal malignancy; severe concomitant diseases; previous gastric surgery. All patients enrolled in the study were affected by chronic dyspepsia without alarm symptoms. Only patients older than 55 years underwent an upper endoscopy before the admission to the study. Patients with active gastric and/or duodenal ulcer or gastric neoplasia were excluded [25].
+
+**Study Protocol**
+
+Consecutive *H. pylori*-positive patients never treated in their past for the infection were randomized into four groups with different therapeutics regimens. A simple randomization schedule was used following a computer-dedicated software [26]. Group A included patients treated with a triple therapy with esomeprazole, amoxicillin, and DOX 100 mg b.i.d. (EAD-100). Group B included patients treated with a quadruple therapy with esomeprazole, amoxicillin, and DOX 100 mg b.i.d. and bismuth subcitrate (EADB-100). Group C included patients treated with a triple therapy with esomeprazole, amoxicillin, and DOX 200 mg b.i.d. (EAD-200). Group D included patients treated with a quadruple therapy with esomeprazole, amoxicillin, and DOX 200 mg b.i.d. and bismuth subcitrate (EADB-200). All four groups were treated with these therapeutic agents for 10 days.
+
+While esomeprazole, amoxicillin, and DOX were administered before breakfast and supper, bismuth salt was administered 3 hours later as it may bind with DOX and prevent its full absorption [27].
+
+---
+
+# Page 3
+
+Dosages and time of administration of the studied drugs are summarized in Tables 1 and 2.
+
+Patients were informed that bismuth renders the stools a black dark color.
+
+Helicobacter pylori eradication was defined as a negative result in UBT performed at least 8 weeks after the end of treatment with a delta over baseline (DOB) value equal or <5.
+
+**Statistical Analysis**
+
+For this study, the number of patients to be recruited for each of the four groups had to be at least 50 subjects. An effective therapy was defined as a per-protocol treatment success of 90% or greater, treatment success of 80% or less was prospectively deemed unacceptable. Stopping rules were anytime six failures had occurred [28].
+
+Statistic evaluation was carried out using the chi-square analysis. A $p$-value of .05 or less was considered statistically significant. Per protocol (PP) in which only data from adherent subjects are analyzed, and intention to treat (ITT) in which all subjects are followed regardless of adherence, was calculated.
+
+**Results**
+
+Patient Characteristics are Summarized in Tables 1 and 2.
+
+Six treatment failures were reached in the EAD-100 group and in the EAD-200 group at the fourteenth and fifteenth patient recruited, respectively. All patients in each group returned to control; therefore, PP and ITT were coincident. Eradication was 8/14 (57.1%, 95% CI: 28.9–82.3) in the EAD-100 group; 9/15 (60.0%, 95% CI: 32.3–82.7) in the EAD-200 group.
+
+Fifty-two and 51 patients were admitted in EADB-100 and EADB-200 groups, respectively. In both groups, one patient did not return to control. PP eradication was 46/51 (90.1%, 95% CI: 78.6–96.7) and 47/50 (94.0%, 95% CI: 83.5–98.7), respectively. ITT eradication was 46/52 (88.5%, 95% CI: 76.6–95.6) in the EADB-100 group; 47/51 (92.1%, 95% CI: 81.1–97.8) in the EADB-200 group.
+
+Helicobacter pylori eradication rates were significantly higher in the EADB-100 group versus the EAD-100 group in both PP ($p=.003$) and ITT analyses ($p=.007$), and in the EADB-200 group versus the EAD-200 group in both PP ($p=.0008$) and ITT analysis ($p=.002$) (Fig. 1).
+
+**Adverse Effects**
+
+Both treatments were well tolerated with no reported side effects.
+
+**Discussion**
+
+Antibiotics have been useful in the treatment of *H. pylori*-related gastroduodenal diseases. Therefore, eradication is considered as an obvious choice. However, the rate of eradication failure has dramatically decreased in recent years. The use of antibiotics in the treatment of *H. pylori*-related diseases has been shown to be effective in reducing the risk of recurrence and improving the overall prognosis. However, the use of antibiotics in the treatment of *H. pylori*-related diseases has been associated with an increased risk of adverse effects, including diarrhea, nausea, and abdominal pain. Therefore, the use of antibiotics in the treatment of *H. pylori*-related diseases should be carefully considered in light of the potential risks and benefits.
+
+**Table 1 Summary of study data**
+
+| Triple therapy regimen (EAD-100) | Quadruple therapy regimen (EADB-100) |
+|---------------------------------|----------------------------------------|
+| Esomeprazole (ESO) 20 mg b.i.d. (8.00 a.m.–8.00 p.m.) | Amoxicillin (AMO) 1 g b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Doxycycline (DOX) 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) | Amoxicillin (AMO) 1 g b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Azithromycin (AZO) 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) | Doxycycline (DOX) 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Bismuth subcitrate 240 mg b.i.d. (11.00 a.m.–11.00 p.m.) | Azithromycin (AZO) 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Number of patients: 15 | Number of patients: 51 |
+| Female/male: 10/5 | Female/male: 29/22 |
+| Age: mean 47, range 24–72 | Age: mean 49, range 23–70 |
+| Smoking habits (5 F; 2 M) | Smoking habits (15 F; 12 M) |
+| Alcohol consumption (<30 gr/week; 4 F; 5 M) | Alcohol consumption (<30 gr/week; 20 F; 18 M) |
+| Follow-up loss: 0 | Follow-up loss: 1 |
+| Urea Breath Test (UBT) | Urea Breath Test (UBT) |
+| Negative: 9 | Negative: 9 |
+| UBT Positive: 6 | UBT Positive: 3 |
+
+**Table 2 Summary of study data**
+
+| Triple therapy regimen (EAD-200) | Quadruple therapy regimen (EADB-200) |
+|---------------------------------|----------------------------------------|
+| Esomeprazole (ESO) 20 mg b.i.d. (8.00 a.m.–8.00 p.m.) | ESO 20 mg b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Amoxicillin (AMO) 1 g b.i.d. (8.00 a.m.–8.00 p.m.) | AMO 1 g b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Doxycycline (DOX) 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) | Dox 200 mg b.i.d. (8.00 a.m.–8.00 p.m.) |
+| Bismuth subcitrate 240 mg b.i.d. (11.00 a.m.–11.00 p.m.) | Bismuth subcitrate 240 mg b.i.d. (11.00 a.m.–11.00 p.m.) |
+| Number of patients: 15 | Number of patients: 51 |
+| Female/male: 10/5 | Female/male: 29/22 |
+| Age: mean 47, range 24–72 | Age: mean 49, range 23–70 |
+| Smoking habits (5 F; 2 M) | Smoking habits (15 F; 12 M) |
+| Alcohol consumption (<30 gr/week; 4 F; 5 M) | Alcohol consumption (<30 gr/week; 20 F; 18 M) |
+| Follow-up loss: 0 | Follow-up loss: 1 |
+| Urea Breath Test (UBT) | Urea Breath Test (UBT) |
+| Negative: 8 | Negative: 8 |
+| UBT Positive: 6 | UBT Positive: 5 |
+
+---
+
+# Page 4
+
+risen in many countries due to resistance to antibiotics. As the worldwide increase in the rate of antibiotic resistance represents a problem of relevance, some studies have been performed to identify highly active and well-tolerated anti-H. pylori therapies. The constant development of new antibiotic resistances suggests that future treatment will need to be individualized on the basis of host polymorphisms, antibiotic resistance, and demographic factors. Triple therapy containing an PPI combined with clarithromycin and amoxicillin and/or metronidazole has been the established first-line therapy for H. pylori infection over the past years around the world [29,30]. However, the efficacy of standard triple therapy needs to be reconsidered in areas with a high prevalence of clarithromycin- or metronidazole-resistant H. pylori strains. The geographic prevalence of antibiotic resistance should influence the choice of a first-line regimen for the treatment of infection by H. pylori. Alternatively, new regimens including sequential, concomitant quadruple, and quadruple therapy.
+
+Tetracycline is an antibiotic that is commonly used to eradicate H. pylori infection in several second-line regimens. The bactericidal activity of tetracycline is a result of the drug’s ability to prevent the synthesis of nascent peptide chains via binding to the 30-S ribosomal subunit, as well as blocking the binding of aminoacyl-tRNA [31]. The best-studied resistant mechanism has been mostly associated with de novo mutations in the 16S rRNA gene, which is based on a single, double, or triple base-pair substitution in adjacent 16S rRNA gene [32].
+
+Doxycycline is a synthetic antibiotic in the tetracycline class used for several infections which has bacteriostatic properties through the inhibition of bacterial protein synthesis [33]. Heep et al. [24] found 0% resistance to DOX, in a study to determine secondary resistance in H. pylori, isolated from patients in which one or more therapies for the eradication of H. pylori had failed.
+
+The therapies containing tetracycline or DOX have been used in the therapy of H. pylori infection with variable results.
+
+Malfertheiner et al. have shown that a quadruple therapy with omeprazole and a single three-in-one capsule containing bismuth citrate potassium, metronidazole, and tetracycline for 10 days when compared with a triple therapy for 7 days with omeprazole, amoxicillin, and clarithromycin produces an eradication rate of 80% versus a 55% in the standard therapy group. The authors concluded that quadruple therapy needs to be considered as first-line therapy in areas with a high prevalence of clarithromycin-resistant H. pylori strains [19].
+
+In some previous trials, DOX-containing therapies have been variously used, always in triple drug combinations.
+
+Doxycycline-containing therapy has been used in the eradication of H. pylori as first-line therapy, as second-line therapy, and as third-line rescue therapy. In those studies that used DOX as first-line therapy for the eradication of H. pylori, the results were not satisfactory, with eradication rates ranging from 0 to 68% [23,34–36]. In one study only, higher eradication rates could be reached using a unconventional quadruple therapy with DOX associated with levofloxacin, the synthetic antiprotozoal nitazoxanide, and a PPI as first-line therapy. In this specific study, the eradication rate was 90% [37]. As second-and third-line therapy, a DOX
+
+---
+
+# Page 5
+
+quadruple regimen with PPI, amoxicillin, and bismuth salts was used for the treatment of H. pylori infection. In these studies, eradication rates were more satisfactory with values ranging between 66.3% and 90% of the treated case [38–41].
+
+All the above-cited studies used DOX at the dose of 100 mg b.i.d. for 10 days while to our knowledge, our study is the first to use DOX at 200 mg b.i.d. for 10 days, a dosage that was well accepted by all patients and without side effects. The 200 mg b.i.d., however, does not seem to be more efficacious than the 100 mg b.i.d. with a slight increase in the percentage of eradication. The different results obtained when DOX is used as first-line therapy suggest that there may be a role for DOX in the treatment of H. pylori infection; however, optimization in terms of doses and durations needs to be further evaluated. A consistent increase in the eradication rate indeed is obtained when DOX, either with the 100 mg b.i.d. or with the 200 mg b.i.d., is used in association with bismuth subcitrate.
+
+Bismuth exerts its antibacterial action by decreasing mucin viscosity, by binding toxins produced by H. pylori, and by preventing bacterial colonization and adherence to gastric epithelium [42,43]. In addition, bismuth reduces the bacterial load and has a synergistic effect with several antibiotics [44].
+
+The results obtained in this study confirm that quadruple regimes, including a PPI, amoxicillin, DOX, and bismuth subcitrate, may constitute an effective first-line option for the treatment of H. pylori infection. In addition, the quadruple regime used in the present investigation obtained excellent compliance from all the enrolled patients.
+
+Criticism for our study might include the absence of a preliminary susceptibility test. It may be observed, however, that the culture and sensitivity test was not performed as the resistance of H. pylori to amoxicillin and tetracycline in patients never treated is in our region quite low with percentages ranging between 0.1% and 2% of tested strains [45], reducing to a minimum possibility to identify a resistant strain to the above-cited antibiotics in our patients. Nevertheless, the knowledge of the organism’s antibiotic susceptibility does not necessarily lead to eradication in vivo. Also, as reviewed by Gisbert, [46] even after culture-guided rescue treatments, the lowest eradication rates were obtained in patients with H. pylori strains susceptible to all antibiotics, thereby indicating that other factors, different from in vitro antibiotic susceptibility, influence eradication rates.
+
+Once H. pylori is introduced in the stomach, it comes into contact with the mucin layer that covers the epithelial cells, resulting in a strain-dependent adherence between mucin and H. pylori [47]. As reported by Cole et al., [48] increasing concentrations of mucin significantly enhanced planktonic growth over biofilm formation, suggesting that H. pylori exists primarily as a biofilm in the environment, but rapidly proliferating as free-living bacteria upon encountering mucin in the human stomach. Biofilm recalcitrant to antimicrobial compounds has long been thought to be due to restricted antibiotic diffusion within the extracellular polymeric substances matrix [49]. Antibiotics have been shown to penetrate biofilm readily in some cases and poorly in others, depending on the particular agent and biofilm [50]. As mentioned earlier, the bismuth exerts its antibacterial action by decreasing mucin viscosity, by binding toxins produced by H. pylori, and by preventing bacterial colonization and adherence to gastric epithelium [36,37]. Therefore, the addition of bismuth to the triple therapy helps to overcome H. pylori resistance to DOX: only eight patients (five in the EADB-100 group and three in the EADB-200 group) were positive at $^{13}$C urea breath test after treatment with quadruple therapy. These data support the hypothesis that the rate of eradication of H. pylori infection with a DOX-containing quadruple therapy for 10 days is scarcely influenced by amount of DOX used, that is 100 or 200 mg b.i.d., but more importantly by the inclusion of bismuth. Further studies, however, are needed to optimize the dose of DOX and the duration of treatment.
+
+It may be concluded therefore that the 10-day quadruple therapy consisting of a PPI, bismuth, amoxicillin, and DOX could be recommended as the first-line treatment of H. pylori infection in all areas where bismuth is available and particularly in those regions with high clarithromycin, metronidazole, and fluoroquinolones resistance.
+
+**Acknowledgements and Disclosures**
+
+**Competing interest:** no competing interest declared.
+
+**References**
+
+1. Ford AC, Delaney BC, Forman D, Moayyedi P. Eradication therapy in Helicobacter pylori positive peptic ulcer disease: systematic review and economic analysis. *Am J Gastroenterol* 2004;99:1833–55.
+2. Chen LT, Lin JT, Tai JJ, et al. Long-term results of anti-Helicobacter pylori therapy in early-stage gastric high grade transformed MALT lymphoma. *J Natl Cancer Inst* 2005;97:1345–53.
+3. Malfertheiner P, Sipponen P, Naumann M, Moayyedi P, Mégraud F, Xiao SD, Sugano K, Nyrén O; Lejondal H. pylori-Gastric Cancer Task Force. *Helicobacter pylori* eradication has the potential to prevent gastric cancer: a state-of-the-art critique. *Am J Gastroenterol* 2005;100:2100–15.
+
+---
+
+# Page 6
+
+4 Suzuki H, Nishizawa T, Hibi T. *Helicobacter pylori* eradication therapy. *Future Microbiol* 2010;5:639–48.
+
+5 Kuo CH, Kuo FC, Hu HM, Liu CJ, Wang SS, Chen YH, Hsieh MC, Hou MF, Wu DC. The optimal first-line therapy of *Helicobacter pylori* infection in year 2012. *Gastroenterol Res Pract* 2012;2012:168361.
+
+6 Vakil N. *H. pylori* treatment: new wine in old bottles? *Am J Gastroenterol* 2009;104:26–30.
+
+7 Perez Aldana L, Kato M, Nakagawa S, et al. The relationship between consumption of antimicrobial agents and the prevalence of primary *Helicobacter pylori* resistance. *Helicobacter* 2002;7:306–9.
+
+8 De Francesco V, Giorgio F, Hassan C, Manes G, Vannella L, Panella C, Ierardi E, Zullo A. Worldwide *H. pylori* antibiotic resistance: a systematic review. *J Gastrointestin Liver Dis* 2010;19:409–14.
+
+9 Megraud F. *H. pylori* antibiotic resistance: prevalence, importance and advances in testing. *Gut* 2004;53:1374–84.
+
+10 Boyanova L, Mitov I. Geographic map and evolution of primary *Helicobacter pylori* resistance to antibacterial agents. *Expert Rev Anti Infect Ther* 2010;8:59–70.
+
+11 Falush D, Kraft C, Taylor NS, et al. Recombination and mutation during long-term gastric colonization by *Helicobacter pylori*: estimates of clock rates, recombination size, and minimal age. *Proc Natl Acad Sci USA* 2001;98:15056–61.
+
+12 Mégraud F, Lehours P. *Helicobacter pylori* detection and antimicrobial susceptibility testing. *Clin Microbiol Rev* 2007;2:280–322.
+
+13 Quasim A, O’Marian CA. Review article: treatment of *Helicobacter pylori* infection and factors influencing eradication. *Aliment Pharmacol Ther* 2002;16:24–30.
+
+14 Broutet N, Tchamgoue S, Pereira E, Lamouillatet H, Salomon R, Megraud F. Risk factors for failure of *Helicobacter pylori* therapy-results of an individual data analysis of 2751 patients. *Aliment Pharmacol Ther* 2003;17:99–109.
+
+15 Fischbach LA, Van Zanten S, Dickason J. Meta-analysis: the efficacy, adverse events, and adherence related to first-line anti-*Helicobacter pylori* quadruple therapies. *Aliment Pharmacol Ther* 2004;20:1071–82.
+
+16 Calvet X, Lopez-Lorente M, Cubells M, Bare M, Galvez E, Molina E. Two-week dual vs. one-week triple therapy for cure for *Helicobacter pylori* infection in primary care: a multicentre, randomized trial. *Aliment Pharmacol Ther* 1999;13:781–6.
+
+17 Gené E, Calvet X, Azagra R, Gisbert JP. Triple vs. quadruple therapy for treating *Helicobacter pylori* infection: an updated meta-analysis. *Aliment Pharmacol Ther* 2003;18:543–4.
+
+18 Laine L, Hunt R, El-Zimaity H, Nguyen B, Osato M, Spénard J. Bismuth-based quadruple therapy using a single capsule of bismuth biskalcitrate, metronidazole, and tetracycline given with omeprazole versus omeprazole, AMO, and clarithromycin for eradication of *Helicobacter pylori* in duodenal ulcer patients: a prospective, randomized, multicenter. North American trial. *Am J Gastroenterol* 2003;98:562–7.
+
+19 Malfertheiner P, Bazzoli F, Delchier JC, Celiński K, Giguère M, Rivière M, Mégraud F; Pylera Study Group. *Helicobacter pylori* eradication with a capsule containing bismuth citrate potassium, metronidazole, and tetracycline given with omeprazole versus clarithromycin-based triple therapy: a randomised, open-label, noninferiority, phase 3 trial. *Lancet* 2011;377: 905–13.
+
+20 Huang JQ, Hunt RH. Treatment after failure. The problem of ‘non-responders’. *Gut* 1999;45:140–4.
+
+21 Farup PG, Tholfsen J, Wettermus S, Torp R, Hoie O, Lange OF. Comparison of three triple regimens with omeprazole or ranitidine bismuth citrate for *Helicobacter pylori* eradication. *Scand J Gastroenterol* 2002;37:1374–9.
+
+22 Tursi A, Brandimarte G, Giorgetti G, Modeo ME, Gigliobianco A. Efficacy and tolerability of ranitidine bismuth citrate plus amoxicillin and clarithromycin as first- or second-line therapy to cure *Helicobacter pylori* infection. *Hepatogastroenterology* 2002;49:1006–9.
+
+23 Taghavi SA, Jafari A, Eshraghian A. Efficacy of a new therapeutic regime versus two routinely prescribed treatments for eradication of *Helicobacter pylori*: a randomized, double-blind study of DOX, co-amoxiclav, and omeprazole in Iranian patients. *Dig Dis Sci* 2009;54:599–603.
+
+24 Heep M, Kist M, Strobel S, Beck D, Lehn N. Secondary resistance among 554 isolates of *Helicobacter pylori* after failure of therapy. *Eur J Clin Microbiol Infect Dis* 2000;19:538–41.
+
+25 Ikenberry SO, Harrison ME, Lichtenstein D, et al. The role of endoscopy in dyspepsia. *Gastrointest Endosc* 2007;66:1071–5.
+
+26 Kang M, Ragan BG, Park JH. Issues in outcomes research: an overview of randomization techniques for clinical trials. *J Athl Train* 2008;43:215–21.
+
+27 Healy DP, Dansereau RJ, Dunn AB, Clendening CE, Mounts AW, Deepe GS Jr. Reduced tetracycline bioavailability caused by magnesium aluminum silicate in liquid formulations of bismuth subsalicylate. *Ann Pharmacother* 1997;31:1460–4.
+
+28 Graham DY. Efficient identification and evaluation of effective *Helicobacter pylori* therapies. *Clin Gastroenterol Hepatol* 2009;7:145–8.
+
+29 Caselli M, Zullo A, Maconi G, Parente F, Alvisi V, Casetti T, Sorrentino D, Gasbarrini G; Working Group of the Cervia II Meeting. Cervia II Working Group Report 2006: guidelines on diagnosis and treatment of *Helicobacter pylori* infection in Italy. *Dig Liver Dis* 2007;39:782–9.
+
+30 Malfertheiner P, Megraud F, O’Marian C, Bazzoli F, El-Omar E, Graham D, Hunt R, Rokkas T, Vakil N, Kuipers EJ. Current concepts in the management of *Helicobacter pylori* infection: the Maastricht III Consensus Report. *Gut* 2007;56:772–81.
+
+31 Chopra I, Roberts M. Tetracycline antibiotics: mode of action, applications, molecular biology, and epidemiology of bacterial resistance. *Microbiol Mol Biol Rev* 2001;65:232–60.
+
+32 Ribeiro ML, Gerrits MM, Benvengo YHB, et al. Detection of high-level tetracycline resistance in clinical isolates of *Helicobacter pylori* using PCR-RFLP. *FEMS Immunol Med Microbiol* 2004;40:57–61.
+
+33 Smilack JD. Symposium on antimicrobial agents – part X: the tetracyclines. *Mayo Clin Proc* 1999;74:727–9.
+
+34 Perri F, Festa V, Merla A, Quitadamo M, Clemente R, Andriulli A. Amoxicillin/tetracycline combinations are inadequate as alternative therapies for *Helicobacter pylori* infection. *Helicobacter* 2002;7:99–104.
+
+35 Akyildiz M, Akay S, Musoglu A, Tuncyurek M, Aydin A. The efficacy of ranitidine bismuth citrate, amoxicillin and DOX or tetracycline regimens as a first line treatment for *Helicobacter pylori* eradication. *Eur J Intern Med* 2009;20:53–7.
+
+36 Almeida N, Romaozinho JM, Donato MM, Luxo C, Cardoso O, Cipriano MA, Marinho C, Sofia C. Triple therapy with high-dose proton-pump inhibitor, amoxicillin, and DOX is useless for *Helicobacter pylori* eradication: a proof-of-concept study. *Helicobacter* 2014;19:90–7.
+
+37 Basu PP, Rayapudi K, Pacana T, Shah NJ, Krishnaswamy N, Flynn M. A randomized study comparing levofloxacin, omeprazole, nitazoxanide, and DOX versus triple therapy for the eradication of *Helicobacter pylori*. *Am J Gastroenterol* 2011;106:1970–5.
+
+---
+
+# Page 7
+
+38. Sanches B, Coelho L, Moretzsohn L, Vieira G Jr. Failure of Helicobacter pylori treatment after regimes containing clarithromycin: new practical therapeutic options. *Helicobacter* 2008;13:572–6.
+
+39. Usta Y, Saltik-Temizel IN, Demir H, Uslu N, Ozen H, Gurakan F, Yuce A. Comparison of short- and long-term treatment protocols and the results of second-line quadruple therapy in children with *Helicobacter pylori* infection. *J Gastroenterol* 2008;43:429–33.
+
+40. Wang Z, Wu S. DOX-based quadruple regimen versus routine quadruple regimen for rescue eradication of *Helicobacter pylori*: an open-label control study in Chinese patients. *Singapore Med J* 2012;53:273–6.
+
+41. Cammarota G, Martino A, Pirozzi G, et al. High efficacy of 1-week DOX- and amoxicillin-based quadruple regimen in a culture-guided, third-line treatment approach for *Helicobacter pylori* infection. *Aliment Pharmacol Ther* 2004;19:789–95.
+
+42. Rodgers C, van Zanten SV. A meta-analysis of the success rate of *Helicobacter pylori* therapy in Canada. *Can J Gastroenterol* 2007;21:295–300.
+
+43. Wagstaff AJ, Benfield P, Monk JP. Colloidal bismuth subcitrate: a review of its pharmacodynamic and pharmacokinetic properties, and its therapeutic use in peptic ulcer disease. *Drugs* 1988;36:132–57.
+
+44. Malfertheiner Peter. Bismuth improves PPI-based triple therapy for *H. pylori* eradication. *Nat Rev Gastroenterol Hepatol* 2010;7:538–9.
+
+45. Megraud F, Coenen S, Versporten A, Kist M, Lopez-Brea M, Hirschl AM, Andersen LP, Goossens H, Glupczynski Y; Study Group Participants. *Helicobacter pylori* resistance to antibiotics in Europe and its relationship to antibiotic consumption. *Gut* 2013;62:34–42.
+
+46. Gisbert JP. “Rescue” regimens after *Helicobacter pylori* treatment failure. *World J Gastroenterol* 2008;14:5385–402.
+
+47. Andersen LP. Colonization and infection by *Helicobacter pylori* in humans. *Helicobacter* 2007;12:12–5.
+
+48. Cole SP, Harwood J, Lee R, She R, Guiney DG. Characterization of monospesies biofilm formation by *Helicobacter pylori*. *J Bacteriol* 2004;186:3124–32.
+
+49. Costerton JW, Stewart PS, Greenberg EP. Bacterial biofilms: a common cause of persistent infections. *Science* 1999;284:1318–22.
+
+50. Hoiby N, Bjarnsholt T, Givskov M, Molin S, Ciofu O. Antibiotic resistance of bacterial biofilms. *Int J Antimicrob Agents* 2010;35:322–32.

@@ -1,0 +1,219 @@
+# Page 1
+
+Furazolidone-containing triple and quadruple eradication therapy for initial treatment for *Helicobacter pylori* infection: A multicenter randomized controlled trial in China
+
+Yong Xie\(^1\) | Zhenyu Zhang\(^2\) | Junbo Hong\(^1\) | Wenzhong Liu\(^3\) | Hong Lu\(^3\) | Yiqi Du\(^4\) | Weihong Wang\(^5\) | Jianming Xu\(^6\) | Xuehong Wang\(^7\) | Lijuan Huo\(^8\) | Guiying Zhang\(^9\) | Chunhui Lan\(^10\) | Xiaoyan Li\(^11\) | Yanqing Li\(^12\) | Hong Wang\(^13\) | Guoxin Zhang\(^14\) | Yin Zhu\(^1\) | Xu Shu\(^1\) | Ye Chen\(^15\) | Jiangbin Wang\(^16\) | Nonghua Lu\(^1\) for the Chinese Society of Gastroenterology Chinese Study Group on Helicobacter pylori
+
+\(^1\)Department of Gastroenterology, First Affiliated Hospital of Nanchang University, Jiangxi, China
+\(^2\)Department of Gastroenterology, Nanjing First Hospital, Jiangsu, China
+\(^3\)Department of Gastroenterology, Renji Hospital, Shanghai Jiao Tong University School of Medicine, Shanghai, China
+\(^4\)Department of Gastroenterology, Changhai Hospital, Second Military Medical University, Shanghai, China
+\(^5\)Department of Gastroenterology, Peking University First Hospital, Beijing, China
+\(^6\)Department of Gastroenterology, The First Affiliated Hospital of Anhui Medical University, Anhui, China
+\(^7\)Department of Gastroenterology, Qinghai University Affiliated Hospital, Qinghai, China
+\(^8\)Department of Gastroenterology, First Hospital of Shanxi Medical University, Shanxi, China
+\(^9\)Department of Gastroenterology, Xiangya Hospital of Central South University, Hunan, China
+\(^10\)Department of Gastroenterology, Daping Hospital and the Research Institute of Surgery of Third Military Medical University, Chongqing, China
+\(^11\)Department of Gastroenterology, First Affiliated Hospital of Kunming Medical College, Yunnan, China
+\(^12\)Department of Gastroenterology, Qilu Hospital of Shandong University, Shandong, China
+\(^13\)Department of Gastroenterology, Guangzhou First People's Hospital, Guangdong, China
+\(^14\)Department of Gastroenterology, Jiangsu Province Hospital, Jiangsu, China
+\(^15\)Department of Gastroenterology, Nanfang Hospital, Southern Medical University, Guangzhou, China
+\(^16\)Department of Gastroenterology, China-Japan Union Hospital of Jilin University, Changchun, Jilin, China
+
+**Correspondence**
+Nonghua Lu, Department of Gastroenterology, First Affiliated Hospital of Nanchang University, Nanchang, Jiangxi, China.
+Email: lunonghua@ncu.edu.cn
+Ye Chen, Department of Gastroenterology, Nanfang Hospital, Guangzhou, Guangdong, China.
+Email: chenye2001@hotmail.com
+and
+Jiangbin Wang, Department of Gastroenterology, China-Japan Union Hospital of Jilin University, Changchun, Jilin, China.
+Email: zrlwangjb@medmail.com
+
+**Abstract**
+Background: The efficacy of *Helicobacter pylori* (*H. pylori*) eradication has steadily declined, primarily because of antibiotic resistance. This study aimed to evaluate the efficacy and safety of furazolidone eradication therapies as initial treatments for *H. pylori* infection.
+
+Methods: A national, multicenter, open-label, randomized controlled trial was performed at 16 sites across 13 provinces in China to evaluate the efficacy and safety of furazolidone-containing therapies for *H. pylori* infection. Treatment naïve patients were randomly assigned to: esomeprazole 20 mg, bismuth 220 mg, amoxicillin 1000 mg, and furazolidone 100 mg twice daily for 10 and 7 days (FAB 10 and FAB 7; the same therapy without bismuth (FA 10 and FA 7). The primary and secondary
+
+---
+
+# Page 2
+
+Funding information
+National Key Research and Development Program of China (2016YFC1302201).
+
+outcomes were the eradication rate and regimen safety, respectively. Treatment success was assessed by the $^{13}$C urea breath test at least 4 weeks after treatment completion.
+
+Results: Overall, according to intention-to-treat (ITT) analysis, the eradication rates for FAB 10 and FAB 7 were 86.6% (95% confidence interval [CI], 79.9%-93.2%) and 83.6% (95% CI, 76.3%-90.9%) and for FA 10 and FA 7 were 82.4% (95% CI, 74.9%-89.8%) and 77.6% (95% CI, 69.4%-85.8%), respectively. According to per-protocol analysis, the overall eradication rates for FAB 10 and FAB 7 were 94.7% (95% CI, 90.3%-99.1%) and 90.8% (95% CI, 85.1%-96.5%) and for FA 10 and FA 7 were 90.6% (95% CI, 84.9%-96.3%) and 85.1% (95% CI, 78.2%-92.1%), respectively. The overall prevalence of side effects was 8.1%.
+
+Conclusions: Furazolidone-containing therapies, particularly the tested 10-day quadruple therapy, exhibited satisfactory efficacy and safety. This 10-day quadruple therapy represents a promising initial treatment strategy for Chinese patients.
+
+KEYWORDS
+furazolidone, Helicobacter pylori, quadruple therapy, triple therapy
+
+1 | INTRODUCTION
+
+Helicobacter pylori infection has been implicated in the development of gastritis, peptic ulcer disease, gastric cancer, and various extragastric diseases; thus, it needs to be well managed. The clarthromycin- or metronidazole-based standard triple therapy for H. pylori infection is no longer recommended in China because of its low efficacy, primarily caused by antibiotic resistance. However, the efficacy of the triple therapy regimen containing furazolidone and amoxicillin, with extremely low resistance rates, has not been compared with or without bismuth in a nationwide multicenter randomized trial.
+
+Quadruple eradication therapies have been widely applied to address antibiotic resistance. However, sequential therapy becomes ineffective in the presence of metronidazole resistance and is inferior to standard triple therapy in China, with eradication rates <80%. Furthermore, concomitant therapy, which can be complicated because of the dual resistance to clarthromycin and metronidazole, should be studied further, although it has received increasing interest from clinicians.
+
+The bismuth-containing quadruple regimen is considered as the first-line empirical treatment, especially in China, where the bismuth is available. Our previous study revealed that the eradication rates of the 10-day quadruple regimen containing rabeprazole, bismuth, amoxicillin, and furazolidone were 86.1% and 92.3% in patients with duodenal ulcer (DU) according to intention-to-treat (ITT) and per-protocol (PP) analyses, respectively, in Jiangxi Province. Furthermore, bismuth-containing quadruple regimens achieve eradication rates of >90% in patients who failed previous treatments, and significantly more patients achieve infection eradication using furazolidone-containing regimens than do those using nonfurazolidone regimens. These results suggest that a furazolidone- and bismuth-containing quadruple therapy can provide effective treatment despite the high prevalence of antibiotic resistance. Regardless, this problem has not been well studied in China.
+
+Our previous study was conducted in Jiangxi province, which cannot stand for the overall eradication rate in China. The current multicenter open-label randomized controlled trial was conducted at 16 hospitals across 13 provinces in China to comprehensively evaluate the efficacy and safety of furazolidone eradication therapies with or without bismuth as initial treatments for H. pylori infection, which provides evidence for the indication of H. pylori eradication in China.
+
+2 | MATERIALS AND METHODS
+
+2.1 | Study design, settings, and participants
+
+This national, multicenter, open-label, randomized controlled trial was performed between April 2011 and September 2012 at 16 hospitals across 13 provinces in China. The study was approved by the Research Ethics Committee of these 16 hospitals and registered at www.chictr.org.cn (number ChiCTR-OPC-16009523). The medical records of consecutive patients diagnosed with chronic gastritis (CG) or duodenal ulcer (DU) disease infected with H. pylori were included and those who had not received prior eradication therapy were eligible for enrollment. The exclusion criteria were a history of anti-H. pylori therapy; treatment with nonsteroidal anti-inflammatory drugs (NSAIDs) over the previous 3 months or histamine H2-receptor antagonists or proton-pump inhibitor (PPI) over the previous 4 weeks; age younger than 18 years or older than 70 years; the presence of severe comorbidities; pregnancy or lactation; allergy to any of the
+
+---
+
+# Page 3
+
+index antibiotics; alcohol abuse or drug addiction; or the presence of severe neurological or psychiatric disorders. The criteria for terminating the study were deterioration or severe complications; serious adverse events that might not be tolerated during treatment; other diseases that interfered with observation during treatment; lost to follow-up; and pregnancy during treatment.
+
+The patients were randomly assigned to one of the following 4 groups via computer-generated sequence and sealed opaque envelopes. Groups 1 and 2 were treated with esomeprazole (20 mg), bismuth (220 mg), amoxicillin (1000 mg), and furazolidone (100 mg) twice daily for 10 and 7 days (FAB 10 and FAB 7, respectively); groups 3 and 4 were treated with the same therapy without bismuth (FA 10 and FA 7).
+
+2.2 | Helicobacter pylori infection and eradication evaluation
+
+Helicobacter pylori infection was identified via a positive response upon rapid urease testing (++ or above) during endoscopy; H. pylori infection eradication was confirmed as a negative $^{13}$C urea breath test at least 4 weeks after the completion of treatment. $^{1,3,4}$
+
+2.3 | Outcome evaluation
+
+The primary and secondary outcomes were the H. pylori eradication rate and the safety of the 4 regimens.
+
+2.4 | Demographics and side effects evaluation
+
+Gender and age were recorded before the regimens. Side effects (eg, bitter taste, nausea, diarrhea, abdominal pain, dizziness, and limb as- thenia), assessed by a telephone interview during the regimens and when returned, were all recorded in an specific questionnaire.
+
+2.5 | Statistical analyses
+
+In our preliminary study (unpublished data), the eradication rate of esomeprazole-FAB10 was approximately 80% (ITT). In addition, the eradication rate of omeprazole (20 mg, twice daily)-FA7 was 64% (ITT) according to a previous study. $^{11}$ We assume the eradication rates were as follows: FAB10 > FAB7 > FA10 > FA7. Based on the eradication rates of 80% and 64%, and with a power of 80% and a 2-sided type 1 error of 5%, 754 patients were sufficient for each treatment arm that would also allow for 10% loss to follow-up in this study.
+
+The data are presented as means ± standard deviations (SDs) or as percentages. The eradication rate was evaluated via PP and ITT analyses. In the PP analysis, patients who violated the study protocol or who were not complied with the assigned regimen were excluded. The ITT analysis included all randomized patients. The chi-square test was used to estimate the significance of the differences among categorical data. Analysis of variance (ANOVA) was used to calculate the differences in the continuous data. $P < .05$ was considered as significant, and all reported $P$-values were 2-tailed. Bonferroni correction was applied to express the 2-sided significance at $P < .008$ (0.05/6) for eradication rate according to PP and ITT analysis among 4 regimens. All analyses were performed using SPSS version 17.0 (SPSS Inc., Chicago, IL, USA).
+
+3 | RESULTS
+
+A total of 957 patients with DU or CG were screened, and 203 patients were excluded for the following reasons: a history of H. pylori eradication (n = 58); related drug intake (n = 56); pregnancy (n = 10); comorbidities (n = 8); allergy to amoxicillin (n = 21); age <18 or >70 years (n = 19); alcohol abuse (n = 7); or refusal to adhere to the regimen (n = 24). Ultimately, 754 patients (DU: 376 cases; CG: 378 cases) were included and randomly assigned to study groups via a computer-generated sequence using sealed, opaque envelopes (186 and 189 patients in FAB 10 and FAB 7; 187 and 192 patients in FA 10 and FA 7, respectively). A total of 65 cases withdrew: 42 patients were lost to follow-up (10 and 9 for FAB 10 and FAB 7; 11 and 12 for FA 10 and FA 7, respectively); 23 patients discontinued (6 and 6 for FAB 10 and FAB 7; 6 and 5 for FA 10 and FA 7, respectively), resulting in an attrition rate of 8.6% (Figure 1).
+
+The ages and genders of the patients did not significantly differ across the 4 groups (Table 1).
+
+According to ITT analysis, the overall eradication rates for FAB 10 and FAB 7 were 86.6% (95% CI, 79.9%-93.2%) and 83.6% (95% CI, 76.3%-90.9%) and for FA 10 and FA 7 were 82.4% (95% CI, 74.9%-89.8%) and 77.6% (95% CI, 69.4%-85.8%), respectively. Eradication rates did not significantly differ in any of the 4 groups. According to PP analysis, the overall eradication rates for FAB 10 and FAB 7 were 94.7% (95% CI, 90.3%-99.1%) and 90.8% (95% CI, 85.1%-96.5%) and for FA 10 and FA 7 groups were 90.6% (95% CI, 84.9%-96.3%) and 85.1% (95% CI, 78.2%-92.1%), respectively. The eradication rate for FAB10 was significantly higher than that of FA7, $\chi^2 = 8.651, P = .003$ (Table 2).
+
+The most common side effects were dizziness, diarrhea, nausea, vomiting and asthenia. The rates of side effects in groups FAB 10 and FAB 7 were 9.7% and 7.4% and in groups FA 10 and FA 7 were 8.0% and 7.3%, respectively, with no significant difference across groups. The overall prevalence of side effects was 8.1% (61/754; Table 3).
+
+4 | DISCUSSION
+
+The present study demonstrated that in treatment naïve patients, both 10- and 7-day furazolidone-containing quadruple therapies as well as the 10-day furazolidone- containing triple therapy achieved eradication rates >80% (ITT) and >90% (PP), with a low incidence of side effects. Furthermore, the 10-day furazolidone-containing quadruple therapy achieved eradication rates of ~90% (ITT) and ~95% (PP), suggesting that this treatment strategy is a promising initial regimen for Chinese patients.
+
+---
+
+# Page 4
+
+FIGURE 1 FAB 10 and FAB 7 were treated with esomeprazole (20 mg), bismuth (220 mg), amoxicillin (1000 mg), and furazolidone (100 mg) twice daily for 10 and 7 d, respectively. FAB 10 and FAB 7 were treated with esomeprazole (20 mg), amoxicillin (1000 mg), and furazolidone (100 mg) twice daily for 10 and 7 days, respectively. H. pylori, Helicobacter pylori; ITT, intention-to-treat; PP, per-protocol.
+
+TABLE 1 Demographics of the study population
+
+| Age (y) | FAB 10 (n = 186) | FAB 7 (n = 189) | FAB 10 (n = 187) | FAB 7 (n = 192) |
+|---------|------------------|------------------|------------------|------------------|
+|         | 44.0 ± 11.3      | 45.4 ± 11.7      | 43.6 ± 12.2      | 42.5 ± 12.3      |
+| Gender (n, %) |                  |                  |                  |                  |
+| Male     | 93 (50.0)        | 114 (60.3)       | 101 (54.0)       | 109 (56.8)       |
+| Female   | 93 (50.0)        | 75 (39.7)        | 86 (46.0)        | 83 (43.2)        |
+
+TABLE 2 Eradication efficacy of 4 regimens (n, %)
+
+| ITT analysis | FAB 10 | FAB 7 | FAB 10 | FAB 7 |
+|-------------|--------|-------|--------|-------|
+| 95% CI      | 161/186 (86.6) | 158/189 (83.6) | 154/187 (82.4) | 149/192 (77.6) |
+| 95% CI      | 79.9-93.2 | 76.3-90.9 | 74.9-89.8 | 69.4-85.8 |
+| PP analysis  | 161/170 (94.7) | 158/174 (90.8) | 154/170 (90.6) | 149/175 (85.1) |
+| 95% CI      | 90.3-99.1 | 85.1-96.5 | 84.9-96.3 | 78.2-92.1 |
+
+CI, confidence interval; ITT, intention-to-treat; PP, per-protocol.
+
+aCompared with FAB 7: $\chi^2 = 8.651$, $P = .003$ (Bonferroni correction $[P < .008]$).
+
+---
+
+# Page 5
+
+Antibiotic resistance remains the major determinant of treatment outcomes, and rates of resistance to clarithromycin and metronidazole in China are 21.5%-37.5% and 60%-70%, respectively. However, the prevalence of resistance to furazolidone is low: 0.1% in coastal southeast China, and 0% in our previous study. In addition, furazolidone is classified as a class III agent, which indicates that there are no data supporting the notion that it is carcinogenic for humans. Moreover, furazolidone is cost effective because a 10-day regimen costs merely RMB 1.4 yuan (RMB 0.07 yuan per piece). Thus, furazolidone can replace clarithromycin in H. pylori eradication regimens due to a lack of resistance and its low cost.
+
+Furazolidone-containing therapies have not yet been optimized, and the efficacy of a furazolidone regimen may vary according to the dose and duration. Indeed, the eradication rate of the therapies with a high dose of furazolidone (400 mg, qd, or 200 mg, bid) was reported as being superior to that of a low dose of furazolidone (200 mg, qd or 50 mg, bid) in 2 studies with a small sample size. However, according to ITT and PP analyses in a multicenter study in China, 7-day triple initial therapy containing omeprazole, amoxicillin, and furazolidone (100 mg, bid) achieves an efficacy of 86% and 87%. Similar results were confirmed in our previous study with the same furazolidone dose in 7- and 10-day triple and quadruple initial therapies. In addition, furazolidone-containing therapy regimens have always been used as rescue treatments. The eradication rates of the 14-day quadruple therapy in 2 studies were >90% and >95% according to ITT and PP analyses, respectively, irrespective of the furazolidone dose (100 mg, 3 or 2 times daily). Furthermore, the efficacy of 14-day bismuth-containing quadruple therapy with furazolidone 200 mg 2 times daily during the first week and 10-day quadruple therapy with furazolidone 200 mg twice daily are >80% (both PP and ITT analyses) for patients with previous H. pylori eradication treatment failure. These results indicate that furazolidone-containing therapies can achieve satisfactory eradication rates with appropriate furazolidone dose and duration. Moreover, 100 mg twice daily may be sufficient, especially for treatment naïve patients and is also recommended by the Fourth Chinese National consensus. In the present study, the furazolidone dose was 100 mg 2 times daily, and the eradication rates of the 7-day triple therapy were 77.6% and 85.1% based on ITT and PP analyses. The 10-day furazolidone-containing triple therapy achieved eradication rates of 82.4% (ITT) and 90.6% (PP). In addition, the eradication rates associated with the 7- and 10-day quadruple therapies were 83.6% and 86.6% based on ITT analysis and 90.8% and 94.7% based on PP analysis, respectively.
+
+Bismuth-containing quadruple therapies provide superior eradication with similar safety and tolerability compared with standard therapy because an adjunct of bismuth subcitrate in the triple therapy for H. pylori infection potentiates the therapeutic effect. However, one study indicated that bismuth-containing quadruple and standard triple therapies yield similar suboptimal eradication rates as a primary therapy for H. pylori infection. These inconsistent results should be further clarified. Furthermore, the efficacies of 7- or 10-day furazolidone-based therapies with or without bismuth have not been compared head to head. In the present study, the eradication rates of the 7- and 10-day bismuth-containing therapies were higher than those of the triple therapy, which suggests that the eradication rate can be increased via the adjunct use of bismuth subcitrate.
+
+Previous studies have demonstrated that the efficacy of PPI-containing triple and quadruple therapies can be enhanced by increasing the duration to 14 days (Maastricht V and Toronto refs). However, as mentioned above, the bismuth-containing quadruple therapy remains highly effective (i.e., ≥95% by PP analysis and >90% by ITT analysis), even when the treatment duration was reduced from 14 days to 10 days. The most recent Maastricht V/Florence Consensus Report for H. pylori infection indicated that the treatment duration of bismuth quadruple therapy could be reduced to 10-day therapies were proven to locally be equally effective. This would require head-to-head comparisons with a noninferiority study design and prespecified outcomes (e.g., achieving 95% or greater eradication PP). A definition of the appropriate duration of therapy is a duration that reliably achieves cure rates ≥95% (PP) for susceptible infections. In this study, based on PP analysis, the overall eradication rate achieved by the 10-day furazolidone-based quadruple therapy was ~95%, which was significantly higher than the eradication rate achieved by the 7-day triple therapy. If these results are confirmed in subsequent studies and head-to-head comparisons with both treatment naïve and prior treatment failures it would be to strongly recommend the described 10-day furazolidone-based quadruple therapy.
+
+The side effects of furazolidone-containing therapies have varied across different studies, and they occur more frequently for these therapies than standard therapies. One initial study revealed that certain side effects (e.g., mild dizziness, nausea,
+
+---
+
+# Page 6
+
+diarrhea and increased bowel movement) occurred in 11 patients (18.3%, 11/60) who received low doses of furazolidone-containing quadruple therapies (rabeprazole 10 mg, amoxicillin 1000 mg, furazolidone 100 mg, and bismuth subcitrate 220 mg, twice daily). In addition, fever, fatigue, and dizziness, which occurred at days 8-10 were more common in high dose furazolidone (200 mg, bid)-containing therapies than low dose therapies (50 mg, bid). The prevalence of the side effects in our previous study was <10% overall in patients who received low doses of furazolidone (100 mg, bid)-containing triple and quadruple therapies (7- and 10-day regimens). These results indicate that the side effects of furazolidone are associated with its dose and possibly the duration of use. In this study, side effects were observed in 8.1% of patients, which emphasized the superior safety of furazolidone-containing therapies.
+
+The strengths of our study include its multicenter randomized design and the large sample size. Moreover, 10-day quadruple initial therapy with furazolidone (100 mg, bid) achieved the highest eradication rate. This therapy is a promising regimen for Chinese patients.
+
+Certain limitations were present in this study. First, eradication rates did not significantly differ in any of the 4 groups according to ITT analysis, probably due to the patients lost to follow-up and discontinued, lowering the eradication efficacy. In addition, 754 cases might be limited, as 868 patients would be required with 80% power, a 2-sided type 1 error of 5% and 10% loss to follow-up based on the current eradication rates of 86.6% and 77.6%. Second, longer treatment durations (14 days) have been widely recommended and should be investigated in the future. Third, the eradication rate may be improved by increasing the doses of PPI, furazolidone, and amoxicillin, which was not evaluated in the present study. Fourth, other influential factors (ie, compliance, high dose of PPIs, CYP2C19, and IL-1B polymorphisms) were not evaluated.
+
+In conclusion, furazolidone-containing therapies, particularly the examined 10-day quadruple therapy, can exhibit satisfactory efficacy and safety. This 10-day therapy represents a promising and cost-effective initial regimen in China, with a population of nearly 1.4 billion and high rates of H. pylori infection. Future studies are needed to verify the efficacy of similar regimens with a larger sample size, longer durations and higher PPI, amoxicillin, and furazolidone doses.
+
+ACKNOWLEDGEMENTS
+
+The authors thank the Chinese Society of Gastroenterology and the Chinese Study Group on H. pylori for the protocol design and implementation. The authors also thank Professor David Y Graham and American Journal Experts (Durham, NC, USA) for assisting in the preparation of this manuscript.
+
+DISCLOSURE
+
+All authors have no conflict of interests to disclose.
+
+ORCID
+
+Nonghua Lu http://orcid.org/0000-0002-1834-2864
+
+REFERENCES
+
+1. Malfertheiner P, Megraud F, O'Morain CA, et al. Management of Helicobacter pylori infection—the Maastricht V/Florence consensus report. Gut. 2017;66:6-30.
+2. Kavitt RT, Cifu AS. Management of Helicobacter pylori infection. JAMA. 2017;317:1572-1573.
+3. Sugano K, Tack J, Kuipers EJ, et al. Kyoto global consensus report on Helicobacter pylori gastritis. Gut. 2015;64:1353-1367.
+4. Chinese Society of Gastroenterology, Chinese Study Group on Helicobacter pylori, Liu WZ, Xie Y, et al. Fourth Chinese National consensus report on the management of Helicobacter pylori infection. J Dig Dis. 2013; 14: 211-221.
+5. Zhou L, Zhang J, Chen M, et al. A comparative study of sequential therapy and standard triple therapy for Helicobacter pylori infection: a randomized multicenter trial. Am J Gastroenterol. 2014;109:535-541.
+6. Ang TL, Fock KM, Song M, et al. Ten-day triple therapy versus sequential therapy versus concomitant therapy as first-line treatment for Helicobacter pylori infection. J Gastroenterol Hepatol. 2015;30:1134-1139.
+7. Hong J, Shu X, Liu D, et al. Antibiotic resistance and CYP2C19 polymorphisms affect the efficacy of concomitant therapies for Helicobacter pylori infection: an open-label, randomized, single-centre clinical trial. J Antimicrob Chemother. 2016;71:2280-2285.
+8. Xie C, Lu NH. Review: clinical management of Helicobacter pylori infection in China. Helicobacter. 2015;20:1-10.
+9. Xie Y, Zhu Y, Zhou H, et al. Furazolidone-based triple and quadruple eradication therapy for Helicobacter pylori infection. World J Gastroenterol. 2014;20:11415-11421.
+10. Liang X, Xu X, Zheng Q, et al. Efficacy of bismuth-containing quadruple therapies for clarithromycin-, metronidazole-, and fluoroquinolone-resistant Helicobacter pylori infections in a prospective study. Clin Gastroenterol Hepatol. 2013;11:802-807.e1.
+11. Guo CY, Wu YB, Liu HL, Wu JY, Zhong MZ. Clinical evaluation of four-one-week triple therapy regimens in eradicating Helicobacter pylori infection. World J Gastroenterol. 2004;10:747-749.
+12. Su P, Li Y, Li H, et al. Antibiotic resistance of Helicobacter pylori isolated in the Southeast coastal region of China. Helicobacter. 2013;18:274-279.
+13. Song Z, Zhang J, He L, et al. Prospective multi-region study on primary antibiotic resistance of Helicobacter pylori strains isolated from Chinese patients. Dig Liver Dis. 2014;46:1077-1081.
+14. Liu DS, Xie Y, Lv NH, et al. Monitoring of resistance to antibiotics of Helicobacter pylori strains in Jiangxi Province of China. Helicobacter. 2011;16(Suppl 1):118.
+15. Graham DY, Lu H. Furazolidone in Helicobacter pylori therapy: misunderstood and often unfairly maligned drug told in a story of French bread. Saudi J Gastroenterol. 2012;18:1-2.
+16. Graham DY, Dore MP. Helicobacter pylori therapy: a paradigm shift. Expert Rev Anti Infect Ther. 2016;14:577-585.
+17. Riahizadeh S, Malekzadeh R, Agah S, et al. Sequential metronidazole-furazolidone or clarithromycin-furazolidone compared to clarithromycin-based quadruple regimens for the eradication of Helicobacter pylori in peptic ulcer disease: a double-blind randomized controlled trial. Helicobacter. 2010;15:497-504.
+18. Coelho LG, Martins GM, Passos MC, et al. Once-daily, low-cost, highly effective Helicobacter pylori treatment to family members of gastric cancer patients. Aliment Pharmacol Ther. 2003;17:131-136.
+
+---
+
+# Page 7
+
+19. Roghani HS, Massarrat S, Shirekhoda M, Butorab Z. Effect of different doses of furazolidone with amoxicillin and omeprazole on eradication of Helicobacter pylori. J Gastroenterol Hepatol. 2003;18:778-782.
+20. Xiao SD, Liu WZ, Hu PJ, et al. A multicentre study on eradication of Helicobacter pylori using four 1-week triple therapies in China. Aliment Pharmacol Ther. 2001;15:81-86.
+21. Zhang Y, Gao W, Cheng H, Zhang X, Hu F. Tetracycline- and furazolidone-containing quadruple regimen as rescue treatment for Helicobacter pylori infection: a single center retrospective study. Helicobacter. 2014;19:382-386.
+22. Fakheri H, Bari Z, Sardarian H. A modified bismuth-containing quadruple therapy including a short course of furazolidone for Helicobacter pylori eradication after sequential therapy failure. Helicobacter. 2012;17:264-268.
+23. Sanches B, Coelho L, Moretzsohn L, Vieira G Jr. Failure of Helicobacter pylori treatment after regimes containing clarithromycin: new practical therapeutic options. Helicobacter. 2008;13:572-576.
+24. Gungor G, Baglicakoglu M, Kayacetin E, et al. Current status of five different regimens for empiric first-line Helicobacter pylori eradication in Turkey. Digestion. 2015;92:55-59.
+25. Malfertheiner P, Bazzoli F, Delchier JC, et al. Helicobacter pylori eradication with a capsule containing bismuth subcitrate potassium, metronidazole, and tetracycline given with omeprazole versus clarithromycin-based triple therapy: a randomised, open-label, non-inferiority, phase 3 trial. Lancet. 2011;377:905-913.
+26. Dore MP, Lu H, Graham DY. Role of bismuth in improving Helicobacter pylori eradication with triple therapy. Gut. 2016;65:870-878.
+27. Ciccaglione AF, Cellini L, Grossi L, Manzoli L, Marzio L. A triple and quadruple therapy with doxycycline and bismuth for first-line treatment of Helicobacter pylori infection: a pilot study. Helicobacter. 2015;20:390-396.
+28. Malfertheiner P. Infection: bismuth improves PPI-based triple therapy for H. pylori eradication. Nat Rev Gastroenterol Hepatol. 2010;7:538-539.
+
+29. Luther J, Higgins PD, Schoenfeld PS, Moayyedi P, Vakil N, Chey WD. Empiric quadruple vs. triple therapy for primary treatment of Helicobacter pylori infection: systematic review and meta-analysis of efficacy and tolerability. Am J Gastroenterol. 2010;105:65-73.
+30. Fallone CA, Chiba N, van Zanten SV, et al. The Toronto consensus for the treatment of Helicobacter pylori infection in adults. Gastroenterology. 2016;151:51-69.e14.
+31. Dore MP, Farina V, Cuccu M, Mameli L, Massarelli G, Graham DY. Twice-a-day bismuth-containing quadruple therapy for Helicobacter pylori eradication: a randomized trial of 10 and 14 days. Helicobacter. 2011;16:295-300.
+32. Graham DY. Hp-normogram (normo-graham) for assessing the outcome of H. pylori therapy: effect of resistance, duration, and CYP2C19 genotype. Helicobacter. 2016;21:85-90.
+33. Buzás GM, Józan J. Nitrofuran-based regimens for the eradication of Helicobacter pylori infection. J Gastroenterol Hepatol. 2007;22:1571-1581.
+34. Cheng H, Hu FL. Furazolidone, amoxicillin, bismuth and rabeprazole quadruple rescue therapy for the eradication of Helicobacter pylori. World J Gastroenterol. 2009;15:860-864.
+
+How to cite this article: Xie Y, Zhang Z, Hong J, et al.; for the Chinese Society of Gastroenterology Chinese Study Group on Helicobacter pylori. Furazolidone-containing triple and quadruple eradication therapy for initial treatment for Helicobacter pylori infection: A multicenter randomized controlled trial in China. Helicobacter. 2018;23:e12496. https://doi.org/10.1111/hel.12496
