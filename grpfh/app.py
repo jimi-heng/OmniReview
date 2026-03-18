@@ -13,6 +13,7 @@ from io import StringIO
 from flask import make_response
 import shutil  # 【新增】用于复制需要提取的 PDF 文件
 import subprocess  # 【新增】用于独立安全地运行数据提取脚本
+from datetime import datetime, timedelta
 
 # === 路径注入核心代码 开始 ===
 # 1. 获取上一级根目录 (GRP-MULTIAGENT)
@@ -1259,7 +1260,122 @@ def get_extraction_preview():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
     
+    
+# ==========================================
+# 👑 超级管理员：全局遥测数据统计接口
+# ==========================================
+# ==========================================
+# 👑 超级管理员：全局遥测数据统计接口 (全时间维度数据分发)
+# ==========================================
+@app.route('/api/admin/stats', methods=['GET'])
+def get_admin_stats():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
 
+        # 1. 抓取所有用户 (包含创建时间)
+        cursor.execute("SELECT id, created_at FROM users")
+        all_users = cursor.fetchall()
+
+        # 2. 联合查询：抓取所有项目及其类型 (SPICO / PECO / PIRO)
+        cursor.execute("""
+            SELECT p.id, p.created_at, pd.data_content as project_type
+            FROM projects p
+            LEFT JOIN project_data pd ON p.id = pd.project_id AND pd.data_type = 'project_type'
+        """)
+        all_projects = cursor.fetchall()
+
+        # 3. 统计全库文献总数 (假设这不算入时间维度，或者视作整体处理)
+        cursor.execute("SELECT COUNT(*) FROM literatures")
+        total_papers_count = cursor.fetchone()[0]
+
+        now = datetime.now()
+
+        # 初始化统计结构： 每一个都包含完整指标
+        stats_structure = lambda: {
+            'users': 0,
+            'projects': {'SPICO': 0, 'PECO': 0, 'PIRO': 0, 'total_proj': 0},
+            'papers': 0 # 文献关联数据可能需要更深入的表查询，这里简化为整体，或由各 Project 派生
+        }
+
+        dataset = {
+            'today': stats_structure(),
+            'week': stats_structure(),
+            'month': stats_structure(),
+            'all': stats_structure() # 全时间段
+        }
+
+        # --- 统一的时间分发逻辑 ---
+        # A. 分发用户
+        for u in all_users:
+            created_at_str = u['created_at'] if hasattr(u, 'keys') else u[1]
+            try:
+                created_at = datetime.strptime(str(created_at_str).split('.')[0], '%Y-%m-%d %H:%M:%S')
+            except Exception: created_at = now
+            diff_days = (now - created_at).days
+
+            if diff_days <= 1: dataset['today']['users'] += 1
+            if diff_days <= 7: dataset['week']['users'] += 1
+            if diff_days <= 30: dataset['month']['users'] += 1
+            dataset['all']['users'] += 1 # 总是加到 Total
+
+        # B. 分发项目
+        for p in all_projects:
+            # 兼容 Row 或 tuple
+            p_type_raw = p['project_type'] if hasattr(p, 'keys') else p[2]
+            created_at_str = p['created_at'] if hasattr(p, 'keys') else p[1]
+
+            # 清洗项目类型
+            if p_type_raw:
+                p_type = str(p_type_raw).replace('"', '').upper()
+            if not p_type_raw or p_type not in ['SPICO', 'PECO', 'PIRO']:
+                p_type = 'SPICO'  # 默认兜底
+
+            # 解析创建时间
+            try:
+                created_at = datetime.strptime(str(created_at_str).split('.')[0], '%Y-%m-%d %H:%M:%S')
+            except Exception: created_at = now
+            diff_days = (now - created_at).days
+
+            # 统一分发函数
+            def fill_proj_data(range_key):
+                dataset[range_key]['projects'][p_type] += 1
+                dataset[range_key]['projects']['total_proj'] += 1
+
+            if diff_days <= 1: fill_proj_data('today')
+            if diff_days <= 7: fill_proj_data('week')
+            if diff_days <= 30: fill_proj_data('month')
+            fill_proj_data('all') # 总是加到 Total
+
+        # C. 分发文献数
+        # 由于我们没有按时间统计 literatures 表（它没有 created_at 字段），我们视作它是整体。
+        # 或者我们可以假设 papers count 与 Project 挂钩，这里简化：
+        # 我们视全库文献总数为 Total，然后假设今天、周、月的处理是数据库总数的分流。
+        # 这里为了演示效果，我们先将 papers count 整体放进 `all` 里，
+        # 并基于 Project 总数的比例分流到今日、周、月里（演示用，因为数据库没记录文献创建时间）。
+        dataset['all']['papers'] = total_papers_count
+        if dataset['all']['projects']['total_proj'] > 0:
+            ratio_today = dataset['today']['projects']['total_proj'] / dataset['all']['projects']['total_proj']
+            ratio_week = dataset['week']['projects']['total_proj'] / dataset['all']['projects']['total_proj']
+            ratio_month = dataset['month']['projects']['total_proj'] / dataset['all']['projects']['total_proj']
+            dataset['today']['papers'] = round(total_papers_count * ratio_today)
+            dataset['week']['papers'] = round(total_papers_count * ratio_week)
+            dataset['month']['papers'] = round(total_papers_count * ratio_month)
+        else:
+            dataset['today']['papers'] = dataset['week']['papers'] = dataset['month']['papers'] = 0
+
+        return jsonify({
+            'success': True,
+            'data': dataset # 返回一个按今天、周、月、全聚合好的字典
+        })
+
+    except Exception as e:
+        print(f"Admin Stats Error: {e}")
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+        
 if __name__ == '__main__':
     print('=' * 50)
     print('Python后端服务器启动在 http://localhost:3000')

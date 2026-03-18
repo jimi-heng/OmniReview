@@ -63,6 +63,7 @@ function updateProgressStep(activeStepId) {
 let activePageId = 'login-page';
 const pageLevel = {
     'home-page': 1,
+    'admin-dashboard-page': 1, // 🌟 Admin 的家，和普通用户的 home-page 同级
     'profile-page': 2,
     'pico-page': 2,
     'import-search-page': 3,
@@ -73,6 +74,13 @@ const pageLevel = {
 
 // 2. 通用页面切换函数（所有按钮跳转核心）
 function showPage(pageId) {
+    // 🚨 终极拦截：如果超级管理员试图返回普通项目主页，强行重定向到指挥中心
+    if (pageId === 'home-page' && currentUser && currentUser.email === 'admin@neural.net') {
+        pageId = 'admin-dashboard-page';
+        const navBar = document.querySelector('.progress-header');
+        if (navBar) navBar.style.display = 'none';
+        loadAdminStats(); // 每次返回指挥中心时，自动刷新最新数据！
+    }
     // 🌟 核心拦截：如果切回主页，就把导航栏名字重置为通用的 Criteria Setup
     if (pageId === 'home-page') {
         const navPico = document.getElementById('step-pico');
@@ -103,7 +111,8 @@ function showPage(pageId) {
     if (pageId === 'home-page') isForward = false;
 
     // 隐藏所有页面，并清除旧的动画类
-    const allPages = ['login-page', 'register-page', 'home-page', 'profile-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
+    // 隐藏所有页面，并清除旧的动画类
+    const allPages = ['login-page', 'register-page', 'home-page', 'admin-dashboard-page', 'profile-page', 'pico-page', 'import-search-page', 'abstract-screen-page', 'full-text-screen-page', 'data-extraction-page'];
     allPages.forEach(id => {
         const el = document.getElementById(id);
         if (el && id !== pageId) {
@@ -228,8 +237,19 @@ document.getElementById('login-btn').addEventListener('click', async () => {
       // 4. 保存到sessionStorage以便页面刷新后保留
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-      showPage('home-page');
-      loadUserProjects(); // 加载用户的项目
+      // 🚨 身份判定分流
+      if (currentUser.email === 'admin@neural.net') {
+          showPage('admin-dashboard-page');
+          const navBar = document.querySelector('.progress-header');
+          if (navBar) navBar.style.display = 'none'; // 管理员不需要顶部普通项目的导航栏
+
+          loadAdminStats(); // 🌟 核心修复 1：开枪！拉取真实数据！
+      } else {
+          showPage('home-page');
+          const navBar = document.querySelector('.progress-header');
+          if (navBar) navBar.style.display = 'flex'; // 普通用户恢复显示导航栏
+          loadUserProjects(); // 加载用户的项目
+      }
     } else {
       errorTip.textContent = result.message;
       errorTip.style.display = 'block';
@@ -277,10 +297,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (timeDisplay && currentUser.loginTime) timeDisplay.textContent = `Logged in: ${currentUser.loginTime}`;
 
     // 如果是在登录状态，直接显示首页并加载项目
-    showPage('home-page');
-    loadUserProjects();
+    // 🚨 如果是在登录状态，根据身份分流
+    if (currentUser.email === 'admin@neural.net') {
+        showPage('admin-dashboard-page');
+        const navBar = document.querySelector('.progress-header');
+        if (navBar) navBar.style.display = 'none';
+
+        loadAdminStats(); // 🌟 核心修复 2：刷新页面时也拉取真实数据！
+    } else {
+        showPage('home-page');
+        const navBar = document.querySelector('.progress-header');
+        if (navBar) navBar.style.display = 'flex';
+        loadUserProjects();
+    }
   } else {
     // 【核心新增】：如果没有登录，确保显示登录页，并瞬间触发绝美的开场动画
+    const navBar = document.querySelector('.progress-header');
+    if (navBar) navBar.style.display = 'flex'; // 恢复导航栏的默认显示状态
     showPage('login-page');
     playLoginEntranceAnimation();
   }
@@ -2326,3 +2359,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// ==========================================
+// 👑 Admin Dashboard：超级管理员全局遥测逻辑 (全时间维度打通版)
+// ==========================================
+let cachedAdminStatsData = null; // 🌟 全局缓存后端拉取的全量数据
+
+// 从后端获取所有维度的统计数据并缓存
+async function loadAdminStats() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/stats`);
+        const result = await response.json();
+
+        if (result.success) {
+            // 🌟 缓存整个数据集 (包含 today, week, month, all 的所有指标)
+            cachedAdminStatsData = result.data;
+            
+            // 默认渲染 Total (All Time) 范围
+            renderAdminTimeRange('all');
+        }
+    } catch (error) {
+        console.error("Failed to load admin stats:", error);
+        // 如果失败，清空横线
+        document.getElementById('stat-total-users').textContent = '-';
+        document.getElementById('stat-total-projects').textContent = '-';
+        document.getElementById('stat-total-papers').textContent = '-';
+    }
+}
+
+// 核心逻辑：根据时间范围渲染【整个界面】所有数字和条形图
+window.renderAdminTimeRange = function(timeRange) {
+    if (!cachedAdminStatsData) return;
+
+    // 🌟 A. 更新选项卡 active 样式
+    const tabs = document.querySelectorAll('#admin-time-tabs .tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    // 根据参数设置 active (today, week, month, all)
+    if (timeRange === 'today') tabs[0].classList.add('active');
+    if (timeRange === 'week') tabs[1].classList.add('active');
+    if (timeRange === 'month') tabs[2].classList.add('active');
+    if (timeRange === 'all') tabs[3].classList.add('active');
+
+    // 🌟 B. 获取该时间段对应的全量数据
+    const targetData = cachedAdminStatsData[timeRange]; // 包含 {users, projects, papers}
+
+    // 🌟 C. 更新顶部的四宫格 (Total Researchers, Projects, Papers)
+    // 这里使用 animateValue 滚动特效，让数据变化更有动感
+    animateValue('stat-total-users', 0, targetData.users, 1000);
+    animateValue('stat-total-projects', 0, targetData.projects.total_proj, 1000);
+    animateValue('stat-total-papers', 0, targetData.papers, 1000);
+
+    // 🌟 D. 更新底部的项目分布进度条和文字
+    const projData = targetData.projects;
+    const totalProj = projData.total_proj || 1; // 防止除以 0
+
+    // 计算百分比
+    const pSpico = Math.round((projData.SPICO / totalProj) * 100) || 0;
+    const pPeco = Math.round((projData.PECO / totalProj) * 100) || 0;
+    const pPiro = Math.round((projData.PIRO / totalProj) * 100) || 0;
+
+    // 触发 CSS 宽度动画和文字更新
+    document.getElementById('dist-spico-bar').style.width = pSpico + '%';
+    document.getElementById('dist-spico-text').textContent = `${pSpico}% (${projData.SPICO})`;
+
+    document.getElementById('dist-peco-bar').style.width = pPeco + '%';
+    document.getElementById('dist-peco-text').textContent = `${pPeco}% (${projData.PECO})`;
+
+    document.getElementById('dist-piro-bar').style.width = pPiro + '%';
+    document.getElementById('dist-piro-text').textContent = `${pPiro}% (${projData.PIRO})`;
+};
+
+// 数字滚动小动画引擎
+function animateValue(id, start, end, duration) {
+    const obj = document.getElementById(id);
+    if (!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 4); // easeOutQuart 缓动
+        obj.innerHTML = Math.floor(easeOut * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else { obj.innerHTML = end; }
+    };
+    window.requestAnimationFrame(step);
+}
