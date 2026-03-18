@@ -1549,6 +1549,37 @@
             0% { transform: translateX(-30px); opacity: 0; }
             100% { transform: translateX(0); opacity: 1; }
         }
+
+        /* 👑 超级管理员：Premium 圆形头像按钮 */
+        .avatar-admin-wrapper {
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            background: linear-gradient(#1c1c1e, #1c1c1e) padding-box, 
+                        linear-gradient(135deg, #0071e3, #8f52de) border-box; /* 极光渐变 */
+        }
+        [data-theme="light"] .avatar-admin-wrapper {
+            background: linear-gradient(#ffffff, #ffffff) padding-box, 
+                        linear-gradient(135deg, #0071e3, #8f52de) border-box;
+        }
+        .avatar-admin-wrapper:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 15px rgba(143, 82, 222, 0.4);
+        }
+        .avatar-admin-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0071e3, #8f52de);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent; /* 🌟 核心小技巧：让文字也变成渐变色 */
+        }
     </style>
 </head>
 <body>
@@ -1691,6 +1722,90 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+        <div id="admin-dashboard-page" class="container" style="display: none;">
+            <div class="header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h1>Global Telemetry</h1>
+                    <span class="type-badge" style="background: rgba(143, 82, 222, 0.15); color: #8f52de; border: 1px solid rgba(143, 82, 222, 0.3);">SYSTEM OVERLORD</span>
+                </div>
+                <div class="avatar-admin-wrapper" onclick="showPage('profile-page')">
+                    <div class="avatar-admin-text">A</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px;">
+                <div class="card dark-glass" style="padding: 24px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="color: #86868b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Researchers</div>
+                    <div id="stat-total-users" style="font-size: 36px; font-weight: 700; color: #00d2ff; margin-top: 10px;">-</div>
+                    <div style="font-size: 12px; color: #34c759; margin-top: 8px;">Active database records</div>
+                </div>
+                <div class="card dark-glass" style="padding: 24px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="color: #86868b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Projects Created</div>
+                    <div id="stat-total-projects" style="font-size: 36px; font-weight: 700; color: #ff9500; margin-top: 10px;">-</div>
+                    <div style="font-size: 12px; color: #86868b; margin-top: 8px;">Across all analysis types</div>
+                </div>
+                <div class="card dark-glass" style="padding: 24px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="color: #86868b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Papers Processed</div>
+                    <div id="stat-total-papers" style="font-size: 36px; font-weight: 700; color: #af52de; margin-top: 10px;">-</div>
+                    <div style="font-size: 12px; color: #86868b; margin-top: 8px;">Imported to knowledge base</div>
+                </div>
+                <div class="card dark-glass" style="padding: 24px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="color: #86868b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">API Health</div>
+                    <div style="font-size: 36px; font-weight: 700; color: #34c759; margin-top: 10px;">99.9%</div>
+                    <div style="font-size: 12px; color: #34c759; margin-top: 8px;">All systems operational</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3 style="margin: 0;">Project Distribution</h3>
+                    <div class="tabs" style="margin-bottom: 0;" id="admin-time-tabs">
+                        <div class="tab" onclick="renderAdminTimeRange('today')">Today</div>
+                        <div class="tab" onclick="renderAdminTimeRange('week')">This Week</div>
+                        <div class="tab" onclick="renderAdminTimeRange('month')">This Month</div>
+                        <div class="tab active" onclick="renderAdminTimeRange('all')">Total</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                        <span>Intervention (SPICO)</span>
+                        <span id="dist-spico-text">0% (0)</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(128,128,128,0.2); border-radius: 4px; overflow: hidden;">
+                        <div id="dist-spico-bar" style="width: 0%; height: 100%; background: #0071e3; border-radius: 4px; transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                        <span>Prognosis (PECO)</span>
+                        <span id="dist-peco-text">0% (0)</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(128,128,128,0.2); border-radius: 4px; overflow: hidden;">
+                        <div id="dist-peco-bar" style="width: 0%; height: 100%; background: #34c759; border-radius: 4px; transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+                        <span>Diagnosis (PIRO)</span>
+                        <span id="dist-piro-text">0% (0)</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(128,128,128,0.2); border-radius: 4px; overflow: hidden;">
+                        <div id="dist-piro-bar" style="width: 0%; height: 100%; background: #af52de; border-radius: 4px; transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);"></div>
+                    </div>
                 </div>
             </div>
         </div>

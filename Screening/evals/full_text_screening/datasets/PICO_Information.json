@@ -1,0 +1,22 @@
+[
+    {
+        "Aspect": "Treatment of Helicobacter pylori Infection",
+        "Index": "15",
+        "Question": "For patients with Helicobacter pylori infection (regardless of prior treatment history), is standard triple therapy recommended compared to bismuth quadruple therapy?",
+        "P": "Patients with Helicobacter pylori infection (Including first-line treatment and all other treatment situations)",
+        "I": "Standard Triple Therapy (Proton Pump Inhibitor [PPI] + two antibiotics, including all kinds of antibiotics) ",
+        "C": [
+            "Bismuth Quadruple Therapy (defined as Standard Triple Therapy combined with a Bismuth agent)"
+        ],
+        "O": {
+            "Standard Bismuth Quadruple Therapy": [
+                "Eradication rate (Critical outcome, >85-90%) ",
+                "Serious adverse events (Critical outcome, e.g., peptic ulcer) ",
+                "Significant adverse events ",
+                "Symptom relief ",
+                "Quality of life ",
+                "Economic indicators / Cost-effectiveness "
+            ]
+        }
+    }
+]
