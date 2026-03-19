@@ -22,7 +22,7 @@ from Screening.FullTextScreening import (
 )
 
 
-class WebFullTextTests(unittest.TestCase):
+class FullTextScreeningTests(unittest.TestCase):
     def test_parse_pages_spec_supports_ranges(self) -> None:
         self.assertIsNone(_parse_pages_spec("all"))
         self.assertEqual(_parse_pages_spec("1-3,5"), [1, 2, 3, 5])
