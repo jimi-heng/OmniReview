@@ -32,7 +32,7 @@ import Screening.ThreeAgnets
 from Screening.paper_download import ImprovedPaperDownloader
 from flask import Flask, request, jsonify, make_response, send_file, send_from_directory  # 新增 send_file
 # ...
-from Screening.WebFullText import run_fulltext_ai_sync  # 新增引入口
+from Screening.FullTextScreening import run_fulltext_ai_sync  # 新增引入口
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})

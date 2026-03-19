@@ -15,7 +15,7 @@ if str(SCREENING_DIR) not in sys.path:
 
 import fitz
 
-from Screening.WebFullText import (
+from Screening.FullTextScreening import (
     _load_pdf_bytes,
     _parse_pages_spec,
     _resolve_runtime_config,
