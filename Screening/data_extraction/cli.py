@@ -17,7 +17,7 @@ from .http_client import ResponsesAPIClient, ResponsesAPIConfig
 from .models import Paper
 from .output import csv_to_excel, csv_writer
 from .pdf import discover_pdfs, parse_pages_spec
-from .service import EnhancedDataExtractor, ExtractionRequest
+from .service import EnhancedDataExtractor, ExtractionRequest, PipelineOrchestrator
 from .template import read_template_columns
 
 
@@ -95,6 +95,13 @@ Examples:
         default="",
         help='JSON string containing PICO criteria from frontend (e.g., \'{"s":"RCT","p":"children","i":"iron","c":"placebo","o":"hemoglobin"}\')',
     )
+    parser.add_argument(
+        "--pipeline-mode",
+        type=str,
+        default="legacy",
+        choices=["legacy", "phase1", "phase2"],
+        help="Extraction pipeline mode: legacy single-shot, phase1 stage1/2+fallback, or phase2 multi-stage rows",
+    )
     parser.add_argument("--debug-prompt", action="store_true", help="Log first 500 chars of the prompt per paper")
     parser.add_argument("--log-level", type=str, default="INFO", help="Logging level (DEBUG/INFO/WARNING/ERROR)")
     return parser
@@ -158,10 +165,20 @@ async def async_main(argv: Optional[List[str]] = None) -> None:
 
     async with httpx.AsyncClient() as http_client:
         llm_client = ResponsesAPIClient(http_client=http_client, config=client_cfg)
-        extractor = EnhancedDataExtractor(
+        legacy_extractor = EnhancedDataExtractor(
             llm_client=llm_client,
             project_dir=paths.project_dir,
             debug_prompt=bool(args.debug_prompt),
+        )
+        extractor = (
+            legacy_extractor
+            if str(args.pipeline_mode).lower() == "legacy"
+            else PipelineOrchestrator(
+                llm_client=llm_client,
+                project_dir=paths.project_dir,
+                debug_prompt=bool(args.debug_prompt),
+                fallback_extractor=legacy_extractor,
+            )
         )
 
         writer_task = asyncio.create_task(csv_writer(queue, args.output_csv, llm_columns))
@@ -176,6 +193,7 @@ async def async_main(argv: Optional[List[str]] = None) -> None:
                         pages_spec=pages_spec,
                         project_type=str(args.project_type),
                         pico_dict=pico_dict,
+                        pipeline_mode=str(args.pipeline_mode),
                     ),
                 )
 
@@ -235,4 +253,3 @@ def main(argv: Optional[List[str]] = None) -> None:
         asyncio.run(async_main(argv))
     finally:
         print(f"\nElapsed: {time.perf_counter() - start:.2f}s")
-
