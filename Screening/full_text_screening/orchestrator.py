@@ -4,7 +4,10 @@ from typing import Any, Mapping
 
 import httpx
 
-from Screening.TextHighlight import highlight_pdf
+try:
+    from Screening.TextHighlight import highlight_pdf
+except ImportError:
+    from TextHighlight import highlight_pdf
 
 from .models import FullTextRequest, FullTextScreeningConfig, FullTextScreeningRuntime
 from .parsing import extract_conclusion, extract_evidence, extract_flag, extract_output_text

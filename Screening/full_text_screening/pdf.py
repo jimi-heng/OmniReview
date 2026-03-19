@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+from .models import FullTextPaper
+
 try:
     import fitz  # PyMuPDF
 except Exception:
@@ -52,3 +54,21 @@ def load_pdf_bytes(pdf_path: Path, pages: Optional[list[int]]) -> bytes:
             for page in selected:
                 out.insert_pdf(src, from_page=page - 1, to_page=page - 1)
             return out.write()
+
+
+def discover_pdfs(resources_dir: Path) -> list[FullTextPaper]:
+    pdfs = sorted(
+        [path for path in resources_dir.rglob("*.pdf") if path.is_file()],
+        key=lambda path: str(path).lower(),
+    )
+    papers: list[FullTextPaper] = []
+    for index, path in enumerate(pdfs, start=1):
+        resolved = path.resolve()
+        papers.append(
+            FullTextPaper(
+                paper_id=index,
+                title=resolved.stem,
+                pdf_path=resolved,
+            )
+        )
+    return papers
