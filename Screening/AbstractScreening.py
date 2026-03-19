@@ -11,6 +11,7 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import asyncio
 import requests
+import defusedxml.ElementTree as ET
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
@@ -655,7 +656,6 @@ def search_pubmed(query, max_number):
         if not r:
             return []
 
-        import xml.etree.ElementTree as ET
         root = ET.fromstring(r.text)
 
         results = []
