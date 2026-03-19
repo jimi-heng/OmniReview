@@ -1,4 +1,4 @@
-"""Compatibility facade for full-text screening."""
+"""Public entrypoints for full-text screening."""
 
 from .full_text_screening.models import (
     FullTextPaper,
@@ -19,10 +19,6 @@ from .full_text_screening.prompts import (
 )
 from .full_text_screening.runtime import coerce_paper, normalize_pico_dict, resolve_runtime_config
 
-
-WebFullTextConfig = FullTextScreeningConfig
-WebFullTextRuntime = FullTextScreeningRuntime
-
 _parse_pages_spec = parse_pages_spec
 _load_pdf_bytes = load_pdf_bytes
 _normalize_project_type = normalize_project_type
@@ -30,7 +26,6 @@ _normalize_pico_dict = normalize_pico_dict
 _coerce_paper = coerce_paper
 _get_system_prompt = get_system_prompt
 _build_user_prompt = build_user_prompt
-_run_web_fulltext = run_fulltext
 
 
 def _resolve_runtime_config(config):
@@ -44,8 +39,6 @@ __all__ = [
     "PECO_SYSTEM_PROMPT",
     "PICOS_SYSTEM_PROMPT",
     "PIRO_SYSTEM_PROMPT",
-    "WebFullTextConfig",
-    "WebFullTextRuntime",
     "extract_conclusion",
     "extract_evidence",
     "load_pdf_bytes",

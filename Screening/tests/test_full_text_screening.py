@@ -16,17 +16,17 @@ if str(SCREENING_DIR) not in sys.path:
 import fitz
 
 from Screening.FullTextScreening import (
-    _load_pdf_bytes,
-    _parse_pages_spec,
-    _resolve_runtime_config,
+    load_pdf_bytes,
+    parse_pages_spec,
+    resolve_runtime_config,
 )
 
 
 class FullTextScreeningTests(unittest.TestCase):
     def test_parse_pages_spec_supports_ranges(self) -> None:
-        self.assertIsNone(_parse_pages_spec("all"))
-        self.assertEqual(_parse_pages_spec("1-3,5"), [1, 2, 3, 5])
-        self.assertEqual(_parse_pages_spec("5,3-1"), [1, 2, 3, 5])
+        self.assertIsNone(parse_pages_spec("all"))
+        self.assertEqual(parse_pages_spec("1-3,5"), [1, 2, 3, 5])
+        self.assertEqual(parse_pages_spec("5,3-1"), [1, 2, 3, 5])
 
     def test_load_pdf_bytes_slices_selected_pages(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -37,7 +37,7 @@ class FullTextScreeningTests(unittest.TestCase):
                     page.insert_text((72, 72), f"Page {idx + 1}")
                 doc.save(pdf_path)
 
-            sliced_bytes = _load_pdf_bytes(pdf_path, [1, 3])
+            sliced_bytes = load_pdf_bytes(pdf_path, [1, 3])
             with fitz.open(stream=sliced_bytes, filetype="pdf") as sliced:
                 self.assertEqual(sliced.page_count, 2)
 
@@ -48,7 +48,7 @@ class FullTextScreeningTests(unittest.TestCase):
             "WEB_FULLTEXT_TIMEOUT": "120",
         }
         with patch.dict(os.environ, env, clear=False):
-            runtime = _resolve_runtime_config({"max_concurrency": 9, "pdf_pages": "2-4"})
+            runtime = resolve_runtime_config({"max_concurrency": 9, "pdf_pages": "2-4"}, parse_pages_spec=parse_pages_spec)
 
         self.assertEqual(runtime.api_key, "test-key")
         self.assertEqual(runtime.model, "gpt-from-env")

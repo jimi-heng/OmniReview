@@ -1,19 +1,25 @@
 {
-  "Topic": "Treatment of Helicobacter pylori Infection",
-  "Index": "15",
-  "Question": "For patients with Helicobacter pylori infection (regardless of prior treatment history), is standard triple therapy recommended compared to bismuth quadruple therapy?",
-  "S" : "SR, RCT",
-  "P": "Patients with Helicobacter pylori infection (Including first-line treatment and all other treatment situations)",
-  "I": "Standard Triple Therapy (Proton Pump Inhibitor [PPI] + two antibiotics, including all kinds of antibiotics)",
-  "C": "Bismuth Quadruple Therapy (defined as Standard Triple Therapy combined with a Bismuth agent)",
+  "Topic": "6-24月龄儿童预防铁缺乏和缺铁性贫血",
+  "Index": "6",
+  "Question": "针对6-24月龄儿童，为预防铁缺乏和缺铁性贫血，是推荐铁剂补充还是添加富含含铁的食物？",
+  "S": "SR, RCT, 观察性研究",
+  "P": "儿童（0-6岁，图中问题聚焦于6-24月龄儿童；是否合并疾病未明确）",
+  "I": "铁剂补充（每日2 mg/kg 元素铁的口服铁剂补充）",
+  "C": "含铁食物（如红肉、豆类、绿叶蔬菜等）",
   "O": {
-    "Standard Bismuth Quadruple Therapy": [
-      "Eradication rate (Critical outcome, >85-90%)",
-      "Serious adverse events (Critical outcome, e.g., peptic ulcer)",
-      "Significant adverse events",
-      "Symptom relief",
-      "Quality of life",
-      "Economic indicators / Cost-effectiveness"
-    ]
-  }
+    "Critical": [
+      "血色素的改善",
+      "贫血发生率",
+      "铁缺乏发生率",
+      "生长发育指标"
+    ],
+    "Important": [
+      "安全性指标：胃肠道反应",
+      "食欲下降",
+      "神经认知发育",
+      "肠道菌群",
+      "感染性疾病患病率"
+    ]    
+  },
+  "Notes": ""
 }
