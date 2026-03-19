@@ -414,7 +414,7 @@ def build_user_prompt(request: FullTextRequest) -> str:
         """
 
     return f"""
-            Target PICS Criteria for this Evaluation:
+            Target SPICO Criteria for this Evaluation:
             - Study Design (S): {pico_dict.get('s', '')}
             - Population (P): {pico_dict.get('p', '')}
             - Intervention (I): {pico_dict.get('i', '')}
@@ -423,7 +423,7 @@ def build_user_prompt(request: FullTextRequest) -> str:
             - Additional Criteria: {pico_dict.get('es', '')}
 
             Instructions for this task:
-            Evaluate the paper below against the Target PICS Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.
+            Evaluate the paper below against the Target SPICO Criteria using the strict rules and output template defined in your system instructions. Evaluate S, P, I, C, O, and Extra separately.
 
             Input Data:
             [Paper ID: {paper.paper_id}]
