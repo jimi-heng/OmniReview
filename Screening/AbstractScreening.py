@@ -170,7 +170,6 @@ Task:
 
 PICOSuserPromptReason = PICOSuserPromptNoReason + reasonUserPrompt
 
-
 PECOsystemPromptNoReason = """
 Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
@@ -292,7 +291,6 @@ Task:
 """
 
 PECOuserPromptReason = PECOuserPromptNoReason + reasonUserPrompt
-
 
 PIROsystemPromptNoReason = """
 Role:
@@ -422,6 +420,7 @@ def save_file(paper_list):
     paper_list.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"保存到: {filename}")
 
+
 async def abstract_screening():
     global topic_keywords
 
@@ -431,27 +430,31 @@ async def abstract_screening():
     outcome = input("Enter Outcome: ").strip()
 
     query = {
-        "Topic" : topic_keywords,
-        "Population" : population,
-        "Intervention" : intervention,
-        "Comparison" : comparison,
-        "Outcome" : outcome
+        "Topic": topic_keywords,
+        "Population": population,
+        "Intervention": intervention,
+        "Comparison": comparison,
+        "Outcome": outcome
     }
 
     paper_list = pd.DataFrame(whole_paper_list)
-    await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, PICOSsystemPromptReason, PICOSsystemPromptNoReason,
+    await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, PICOSsystemPromptReason,
+                                    PICOSsystemPromptNoReason,
                                     PICOSuserPromptReason, PICOSuserPromptNoReason)
     save_file(paper_list)
+
 
 # Upload files
 def upload_to_csv():
     global whole_paper_list, topic_keywords
     file_dir = input("enter RIS file: ").strip()
 
+
 async def main():
     # save_dir = input("enter address: ").strip()
 
     await abstract_screening()
+
 
 def reconstruct_abstract(inv_index):
     """将 OpenAlex 的 abstract_inverted_index 还原为正常 abstract"""
@@ -466,8 +469,8 @@ def reconstruct_abstract(inv_index):
     words.sort()
     return " ".join(word for _, word in words)
 
-def search_openalex(query, max_number):
 
+def search_openalex(query, max_number):
     try:
         url = "https://api.openalex.org/works"
 
@@ -538,12 +541,14 @@ def search_openalex(query, max_number):
         print(f"OpenAlex search error: {e}")
         return []
 
+
 def extract_doi(record):
     """从 PubMed record 中提取 DOI"""
     for a in record.get("AID", []):
         if "[doi]" in a:
             return a.replace(" [doi]", "")
     return ""
+
 
 def create_session():
     session = requests.Session()
@@ -560,7 +565,9 @@ def create_session():
 
     return session
 
+
 session = create_session()
+
 
 def safe_get(url, params=None, headers=None):
     try:
@@ -570,6 +577,7 @@ def safe_get(url, params=None, headers=None):
     except Exception as e:
         print(f"[HTTP ERROR] {url} -> {e}")
         return None
+
 
 def search_pubmed(query, max_number):
     try:
@@ -661,8 +669,8 @@ def search_pubmed(query, max_number):
         print(f"PubMed search error: {e}")
         return []
 
-def search_wos(query, max_number):
 
+def search_wos(query, max_number):
     try:
 
         url = "https://wos-api.clarivate.com/api/wos"
@@ -751,6 +759,7 @@ def search_wos(query, max_number):
         print(f"WOS search error: {e}")
         return []
 
+
 def literature_search_all(query, N, databases=None):
     # 如果没传，默认全选防报错
     if databases is None:
@@ -764,11 +773,11 @@ def literature_search_all(query, N, databases=None):
     if 'pubmed' in databases:
         pubmed_papers = search_pubmed(query, N)
         print(f"PubMed returned {len(pubmed_papers)} papers")
-        
+
     if 'openalex' in databases:
         openalex_papers = search_openalex(query, N)
         print(f"OpenAlex returned {len(openalex_papers)} papers")
-        
+
     if 'wos' in databases:
         wos_papers = search_wos(query, N)
         print(f"WOS returned {len(wos_papers)} papers")
@@ -795,7 +804,7 @@ def literature_search_all(query, N, databases=None):
             unique[key] = True
             results.append(p)
         else:
-            duplicate_count +=1
+            duplicate_count += 1
 
     # 打乱
     random.shuffle(results)
@@ -805,6 +814,7 @@ def literature_search_all(query, N, databases=None):
     print(f"Final paper count: {len(results)}")
     print(f"Duplicate papers: {duplicate_count}")
     return results
+
 
 def has_valid_abstract(paper):
     abstract = paper.get("abstract")
@@ -822,6 +832,7 @@ def has_valid_abstract(paper):
 
     return True
 
+
 # --- 新增对接接口开始 ---
 
 async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
@@ -829,12 +840,12 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
     global PICOSsystemPromptReason, PICOSsystemPromptNoReason, PICOSuserPromptReason, PICOSuserPromptNoReason
     global PECOsystemPromptReason, PECOsystemPromptNoReason, PECOuserPromptReason, PECOuserPromptNoReason
     global PIROsystemPromptReason, PIROsystemPromptNoReason, PIROuserPromptReason, PIROuserPromptNoReason
-    global topic_keywords 
-    
+    global topic_keywords
+
     results = []
     if not papers:
         return results
-        
+
     # 动态匹配对应的 Prompt 模板
     if project_type == 'PECO':
         sys_reason = PECOsystemPromptReason
@@ -883,39 +894,40 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
             "Outcome": pico_data.get('o', ''),
             "Addition Criteria": pico_data.get('es', ''),
         }
-    
+
     df_list = []
     for p in papers:
         df_list.append({
-            'ID': p['id'],             
+            'ID': p['id'],
             'Title': p['title'],
             'Abstract_clean': p['abstract'],
             'Abstract': p['abstract'],
-            'Flag1': '', 'Flag2': '', 'Flag3': '', 'Reason': ''               
+            'Flag1': '', 'Flag2': '', 'Flag3': '', 'Reason': ''
         })
     paper_list_df = pd.DataFrame(df_list)
-    
+
     try:
         updated_df = await ThreeAgnets.use_agent_all(
-            paper_list_df, query, model1_name, model2_name, model3_name, 
+            paper_list_df, query, model1_name, model2_name, model3_name,
             sys_reason, sys_no_reason, usr_reason, usr_no_reason
         )
-        
+
         for index, row in updated_df.iterrows():
             flag_val = str(row.get('Flag3', '0')).strip()
             ai_decision = 'Included' if '1' in flag_val else 'Excluded'
             reason = str(row.get('Reason', ''))
             if not reason or reason.strip() == '' or reason == 'nan':
                 reason = "AI successfully screened this paper but did not output detailed reasoning."
-                
+
             results.append({'id': row['ID'], 'ai_decision': ai_decision, 'reasoning': reason})
-            
+
     except Exception as e:
         print(f"ThreeAgnets Screening Error: {e}")
         for p in papers:
             results.append({'id': p['id'], 'ai_decision': 'Pending', 'reasoning': f"AI Screening Error: {str(e)}"})
-            
+
     return results
+
 
 def run_ai_screening_sync(pico_data, papers, project_type='SPICO'):
     """
@@ -928,6 +940,7 @@ def run_ai_screening_sync(pico_data, papers, project_type='SPICO'):
         return results
     finally:
         loop.close()
+
 
 # --- 新增对接接口结束 ---
 
