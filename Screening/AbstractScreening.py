@@ -4,12 +4,11 @@ from Bio import Entrez
 from Bio import Medline
 import pandas as pd
 import os
-import re
 import ThreeAgnets
-import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import asyncio
 import requests
 
@@ -527,7 +526,9 @@ def search_openalex(query, max_number):
             "per-page": max_number
         }
 
-        r = requests.get(url, params=params)
+        r = safe_get(url, params=params)
+        if not r:
+            return []
 
         if r.status_code != 200:
             print("OpenAlex request failed:", r.status_code)
@@ -593,61 +594,116 @@ def extract_doi(record):
             return a.replace(" [doi]", "")
     return ""
 
-def search_pubmed(query, max_number):
+def create_session():
+    session = requests.Session()
 
+    retries = Retry(
+        total=3,
+        backoff_factor=1,  # 1s, 2s, 4s
+        status_forcelist=[500, 502, 503, 504]
+    )
+
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    return session
+
+session = create_session()
+
+def safe_get(url, params=None, headers=None):
     try:
-        # 搜索 PMID
-        handle = Entrez.esearch(
-            db="pubmed",
-            term=query,
-            retmax=max_number
-        )
+        r = session.get(url, params=params, headers=headers, timeout=10)
+        r.raise_for_status()
+        return r
+    except Exception as e:
+        print(f"[HTTP ERROR] {url} -> {e}")
+        return None
 
-        record = Entrez.read(handle)
-        handle.close()
+def search_pubmed(query, max_number):
+    try:
+        # 1. 搜索 PMID
+        url_search = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 
-        pmids = record.get("IdList", [])
+        params = {
+            "db": "pubmed",
+            "term": query,
+            "retmax": max_number,
+            "retmode": "json"
+        }
+
+        r = safe_get(url_search, params=params)
+        if not r:
+            return []
+
+        data = r.json()
+        pmids = data.get("esearchresult", {}).get("idlist", [])
 
         if not pmids:
             return []
 
-        # 获取详细信息
-        handle = Entrez.efetch(
-            db="pubmed",
-            id=pmids,
-            rettype="medline",
-            retmode="text"
-        )
+        # 2. 获取详细信息（XML）
+        url_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
-        records = list(Medline.parse(handle))
-        handle.close()
+        params = {
+            "db": "pubmed",
+            "id": ",".join(pmids),
+            "retmode": "xml"
+        }
+
+        r = safe_get(url_fetch, params=params)
+        if not r:
+            return []
+
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(r.text)
 
         results = []
 
-        for r in records:
+        for article in root.findall(".//PubmedArticle"):
 
-            # year
-            year_str = r.get("DP", "")
-            year = ""
+            try:
+                title = article.findtext(".//ArticleTitle") or ""
+                abstract = " ".join(
+                    [a.text or "" for a in article.findall(".//AbstractText")]
+                )
 
-            if year_str:
-                try:
-                    year = int(year_str[:4])
-                except:
-                    year = ""
+                journal = article.findtext(".//Title") or ""
 
-            row = {
-                "title": r.get("TI", "") or "",
-                "abstract": r.get("AB", "") or "",
-                "author": "; ".join(r.get("AU", [])),
-                "journal": r.get("JT", "") or "",
-                "year": year,
-                "doi": extract_doi(r)
-            }
+                year = article.findtext(".//PubDate/Year") or ""
 
-            if not has_valid_abstract(row):
+                # DOI
+                doi = ""
+                for id_node in article.findall(".//ArticleId"):
+                    if id_node.attrib.get("IdType") == "doi":
+                        doi = id_node.text or ""
+
+                # authors
+                authors = []
+                for a in article.findall(".//Author"):
+                    last = a.findtext("LastName") or ""
+                    fore = a.findtext("ForeName") or ""
+                    name = f"{fore} {last}".strip()
+                    if name:
+                        authors.append(name)
+
+                row = {
+                    "title": title,
+                    "abstract": abstract,
+                    "author": "; ".join(authors),
+                    "journal": journal,
+                    "year": year,
+                    "doi": doi
+                }
+
+                if not has_valid_abstract(row):
+                    continue
+
+                results.append(row)
+
+            except Exception as e:
+                print("Parse error:", e)
                 continue
-            results.append(row)
 
         return results
 
@@ -672,7 +728,9 @@ def search_wos(query, max_number):
             "X-ApiKey": "WOS_API_KEY"
         }
 
-        r = requests.get(url, headers=headers, params=params)
+        r = safe_get(url, params=params, headers=headers)
+        if not r:
+            return []
 
         if r.status_code != 200:
             print("WOS request failed:", r.status_code)

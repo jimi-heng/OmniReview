@@ -5,7 +5,9 @@ let currentUser = null; // 存储当前登录用户信息
 let currentProject = null; // 存储当前正在进行的项目
 // ====== 核心配置：自动环境识别 ======
 // 如果当前网址是 localhost，就请求本地后端的 3000 端口；否则请求云服务器的后端
-const API_BASE_URL ='';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3000'
+    : '';
     
 // ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
 // ====== 新增：处理 Apple 风格登录页入场动画逻辑 ======
