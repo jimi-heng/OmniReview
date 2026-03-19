@@ -4,7 +4,7 @@ from typing import Any, Mapping
 
 import httpx
 
-from TextHighlight import highlight_pdf
+from Screening.TextHighlight import highlight_pdf
 
 from .models import FullTextRequest, FullTextScreeningConfig, FullTextScreeningRuntime
 from .parsing import extract_conclusion, extract_evidence, extract_flag, extract_output_text
@@ -57,6 +57,8 @@ async def process_single_paper(
         evidences = extract_evidence(text)
         conclusion = extract_conclusion(text)
         decision = "Included" if flag == "1" else "Excluded"
+
+        print(evidences)
 
         hl_path_str = None
         try:
