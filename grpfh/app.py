@@ -29,7 +29,7 @@ from grpfh.database import get_db  # 只导入get_db，不导入init_database
 # app.py 顶部导入区域，更新这一行
 from Screening.AbstractScreening import literature_search_all, run_ai_screening_sync
 import Screening.ThreeAgnets
-from Screening.download import ImprovedPaperDownloader
+from Screening.paper_download import ImprovedPaperDownloader
 from flask import Flask, request, jsonify, make_response, send_file, send_from_directory  # 新增 send_file
 # ...
 from Screening.WebFullText import run_fulltext_ai_sync  # 新增引入口

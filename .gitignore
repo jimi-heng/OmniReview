@@ -217,6 +217,9 @@ resources/
 data/
 resources_md/
 
+# Office temp/lock files
+~$*.xlsx
+
 CLAUDE.md
 AGENTS.md
 .DS_Store
