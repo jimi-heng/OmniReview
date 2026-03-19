@@ -736,6 +736,8 @@ async def csv_writer(
 
 def csv_to_excel(csv_path: Path, xlsx_path: Path, template_path: Path) -> None:
     """Convert CSV to Excel with template-based column ordering."""
+    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+
     template_columns, _ = read_template_columns(template_path)
     metadata_fields = {"Rayyan_ID", "Title", "Abstract", "Full_Text", "Extractor", "Checker"}
     preferred = ["ID", "Title", "RelativePath"] + [c for c in template_columns if c not in metadata_fields] + ["Error"]
@@ -751,7 +753,7 @@ def csv_to_excel(csv_path: Path, xlsx_path: Path, template_path: Path) -> None:
         ws.title = "baseline characteristics"
         ws.append(ordered_headers)
         for row in reader:
-            ws.append([row.get(col, "") for col in ordered_headers])
+            ws.append([ILLEGAL_CHARACTERS_RE.sub("", row.get(col, "")) for col in ordered_headers])
 
     xlsx_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(xlsx_path)
