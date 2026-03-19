@@ -1,14 +1,15 @@
 import asyncio
 import base64
+import json
 import os
 import re
-import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Optional
+
 import httpx
 from dotenv import load_dotenv
 
-# 引入你们的高亮绘图工具
 from TextHighlight import highlight_pdf
 
 try:
@@ -16,10 +17,11 @@ try:
 except Exception:
     fitz = None
 
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
 
-# 保留你们极其严格的系统提示词
+
 PICOS_SYSTEM_PROMPT = """
 Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
@@ -376,15 +378,54 @@ Conclusion:
 "<concise explanation why the paper is included or excluded based strictly on matched component count>"
 """
 
-import re
+
+@dataclass(frozen=True)
+class FullTextPaper:
+    paper_id: int
+    title: str
+    pdf_path: Path
+
+
+@dataclass(frozen=True)
+class FullTextRequest:
+    paper: FullTextPaper
+    pico_dict: dict[str, str]
+    project_type: str
+
+
+@dataclass(frozen=True)
+class WebFullTextConfig:
+    base_url: str = "https://www.dmxapi.cn/v1"
+    model: str = "gpt-4.1"
+    api_key_env: str = "DMX_API_KEY_1"
+    timeout: float = 300.0
+    retries: int = 3
+    retry_delay: float = 3.0
+    max_concurrency: int = 5
+    pdf_pages: str = "all"
+
+
+@dataclass(frozen=True)
+class WebFullTextRuntime:
+    endpoint: str
+    api_key: str
+    model: str
+    timeout: float
+    retries: int
+    retry_delay: float
+    max_concurrency: int
+    pdf_pages: str
+    selected_pages: Optional[list[int]]
+
 
 def clean_evidence(text: str) -> str:
     if not text:
         return ""
     return text.strip().strip('"').strip("'")
 
+
 def extract_evidence(text):
-    components = ["Study Design", "Population", "Intervention", "Comparison", "Outcome", "Indicator",  "Reference", "Exposure", "Extra"]
+    components = ["Study Design", "Population", "Intervention", "Comparison", "Outcome", "Indicator", "Reference", "Exposure", "Extra"]
     evidences = {}
 
     for comp in components:
@@ -403,40 +444,142 @@ def extract_conclusion(text: str) -> str:
     match = re.search(r'Conclusion:\s*\"?(.*?)\"?(?=\n[A-Z][a-z]+:|\Z)', text, re.DOTALL)
     return match.group(1).strip() if match else "No conclusion provided."
 
-def _extract_flag(text: str) -> str:
-    m = re.search(r"(?mi)^\s*Flag\s*:\s*([01])\s*$", text or "")
-    return m.group(1) if m else "0"
 
-def _extract_output_text(resp_json: dict[str, Any]) -> str:
-    out_parts = []
-    for item in resp_json.get("output", []) or []:
-        if not isinstance(item, dict) or item.get("type") != "message": continue
-        for block in item.get("content", []) or []:
-            if isinstance(block, dict) and block.get("type") == "output_text":
-                text = block.get("text")
-                if isinstance(text, str) and text.strip(): out_parts.append(text)
-    if out_parts: return "\n".join(out_parts)
-    return resp_json.get("output_text", resp_json.get("text", ""))
+def _normalize_project_type(project_type: str) -> str:
+    normalized = (project_type or "PICOS").upper()
+    return "PICOS" if normalized in {"PICO", "SPICO"} else normalized
 
-async def _call_with_retry(coro_func, *args, retries=3, delay_s=3.0):
-    last_exc = None
-    for _ in range(retries):
-        try: return await coro_func(*args)
-        except Exception as e:
-            last_exc = e
-            await asyncio.sleep(delay_s)
-    raise last_exc
 
-async def _post_with_auth_fallback(client, url, api_key, payload, timeout_s):
-    headers1 = {"Authorization": api_key, "Content-Type": "application/json"}
-    r1 = await client.post(url, headers=headers1, json=payload, timeout=timeout_s)
-    if r1.status_code not in (401, 403): return r1
-    headers2 = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    return await client.post(url, headers=headers2, json=payload, timeout=timeout_s)
+def _normalize_pico_dict(pico_dict: Optional[Mapping[str, Any]]) -> dict[str, str]:
+    return {
+        str(key): "" if value is None else str(value)
+        for key, value in (pico_dict or {}).items()
+    }
 
-async def process_single_paper(client, endpoint, api_key, model_name, paper, pico_dict, project_type):
-    if project_type == 'PECO':
-        user_prompt = f"""
+
+def _coerce_paper(paper: Any) -> FullTextPaper:
+    if isinstance(paper, FullTextPaper):
+        return paper
+    if not isinstance(paper, Mapping):
+        raise TypeError(f"Unsupported paper input: {type(paper)!r}")
+
+    paper_id = int(paper["id"])
+    pdf_path = Path(str(paper["pdf_path"]))
+    title = str(paper.get("title") or pdf_path.stem)
+    return FullTextPaper(paper_id=paper_id, title=title, pdf_path=pdf_path)
+
+
+def _parse_pages_spec(spec: str) -> Optional[list[int]]:
+    s = (spec or "").strip().lower()
+    if s in {"", "all", "*"}:
+        return None
+
+    pages: set[int] = set()
+    for part in s.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            a, b = part.split("-", 1)
+            start = int(a.strip())
+            end = int(b.strip())
+            if start <= 0 or end <= 0:
+                continue
+            if start > end:
+                start, end = end, start
+            pages.update(range(start, end + 1))
+        else:
+            p = int(part)
+            if p > 0:
+                pages.add(p)
+    return sorted(pages) if pages else None
+
+
+def _load_pdf_bytes(pdf_path: Path, pages: Optional[list[int]]) -> bytes:
+    data = pdf_path.read_bytes()
+    if pages is None:
+        return data
+
+    if fitz is None:
+        raise RuntimeError("PyMuPDF is required for pdf_pages/page slicing. Install `pymupdf`.")
+
+    with fitz.open(stream=data, filetype="pdf") as src:
+        page_count = src.page_count
+        selected = [p for p in pages if 1 <= p <= page_count]
+        if not selected:
+            return data
+
+        with fitz.open() as out:
+            for p in selected:
+                out.insert_pdf(src, from_page=p - 1, to_page=p - 1)
+            return out.write()
+
+
+def _read_env_config() -> WebFullTextConfig:
+    return WebFullTextConfig(
+        base_url=os.getenv("WEB_FULLTEXT_BASE_URL", "https://www.dmxapi.cn/v1"),
+        model=os.getenv("WEB_FULLTEXT_MODEL", "gpt-4.1"),
+        api_key_env=os.getenv("WEB_FULLTEXT_API_KEY_ENV", "DMX_API_KEY_1"),
+        timeout=float(os.getenv("WEB_FULLTEXT_TIMEOUT", "300.0")),
+        retries=int(os.getenv("WEB_FULLTEXT_RETRIES", "3")),
+        retry_delay=float(os.getenv("WEB_FULLTEXT_RETRY_DELAY", "3.0")),
+        max_concurrency=int(os.getenv("WEB_FULLTEXT_MAX_CONCURRENCY", "5")),
+        pdf_pages=os.getenv("WEB_FULLTEXT_PDF_PAGES", "all"),
+    )
+
+
+def _resolve_runtime_config(config: WebFullTextConfig | Mapping[str, Any] | None) -> WebFullTextRuntime:
+    default_cfg = _read_env_config()
+    endpoint_override: Optional[str] = None
+
+    if config is None:
+        merged = asdict(default_cfg)
+    elif isinstance(config, WebFullTextConfig):
+        merged = asdict(config)
+    elif isinstance(config, Mapping):
+        merged = {**asdict(default_cfg), **dict(config)}
+        endpoint_value = merged.pop("endpoint", None)
+        if endpoint_value:
+            endpoint_override = str(endpoint_value)
+    else:
+        raise TypeError(f"Unsupported config input: {type(config)!r}")
+
+    resolved = WebFullTextConfig(**merged)
+    api_key = os.getenv(resolved.api_key_env)
+    if not api_key:
+        raise RuntimeError(f"Missing env var in Screening/.env: {resolved.api_key_env}")
+
+    endpoint = endpoint_override or resolved.base_url.rstrip("/") + "/responses"
+    pdf_pages = str(resolved.pdf_pages or "all")
+    return WebFullTextRuntime(
+        endpoint=endpoint,
+        api_key=api_key,
+        model=resolved.model,
+        timeout=max(1.0, float(resolved.timeout)),
+        retries=max(1, int(resolved.retries)),
+        retry_delay=max(0.0, float(resolved.retry_delay)),
+        max_concurrency=max(1, int(resolved.max_concurrency)),
+        pdf_pages=pdf_pages,
+        selected_pages=_parse_pages_spec(pdf_pages),
+    )
+
+
+def _get_system_prompt(project_type: str) -> str:
+    normalized = _normalize_project_type(project_type)
+    if normalized == "PECO":
+        return PECO_SYSTEM_PROMPT
+    if normalized == "PIRO":
+        return PIRO_SYSTEM_PROMPT
+    return PICOS_SYSTEM_PROMPT
+
+
+def _build_user_prompt(request: FullTextRequest) -> str:
+    paper = request.paper
+    pico_dict = request.pico_dict
+    project_type = _normalize_project_type(request.project_type)
+
+    if project_type == "PECO":
+        return f"""
         Target PECO Criteria for this Evaluation:
         - Population (P): {pico_dict.get('p', '')}
         - Exposure (E): {pico_dict.get('e', '')}
@@ -448,14 +591,13 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
         Evaluate the paper below against the Target PECO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, E, C, O, and Extra separately.
 
         Input Data:
-        [Paper ID: {paper['id']}]
-        [Paper Title: {paper['title']}]
+        [Paper ID: {paper.paper_id}]
+        [Paper Title: {paper.title}]
         [PDF Page Images Provided Below]
         """
 
-        prompt = PECO_SYSTEM_PROMPT + "\n\n" + user_prompt
-    elif project_type == 'PIRO':
-        user_prompt = f"""
+    if project_type == "PIRO":
+        return f"""
         Target PIRO Criteria for this Evaluation:
         - Population (P): {pico_dict.get('p', '')}
         - Indicator (I): {pico_dict.get('i', '')}
@@ -467,74 +609,123 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
         Evaluate the paper below against the Target PIRO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, R, O, and Extra separately.
 
         Input Data:
-        [Paper ID: {paper['id']}]
-        [Paper Title: {paper['title']}]
+        [Paper ID: {paper.paper_id}]
+        [Paper Title: {paper.title}]
         [PDF Page Images Provided Below]
         """
 
-        prompt = PIRO_SYSTEM_PROMPT + "\n\n" + user_prompt
-    else :
-        # 1. 动态拼装用户在前端设置的PICOS
-        user_prompt = f"""
-                Target PICS Criteria for this Evaluation:
-                - Study Design (S): {pico_dict.get('s', '')}
-                - Population (P): {pico_dict.get('p', '')}
-                - Intervention (I): {pico_dict.get('i', '')}
-                - Comparison (C): {pico_dict.get('c', '')}
-                - Outcome (O): {pico_dict.get('o', '')}
-                - Additional Criteria: {pico_dict.get('es', '')}
+    return f"""
+            Target PICS Criteria for this Evaluation:
+            - Study Design (S): {pico_dict.get('s', '')}
+            - Population (P): {pico_dict.get('p', '')}
+            - Intervention (I): {pico_dict.get('i', '')}
+            - Comparison (C): {pico_dict.get('c', '')}
+            - Outcome (O): {pico_dict.get('o', '')}
+            - Additional Criteria: {pico_dict.get('es', '')}
 
-                Instructions for this task:
-                Evaluate the paper below against the Target PICS Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.
+            Instructions for this task:
+            Evaluate the paper below against the Target PICS Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, C, O, and Extra separately.
 
-                Input Data:
-                [Paper ID: {paper['id']}]
-                [Paper Title: {paper['title']}]
-                [PDF Page Images Provided Below]
-                """
-        prompt = PICOS_SYSTEM_PROMPT + "\n\n" + user_prompt
+            Input Data:
+            [Paper ID: {paper.paper_id}]
+            [Paper Title: {paper.title}]
+            [PDF Page Images Provided Below]
+            """
 
 
-    # 2. 读取之前下载好的 PDF
-    pdf_path = Path(paper['pdf_path'])
-    if not pdf_path.exists():
-        return {'id': paper['id'], 'decision': 'Error', 'evidence': '{}', 'hl_path': None}
-
-    try:
-        pdf_bytes = pdf_path.read_bytes()
-        b64 = base64.b64encode(pdf_bytes).decode("ascii")
-    except Exception as e:
-        return {'id': paper['id'], 'decision': 'Error', 'evidence': '{}', 'hl_path': None}
-
-    payload = {
+def _build_payload(model_name: str, pdf_bytes: bytes, filename: str, prompt: str) -> dict[str, Any]:
+    b64 = base64.b64encode(pdf_bytes).decode("ascii")
+    return {
         "model": model_name,
         "input": [
             {
                 "role": "user",
                 "content": [
-                    {"type": "input_file", "filename": pdf_path.name, "file_data": f"data:application/pdf;base64,{b64}"},
+                    {"type": "input_file", "filename": filename, "file_data": f"data:application/pdf;base64,{b64}"},
                     {"type": "input_text", "text": prompt},
                 ],
             }
         ],
     }
 
-    # 3. 发送给大模型进行多模态阅片
+
+def _error_result(paper_id: int) -> dict[str, Any]:
+    return {"id": paper_id, "decision": "Error", "evidence": "{}", "hl_path": None}
+
+
+def _extract_flag(text: str) -> str:
+    m = re.search(r"(?mi)^\s*Flag\s*:\s*([01])\s*$", text or "")
+    return m.group(1) if m else "0"
+
+
+def _extract_output_text(resp_json: dict[str, Any]) -> str:
+    out_parts = []
+    for item in resp_json.get("output", []) or []:
+        if not isinstance(item, dict) or item.get("type") != "message":
+            continue
+        for block in item.get("content", []) or []:
+            if isinstance(block, dict) and block.get("type") == "output_text":
+                text = block.get("text")
+                if isinstance(text, str) and text.strip():
+                    out_parts.append(text)
+    if out_parts:
+        return "\n".join(out_parts)
+    return resp_json.get("output_text", resp_json.get("text", ""))
+
+
+async def _call_with_retry(coro_func, *args, retries=3, delay_s=3.0):
+    last_exc = None
+    for _ in range(retries):
+        try:
+            return await coro_func(*args)
+        except Exception as e:
+            last_exc = e
+            await asyncio.sleep(delay_s)
+    raise last_exc
+
+
+async def _post_with_auth_fallback(client, url, api_key, payload, timeout_s):
+    headers1 = {"Authorization": api_key, "Content-Type": "application/json"}
+    r1 = await client.post(url, headers=headers1, json=payload, timeout=timeout_s)
+    if r1.status_code not in (401, 403):
+        return r1
+    headers2 = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    return await client.post(url, headers=headers2, json=payload, timeout=timeout_s)
+
+
+async def process_single_paper(client: httpx.AsyncClient, runtime: WebFullTextRuntime, request: FullTextRequest) -> dict[str, Any]:
+    paper = request.paper
+    pdf_path = paper.pdf_path
+    if not pdf_path.exists():
+        return _error_result(paper.paper_id)
+
     try:
-        resp = await _call_with_retry(_post_with_auth_fallback, client, endpoint, api_key, payload, 300.0)
+        prompt = _get_system_prompt(request.project_type) + "\n\n" + _build_user_prompt(request)
+        pdf_bytes = _load_pdf_bytes(pdf_path, runtime.selected_pages)
+        payload = _build_payload(runtime.model, pdf_bytes, pdf_path.name, prompt)
+    except Exception:
+        return _error_result(paper.paper_id)
+
+    try:
+        resp = await _call_with_retry(
+            _post_with_auth_fallback,
+            client,
+            runtime.endpoint,
+            runtime.api_key,
+            payload,
+            runtime.timeout,
+            retries=runtime.retries,
+            delay_s=runtime.retry_delay,
+        )
         if resp.status_code != 200:
-            return {'id': paper['id'], 'decision': 'Error', 'evidence': '{}', 'hl_path': None}
+            return _error_result(paper.paper_id)
 
         text = _extract_output_text(resp.json())
         flag = _extract_flag(text)
         evidences = extract_evidence(text)
         conclusion = extract_conclusion(text)
-        decision = 'Included' if flag == '1' else 'Excluded'
+        decision = "Included" if flag == "1" else "Excluded"
 
-        print(evidences)
-        print("\n")
-
-        # 4. 调用 TextHighlight 进行 PDF 原文高亮标注！
         hl_path_str = None
         try:
             hl_dir = pdf_path.parent / "highlighted"
@@ -543,33 +734,51 @@ async def process_single_paper(client, endpoint, api_key, model_name, paper, pic
             highlight_pdf(pdf_path, out_pdf, evidences)
             hl_path_str = str(out_pdf)
         except Exception as e:
-            print(f"Highlight error for ID {paper['id']}: {e}")
+            print(f"Highlight error for ID {paper.paper_id}: {e}")
 
-        # 将证据打包成 JSON 存入数据库
-        evidence_json = json.dumps({'evidences': evidences, 'conclusion': conclusion}, ensure_ascii=False)
-        return {'id': paper['id'], 'decision': decision, 'evidence': evidence_json, 'hl_path': hl_path_str}
+        evidence_json = json.dumps({"evidences": evidences, "conclusion": conclusion}, ensure_ascii=False)
+        return {"id": paper.paper_id, "decision": decision, "evidence": evidence_json, "hl_path": hl_path_str}
+    except Exception:
+        return _error_result(paper.paper_id)
 
-    except Exception as e:
-        return {'id': paper['id'], 'decision': 'Error', 'evidence': '{}', 'hl_path': None}
 
-async def _run_web_fulltext(papers, pico_dict, project_type):
-    api_key = os.getenv("DMX_API_KEY_1")
-    model_name = "gpt-4.1"
-    endpoint = "https://www.dmxapi.cn/v1/responses"
+async def _run_web_fulltext(
+    papers,
+    pico_dict,
+    project_type,
+    config: WebFullTextConfig | Mapping[str, Any] | None = None,
+):
+    runtime = _resolve_runtime_config(config)
+    normalized_project_type = _normalize_project_type(project_type)
+    normalized_pico = _normalize_pico_dict(pico_dict)
+    requests = [
+        FullTextRequest(
+            paper=_coerce_paper(paper),
+            pico_dict=normalized_pico,
+            project_type=normalized_project_type,
+        )
+        for paper in papers
+    ]
 
-    sem = asyncio.Semaphore(5) # 并发量控制
-    async with httpx.AsyncClient(timeout=300.0) as client:
-        async def _bounded_process(p):
+    sem = asyncio.Semaphore(runtime.max_concurrency)
+    async with httpx.AsyncClient(timeout=runtime.timeout) as client:
+        async def _bounded_process(request: FullTextRequest):
             async with sem:
-                return await process_single_paper(client, endpoint, api_key, model_name, p, pico_dict, project_type)
+                return await process_single_paper(client, runtime, request)
 
-        tasks = [_bounded_process(p) for p in papers]
+        tasks = [_bounded_process(request) for request in requests]
         return await asyncio.gather(*tasks)
 
-def run_fulltext_ai_sync(papers, pico_dict, project_type='PICOS'):
+
+def run_fulltext_ai_sync(
+    papers,
+    pico_dict,
+    project_type="PICOS",
+    config: WebFullTextConfig | Mapping[str, Any] | None = None,
+):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(_run_web_fulltext(papers, pico_dict, project_type))
+        return loop.run_until_complete(_run_web_fulltext(papers, pico_dict, project_type, config=config))
     finally:
         loop.close()
