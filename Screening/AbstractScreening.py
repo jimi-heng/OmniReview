@@ -1,7 +1,5 @@
 import random
 
-from Bio import Entrez
-from Bio import Medline
 import pandas as pd
 import os
 import ThreeAgnets
@@ -15,8 +13,6 @@ import defusedxml.ElementTree as ET
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
-
-Entrez.email = "erzhuzi2023@outlook.com"
 
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
@@ -446,52 +442,6 @@ async def abstract_screening():
     await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, PICOSsystemPromptReason, PICOSsystemPromptNoReason,
                                     PICOSuserPromptReason, PICOSuserPromptNoReason)
     save_file(paper_list)
-
-
-# Download files from PubMed
-def literature_search():
-    global whole_paper_list, topic_keywords
-
-    query = input("enter key words: ").strip()
-    topic_keywords = query + " " + topic_keywords
-    max_number = input("enter max number: ").strip()
-
-    # Search for pubmed List
-    handle = Entrez.esearch(db="pubmed", term=query, retmax=max_number)
-    record = Entrez.read(handle)
-    handle.close()
-
-    pmids = record["IdList"]
-    print(f"find {len(pmids)} papers")
-
-    if not pmids:
-        return
-
-    handle = Entrez.efetch(db="pubmed", id=pmids, rettype="medline", retmode="text")
-    records = list(Medline.parse(handle))
-    handle.close()
-
-    num = len(whole_paper_list)
-    # Transform
-    for idx, record in enumerate(records, start=0):
-        row = {
-            'ID': num + idx,
-            'Title': record.get('TI', ''),
-            'Abstract': record.get('AB', ''),
-            'Authors': '; '.join(record.get('AU', [])),
-            'Journal': record.get('JT', ''),
-            'Publication_Date': record.get('DP', ''),
-            'DOI': extract_doi(record),
-            'topic_keywords': '; '.join(record.get('OT', record.get('MH', []))),
-            'Flag1': '',
-            'Flag2': '',
-            'Flag3': '',
-            'Reason': ''
-        }
-        whole_paper_list.append(row)
-    paper_list = pd.DataFrame(whole_paper_list)
-    save_file(paper_list)
-
 
 # Upload files
 def upload_to_csv():
