@@ -28,7 +28,7 @@ sys.path.insert(0, screening_dir)
 from grpfh.database import get_db  # 只导入get_db，不导入init_database
 # app.py 顶部导入区域，更新这一行
 from Screening.AbstractScreening import literature_search_all, run_ai_screening_sync
-import Screening.ThreeAgnets
+import Screening.ThreeAgents
 from Screening.paper_download import ImprovedPaperDownloader
 from flask import Flask, request, jsonify, make_response, send_file, send_from_directory  # 新增 send_file
 # ...

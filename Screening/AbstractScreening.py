@@ -2,7 +2,7 @@ import random
 
 import pandas as pd
 import os
-import ThreeAgnets
+from Screening import ThreeAgents
 from pathlib import Path
 from dotenv import load_dotenv
 from urllib3.util.retry import Retry
@@ -438,17 +438,10 @@ async def abstract_screening():
     }
 
     paper_list = pd.DataFrame(whole_paper_list)
-    await ThreeAgnets.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, PICOSsystemPromptReason,
+    await ThreeAgents.use_agent_all(paper_list, query, model1_name, model2_name, model3_name, PICOSsystemPromptReason,
                                     PICOSsystemPromptNoReason,
                                     PICOSuserPromptReason, PICOSuserPromptNoReason)
     save_file(paper_list)
-
-
-# Upload files
-def upload_to_csv():
-    global whole_paper_list, topic_keywords
-    file_dir = input("enter RIS file: ").strip()
-
 
 async def main():
     # save_dir = input("enter address: ").strip()
@@ -567,7 +560,6 @@ def create_session():
 
 
 session = create_session()
-
 
 def safe_get(url, params=None, headers=None):
     try:
@@ -907,7 +899,7 @@ async def _run_ai_screening_async(pico_data, papers, project_type='SPICO'):
     paper_list_df = pd.DataFrame(df_list)
 
     try:
-        updated_df = await ThreeAgnets.use_agent_all(
+        updated_df = await ThreeAgents.use_agent_all(
             paper_list_df, query, model1_name, model2_name, model3_name,
             sys_reason, sys_no_reason, usr_reason, usr_no_reason
         )

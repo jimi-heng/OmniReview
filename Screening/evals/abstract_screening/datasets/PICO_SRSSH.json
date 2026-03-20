@@ -1,0 +1,8 @@
+{
+  "S": "RCT、CCT、Single arm trial、Cohort、Case series 排除 case report",
+  "P": "转移性结直肠癌（mCRC）患者（不限定国家和人种）",
+  "I": "Cetuximab-β（泰州迈博太科药业）、Cetuximab（默克）、N01/A140（科伦药业）、Panitumumab（包括齐鲁制药帕妥尤单抗N01注射液等），单药或联合其他药物",
+  "C": "不限定对照干预",
+  "O": "有效性/安全性结局 备注：前期mapping阶段未做细化具体的有效性结局",
+  "Additional Criteria": "不限定检索年份"
+}
