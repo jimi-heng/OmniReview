@@ -59,6 +59,25 @@ STATISTIC_DESCRIPTION_ALIASES = {
     "events and total": "events, total",
 }
 
+_EFFECT_ONLY_OUTCOME_NAMES = {
+    "rr",
+    "relative risk",
+    "risk ratio",
+    "or",
+    "odds ratio",
+    "hr",
+    "hazard ratio",
+    "rrr",
+    "arr",
+    "nnt",
+    "nnh",
+    "risk difference",
+    "mean difference",
+    "standardized mean difference",
+    "smd",
+    "md",
+}
+
 
 class RobustJSONParser:
     """Robust JSON parser with fallback strategies plus typed helpers."""
@@ -170,6 +189,8 @@ class RobustJSONParser:
                 note=RobustJSONParser._clean_whitespace(candidate.note),
             )
             if not normalized.outcome_name:
+                continue
+            if RobustJSONParser._is_effect_only_row_candidate(normalized):
                 continue
 
             signature = (
@@ -687,6 +708,9 @@ class RobustJSONParser:
         if "/" in value:
             return ExtractedCell(value=value, evidence=evidence)
         if "%" in value and not allow_decimal:
+            count_token = RobustJSONParser._extract_count_from_count_percent(value)
+            if count_token:
+                return ExtractedCell(value=count_token, evidence=evidence)
             return ExtractedCell(value=value, evidence=evidence)
 
         numeric_token = RobustJSONParser._extract_numeric_token(value, allow_decimal=allow_decimal)
@@ -695,11 +719,28 @@ class RobustJSONParser:
         return ExtractedCell(value=value, evidence=evidence)
 
     @staticmethod
+    def _extract_count_from_count_percent(text: str) -> str:
+        normalized = RobustJSONParser._clean_whitespace(text)
+        if not normalized or "%" not in normalized:
+            return ""
+        match = re.fullmatch(r"(\d[\d,]*)\s*\(\s*-?\d+(?:\.\d+)?\s*%?\s*\)\s*", normalized)
+        if not match:
+            return ""
+        return RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=False)
+
+    @staticmethod
     def _extract_mean_sd_pair(value: str, evidence: str) -> Optional[Tuple[str, str]]:
         for text in (RobustJSONParser._clean_whitespace(value), RobustJSONParser._clean_whitespace(evidence)):
             if not text:
                 continue
             normalized = text.replace("\u00b1", "+/-")
+            if "%" not in normalized:
+                match = re.search(r"(-?\d+(?:\.\d+)?)\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)", normalized)
+                if match:
+                    return (
+                        RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=True),
+                        RobustJSONParser._sanitize_numeric_token(match.group(2), allow_decimal=True),
+                    )
             match = re.search(r"(-?\d+(?:\.\d+)?)\s*(?:\+/-)\s*(-?\d+(?:\.\d+)?)", normalized)
             if match:
                 return (
@@ -894,6 +935,77 @@ class RobustJSONParser:
         if "event" in lowered and "total" in lowered:
             return "events, total"
         return normalized
+
+    @staticmethod
+    def _is_effect_only_row_candidate(candidate: RowCandidate) -> bool:
+        outcome_name = RobustJSONParser._clean_whitespace(candidate.outcome_name)
+        statistic_description = RobustJSONParser._clean_whitespace(candidate.statistic_description)
+        note = RobustJSONParser._clean_whitespace(candidate.note)
+
+        if outcome_name.casefold() in _EFFECT_ONLY_OUTCOME_NAMES:
+            return True
+
+        combined = " ".join(part for part in (outcome_name, statistic_description, note) if part)
+        if not RobustJSONParser._looks_like_effect_measure(combined):
+            return False
+        if RobustJSONParser._has_raw_row_hints(combined):
+            return False
+        return True
+
+    @staticmethod
+    def _has_raw_row_hints(text: str) -> bool:
+        normalized = (text or "").casefold()
+        return any(
+            token in normalized
+            for token in (
+                "mean",
+                "sd",
+                "standard deviation",
+                "median",
+                "iqr",
+                "events",
+                "event",
+                "total",
+                "count",
+                "prevalence",
+                "n=",
+                "sample size",
+            )
+        )
+
+    @staticmethod
+    def _looks_like_effect_measure(text: str) -> bool:
+        if not text:
+            return False
+        normalized = text.casefold()
+        if any(
+            phrase in normalized
+            for phrase in (
+                "risk ratio",
+                "relative risk",
+                "odds ratio",
+                "hazard ratio",
+                "rate ratio",
+                "incidence rate ratio",
+                "risk difference",
+                "absolute risk reduction",
+                "relative risk reduction",
+                "number needed to treat",
+                "number needed to harm",
+                "mean difference",
+                "standardized mean difference",
+            )
+        ):
+            return True
+        if re.search(r"\b(rrr|arr|nnt|nnh|smd|md)\b", normalized):
+            return True
+        if re.search(r"\brr\b", normalized):
+            return True
+        if re.search(r"\bOR\b", text):
+            return True
+        if re.search(r"\bHR\b", text):
+            return True
+        return False
 
     @staticmethod
     def _normalize_source_basis(value: Any) -> List[str]:

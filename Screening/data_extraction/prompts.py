@@ -196,7 +196,25 @@ Project Type: {pt}
 Paper ID: {paper_id}
 
 Return ONLY one raw JSON object with this exact schema:
-{{"title": str, "year": str, "journal": str, "authors": str, "study_design": str, "country": str, "sample_size": str, "follow_up": str}}
+{{
+  "title": str,
+  "year": str,
+  "journal": str,
+  "authors": str,
+  "study_design": str,
+  "country": str,
+  "sample_size": str,
+  "follow_up": str,
+  "population_summary": str,
+  "inclusion_criteria": str,
+  "exclusion_criteria": str,
+  "age_info": str,
+  "gender_info": str,
+  "analysis_sample_size": str,
+  "randomized_sample_size": str,
+  "arm1_n": str,
+  "arm2_n": str
+}}
 
 Rules:
 - Return a single JSON object, never an array.
@@ -204,6 +222,12 @@ Rules:
 - Extract only from the attached PDF. Do not infer missing values.
 - Keep `authors` as a concise author string as reported in the paper.
 - Keep `sample_size` and `follow_up` in the paper's own wording when available.
+- `population_summary` should be a one-sentence description of the enrolled population.
+- `inclusion_criteria` and `exclusion_criteria` should be short, copy-friendly phrases (not a long paragraph).
+- `age_info` should preserve the paper's format, for example "52.25 (3.73)", "median 63 (IQR 55-72)", or "18-65 years".
+- `analysis_sample_size` should reflect analyzed/ITT/PP sample size when explicitly stated.
+- `randomized_sample_size` should reflect randomized/enrolled sample size when explicitly stated.
+- `arm1_n` and `arm2_n` should be per-arm sample sizes if explicitly stated (Arm1 = intervention, Arm2 = comparator/control).
 - No markdown fences, no explanation, no extra keys.
 """
 
@@ -236,7 +260,25 @@ Target review criteria:
 {criteria}
 
 Return ONLY a raw JSON array with this exact schema:
-[{{"unit_id": "SU-1", "label": str, "arms": [str, str], "population_note": str, "intervention": str, "comparison": str}}]
+[
+  {{
+    "unit_id": "SU-1",
+    "label": str,
+    "arms": [str, str],
+    "population_note": str,
+    "intervention": str,
+    "comparison": str,
+    "population_summary": str,
+    "inclusion_criteria": str,
+    "exclusion_criteria": str,
+    "age_info": str,
+    "gender_info": str,
+    "analysis_sample_size": str,
+    "randomized_sample_size": str,
+    "arm1_n": str,
+    "arm2_n": str
+  }}
+]
 
 Rules:
 - Return one object per independent study unit, sub-study, cohort, or separately reported trial within the paper.
@@ -244,6 +286,8 @@ Rules:
 - Do not split rows by outcome or timepoint. Stage 2 is only for study-unit discovery.
 - `arms` should list the compared groups in study order when available. Use empty strings rather than inventing arm names.
 - `population_note` should briefly explain what makes this unit distinct (for example subgroup, site, or cohort note).
+- Fill the metadata fields (`population_summary`, `inclusion_criteria`, `exclusion_criteria`, `age_info`, `gender_info`, sample sizes) ONLY if they are explicitly reported for this specific study unit/cohort; otherwise return empty strings.
+- If the paper provides only paper-level criteria (not unit-specific), you may repeat them in each study unit.
 - No markdown fences, no explanation, no extra keys.
 """
 
@@ -346,6 +390,9 @@ Rules:
 - If a timepoint is not explicitly reported, use an empty string rather than inventing one.
 - Use `continuous` for means/SDs/medians/CI-style measurements, `binary` for event/prevalence/count outcomes, and `other` otherwise.
 - `statistic_description` should briefly describe the reported summary style, for example "mean, SD", "mean change, SD", or "events, total".
+- `row_candidates` MUST represent rows that can be filled with Arm1/Arm2 raw outcome data (means/SDs/totals OR events/totals).
+- DO NOT create row candidates for effect-size-only statistics such as RR / OR / HR / RRR / ARR / NNT / NNH / risk difference / mean difference / SMD.
+- If effect measures are reported, mention them only inside `note` (as supportive context), not as separate rows.
 - `source_basis` must identify where the row was found: one or more of `text`, `table`, `figure`.
 - Preserve uncertain items instead of dropping them. Mark uncertainty using `uncertainty = low|medium|high`.
 - `evidence_location` should briefly say where the row candidate comes from, for example "Results text", "Table 2", or "Figure 3".

@@ -14,6 +14,7 @@ from .template import METADATA_FIELDS, read_template_columns
 
 
 NOT_REPORTED = "Not Reported"
+_SAMPLE_SIZE_COUNT_PCT_RE = re.compile(r"^\s*(\d[\d,]*)\s*\(\s*-?\d+(?:\.\d+)?\s*%?\s*\)\s*$")
 
 
 async def csv_writer(queue: asyncio.Queue, output_csv: Path, columns: List[str]) -> None:
@@ -80,10 +81,10 @@ def state_to_final_rows(state: PipelineState) -> Tuple[List[Dict[str, str]], Lis
 
         _set_aliases(value_row, ["Arm1_Mean"], _cell_value(extraction_row, "Arm1_Mean"))
         _set_aliases(value_row, ["Arm1_SD"], _cell_value(extraction_row, "Arm1_SD"))
-        _set_aliases(value_row, ["Arm1_Total"], _cell_value(extraction_row, "Arm1_Total"))
+        _set_aliases(value_row, ["Arm1_Total"], _arm_total_with_backfill(state, study_unit, extraction_row, arm_index=1))
         _set_aliases(value_row, ["Arm2_Mean"], _cell_value(extraction_row, "Arm2_Mean"))
         _set_aliases(value_row, ["Arm2_SD"], _cell_value(extraction_row, "Arm2_SD"))
-        _set_aliases(value_row, ["Arm2_Total"], _cell_value(extraction_row, "Arm2_Total"))
+        _set_aliases(value_row, ["Arm2_Total"], _arm_total_with_backfill(state, study_unit, extraction_row, arm_index=2))
         _set_aliases(value_row, ["Arm1_Events"], _cell_value(extraction_row, "Arm1_Events"))
         _set_aliases(value_row, ["Arm2_Events"], _cell_value(extraction_row, "Arm2_Events"))
 
@@ -100,7 +101,7 @@ def state_to_final_rows(state: PipelineState) -> Tuple[List[Dict[str, str]], Lis
         _set_aliases(
             value_row,
             ["干预组数据样本量"],
-            _cell_value(extraction_row, "Arm1_Total"),
+            _arm_total_with_backfill(state, study_unit, extraction_row, arm_index=1),
         )
         _set_aliases(
             value_row,
@@ -115,7 +116,7 @@ def state_to_final_rows(state: PipelineState) -> Tuple[List[Dict[str, str]], Lis
         _set_aliases(
             value_row,
             ["对照组数据样本量"],
-            _cell_value(extraction_row, "Arm2_Total"),
+            _arm_total_with_backfill(state, study_unit, extraction_row, arm_index=2),
         )
 
         note = extraction_row.note
@@ -156,12 +157,30 @@ def _build_base_metadata_row(state: PipelineState, study_unit: StudyUnit) -> Dic
     _set_aliases(row, ["研究类型"], profile.study_design)
     _set_aliases(row, ["Trial_Number"], NOT_REPORTED)
     _set_aliases(row, ["Number_of_centers"], NOT_REPORTED)
-    _set_aliases(row, ["Study_Inclusion"], study_unit.population_note or NOT_REPORTED)
-    _set_aliases(row, ["Exclusion_Criteria"], NOT_REPORTED)
-    _set_aliases(row, ["Diagnosis"], study_unit.population_note or NOT_REPORTED)
-    _set_aliases(row, ["Sample_Size", "样本量"], profile.sample_size or NOT_REPORTED)
-    _set_aliases(row, ["Age", "年龄，给出患者年龄的纳入标准，如果没有的话写基线资料的年龄"], NOT_REPORTED)
-    _set_aliases(row, ["Gender"], NOT_REPORTED)
+    _set_aliases(
+        row,
+        ["Study_Inclusion"],
+        _first_reported(
+            study_unit.inclusion_criteria,
+            study_unit.population_summary,
+            study_unit.population_note,
+            profile.inclusion_criteria,
+            profile.population_summary,
+        ),
+    )
+    _set_aliases(row, ["Exclusion_Criteria"], _first_reported(study_unit.exclusion_criteria, profile.exclusion_criteria))
+    _set_aliases(
+        row,
+        ["Diagnosis"],
+        _first_reported(study_unit.population_summary, study_unit.population_note, profile.population_summary),
+    )
+    _set_aliases(row, ["Sample_Size", "样本量"], _choose_sample_size(profile, study_unit))
+    _set_aliases(
+        row,
+        ["Age", "年龄，给出患者年龄的纳入标准，如果没有的话写基线资料的年龄"],
+        _first_reported(study_unit.age_info, profile.age_info),
+    )
+    _set_aliases(row, ["Gender"], _first_reported(study_unit.gender_info, profile.gender_info))
     _set_aliases(row, ["Follow_up"], profile.follow_up or NOT_REPORTED)
 
     arm1 = _arm_value(study_unit, 0)
@@ -263,3 +282,52 @@ def _infer_rayyan_id(relative_path: str, fallback_title: str) -> str:
     if stem:
         return stem
     return fallback_title
+
+
+def _first_reported(*values: str) -> str:
+    for value in values:
+        normalized = _normalize_output_value(value)
+        if normalized and normalized != NOT_REPORTED:
+            return normalized
+    return NOT_REPORTED
+
+
+def _normalize_sample_size_text(value: str) -> str:
+    text = _normalize_output_value(value)
+    if not text or text == NOT_REPORTED:
+        return ""
+    match = _SAMPLE_SIZE_COUNT_PCT_RE.match(text)
+    if match:
+        return match.group(1).replace(",", "")
+    numbers = re.findall(r"\d[\d,]*", text)
+    if len(numbers) == 1:
+        return numbers[0].replace(",", "")
+    return text
+
+
+def _choose_sample_size(profile: object, study_unit: StudyUnit) -> str:
+    candidate = _first_reported(
+        getattr(study_unit, "analysis_sample_size", ""),
+        getattr(study_unit, "randomized_sample_size", ""),
+        getattr(profile, "analysis_sample_size", ""),
+        getattr(profile, "randomized_sample_size", ""),
+        getattr(profile, "sample_size", ""),
+    )
+    if candidate == NOT_REPORTED:
+        return NOT_REPORTED
+    return _normalize_sample_size_text(candidate) or NOT_REPORTED
+
+
+def _arm_total_with_backfill(state: PipelineState, study_unit: StudyUnit, row: ExtractionRow, *, arm_index: int) -> str:
+    field_name = f"Arm{arm_index}_Total"
+    current = _normalize_output_value(_cell_value(row, field_name))
+    if current and current != NOT_REPORTED:
+        return current
+
+    fallback = _first_reported(
+        getattr(study_unit, f"arm{arm_index}_n", ""),
+        getattr(state.profile, f"arm{arm_index}_n", ""),
+    )
+    if fallback == NOT_REPORTED:
+        return NOT_REPORTED
+    return _normalize_sample_size_text(fallback) or NOT_REPORTED

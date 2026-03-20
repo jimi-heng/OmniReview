@@ -38,6 +38,15 @@ class PaperProfile:
     country: str = ""
     sample_size: str = ""
     follow_up: str = ""
+    population_summary: str = ""
+    inclusion_criteria: str = ""
+    exclusion_criteria: str = ""
+    age_info: str = ""
+    gender_info: str = ""
+    analysis_sample_size: str = ""
+    randomized_sample_size: str = ""
+    arm1_n: str = ""
+    arm2_n: str = ""
 
 
 @dataclass
@@ -50,6 +59,15 @@ class StudyUnit:
     population_note: str = ""
     intervention: str = ""
     comparison: str = ""
+    population_summary: str = ""
+    inclusion_criteria: str = ""
+    exclusion_criteria: str = ""
+    age_info: str = ""
+    gender_info: str = ""
+    analysis_sample_size: str = ""
+    randomized_sample_size: str = ""
+    arm1_n: str = ""
+    arm2_n: str = ""
 
 
 @dataclass

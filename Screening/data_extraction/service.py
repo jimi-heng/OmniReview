@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import traceback
 from collections import defaultdict
 from dataclasses import dataclass
@@ -242,6 +243,8 @@ class PipelineOrchestrator:
         except Exception as exc:
             self._record_stage_error(state, "stage5", exc)
 
+        self._consolidate_metadata(state)
+        self._filter_invalid_rows(state)
         state.final_value_rows, state.final_evidence_rows = state_to_final_rows(state)
         if not state.final_value_rows:
             state.legacy_result = await self._fallback.extract(paper=paper, request=request)
@@ -376,6 +379,8 @@ class PipelineOrchestrator:
             self._log_phase2_validation_summary(state)
         except Exception as exc:
             self._record_stage_error(state, "stage5", exc)
+        self._consolidate_metadata(state)
+        self._filter_invalid_rows(state)
         state.final_value_rows, state.final_evidence_rows = state_to_final_rows(state)
         return state
 
@@ -383,6 +388,78 @@ class PipelineOrchestrator:
         report = self._run_stage5(state=state)
         state.validation_report = report
         return report
+
+    def _consolidate_metadata(self, state: PipelineState) -> None:
+        profile = state.profile
+        for unit in state.study_units:
+            unit.population_summary = unit.population_summary or profile.population_summary
+            unit.inclusion_criteria = unit.inclusion_criteria or profile.inclusion_criteria
+            unit.exclusion_criteria = unit.exclusion_criteria or profile.exclusion_criteria
+            unit.age_info = unit.age_info or profile.age_info
+            unit.gender_info = unit.gender_info or profile.gender_info
+            unit.analysis_sample_size = unit.analysis_sample_size or profile.analysis_sample_size
+            unit.randomized_sample_size = unit.randomized_sample_size or profile.randomized_sample_size
+            unit.arm1_n = unit.arm1_n or profile.arm1_n
+            unit.arm2_n = unit.arm2_n or profile.arm2_n
+
+    def _filter_invalid_rows(self, state: PipelineState) -> None:
+        if not state.extraction_rows:
+            return
+
+        filtered: List[ExtractionRow] = []
+        removed: List[ExtractionRow] = []
+        for row in state.extraction_rows:
+            if self._is_effect_only_row(row):
+                removed.append(row)
+            else:
+                filtered.append(row)
+
+        if removed:
+            for row in removed:
+                self._add_validation_issue(
+                    state.validation_report,
+                    severity="warning",
+                    code="effect_only_row_removed",
+                    message=f"Row {row.row_id} appeared to represent an effect-size-only statistic and was removed before final output.",
+                    row_id=row.row_id,
+                    study_unit_id=row.study_unit_id,
+                )
+        state.extraction_rows = filtered
+
+    @staticmethod
+    def _is_effect_only_row(row: ExtractionRow) -> bool:
+        outcome_name = RobustJSONParser._clean_whitespace(row.outcome_name)
+        statistic_description = RobustJSONParser._clean_whitespace(row.statistic_description)
+        note = RobustJSONParser._clean_whitespace(row.note)
+        combined = " ".join(part for part in (outcome_name, statistic_description, note) if part)
+
+        if outcome_name.casefold() in {
+            "rr",
+            "relative risk",
+            "risk ratio",
+            "or",
+            "odds ratio",
+            "hr",
+            "hazard ratio",
+            "rrr",
+            "arr",
+            "nnt",
+            "nnh",
+            "risk difference",
+            "mean difference",
+            "standardized mean difference",
+            "smd",
+            "md",
+        }:
+            return True
+
+        if not RobustJSONParser._looks_like_effect_measure(combined):
+            return False
+
+        if PipelineOrchestrator._row_has_reported_value(row):
+            return False
+
+        return True
 
     async def _run_stage1(self, *, paper: Paper, pdf_bytes: bytes, project_type: str) -> PaperProfile:
         raw_text = await self._call_stage(
@@ -396,14 +473,23 @@ class PipelineOrchestrator:
             raise ValueError("Stage 1 must return a single JSON object.")
 
         return PaperProfile(
-            title=self._string(payload.get("title")),
-            year=self._string(payload.get("year")),
-            journal=self._string(payload.get("journal")),
-            authors=self._string(payload.get("authors")),
-            study_design=self._string(payload.get("study_design")),
-            country=self._string(payload.get("country")),
-            sample_size=self._string(payload.get("sample_size")),
-            follow_up=self._string(payload.get("follow_up")),
+            title=self._normalize_metadata_text(payload.get("title")),
+            year=self._normalize_metadata_text(payload.get("year")),
+            journal=self._normalize_metadata_text(payload.get("journal")),
+            authors=self._normalize_metadata_text(payload.get("authors")),
+            study_design=self._normalize_metadata_text(payload.get("study_design")),
+            country=self._normalize_metadata_text(payload.get("country")),
+            sample_size=self._normalize_metadata_text(payload.get("sample_size")),
+            follow_up=self._normalize_metadata_text(payload.get("follow_up")),
+            population_summary=self._normalize_metadata_text(payload.get("population_summary")),
+            inclusion_criteria=self._normalize_metadata_text(payload.get("inclusion_criteria")),
+            exclusion_criteria=self._normalize_metadata_text(payload.get("exclusion_criteria")),
+            age_info=self._normalize_metadata_text(payload.get("age_info")),
+            gender_info=self._normalize_metadata_text(payload.get("gender_info")),
+            analysis_sample_size=self._normalize_sample_size_text(payload.get("analysis_sample_size")),
+            randomized_sample_size=self._normalize_sample_size_text(payload.get("randomized_sample_size")),
+            arm1_n=self._normalize_sample_size_text(payload.get("arm1_n")),
+            arm2_n=self._normalize_sample_size_text(payload.get("arm2_n")),
         )
 
     async def _run_stage2(
@@ -991,9 +1077,18 @@ class PipelineOrchestrator:
             unit_id=self._string(payload.get("unit_id")) or f"SU-{index}",
             label=self._string(payload.get("label")) or f"Study Unit {index}",
             arms=self._normalize_arms(payload.get("arms")),
-            population_note=self._string(payload.get("population_note")),
-            intervention=self._string(payload.get("intervention")),
-            comparison=self._string(payload.get("comparison")),
+            population_note=self._normalize_metadata_text(payload.get("population_note")),
+            intervention=self._normalize_metadata_text(payload.get("intervention")),
+            comparison=self._normalize_metadata_text(payload.get("comparison")),
+            population_summary=self._normalize_metadata_text(payload.get("population_summary")),
+            inclusion_criteria=self._normalize_metadata_text(payload.get("inclusion_criteria")),
+            exclusion_criteria=self._normalize_metadata_text(payload.get("exclusion_criteria")),
+            age_info=self._normalize_metadata_text(payload.get("age_info")),
+            gender_info=self._normalize_metadata_text(payload.get("gender_info")),
+            analysis_sample_size=self._normalize_sample_size_text(payload.get("analysis_sample_size")),
+            randomized_sample_size=self._normalize_sample_size_text(payload.get("randomized_sample_size")),
+            arm1_n=self._normalize_sample_size_text(payload.get("arm1_n")),
+            arm2_n=self._normalize_sample_size_text(payload.get("arm2_n")),
         )
 
     @staticmethod
@@ -1011,6 +1106,15 @@ class PipelineOrchestrator:
             "country": profile.country,
             "sample_size": profile.sample_size,
             "follow_up": profile.follow_up,
+            "population_summary": profile.population_summary,
+            "inclusion_criteria": profile.inclusion_criteria,
+            "exclusion_criteria": profile.exclusion_criteria,
+            "age_info": profile.age_info,
+            "gender_info": profile.gender_info,
+            "analysis_sample_size": profile.analysis_sample_size,
+            "randomized_sample_size": profile.randomized_sample_size,
+            "arm1_n": profile.arm1_n,
+            "arm2_n": profile.arm2_n,
         }
 
     @staticmethod
@@ -1022,6 +1126,15 @@ class PipelineOrchestrator:
             "population_note": study_unit.population_note,
             "intervention": study_unit.intervention,
             "comparison": study_unit.comparison,
+            "population_summary": study_unit.population_summary,
+            "inclusion_criteria": study_unit.inclusion_criteria,
+            "exclusion_criteria": study_unit.exclusion_criteria,
+            "age_info": study_unit.age_info,
+            "gender_info": study_unit.gender_info,
+            "analysis_sample_size": study_unit.analysis_sample_size,
+            "randomized_sample_size": study_unit.randomized_sample_size,
+            "arm1_n": study_unit.arm1_n,
+            "arm2_n": study_unit.arm2_n,
         }
 
     @staticmethod
@@ -1093,6 +1206,30 @@ class PipelineOrchestrator:
         if isinstance(value, (int, float, bool)):
             return str(value)
         return str(value).strip()
+
+    @staticmethod
+    def _normalize_metadata_text(value: object) -> str:
+        text = RobustJSONParser._clean_whitespace(PipelineOrchestrator._string(value))
+        if not text:
+            return ""
+        if text.casefold() in {"not reported", "nr", "n/r", "na", "n/a", "not available", "missing", "not stated"}:
+            return ""
+        return text
+
+    @staticmethod
+    def _normalize_sample_size_text(value: object) -> str:
+        text = PipelineOrchestrator._normalize_metadata_text(value)
+        if not text:
+            return ""
+
+        match = re.fullmatch(r"(\d[\d,]*)\s*\(\s*-?\d+(?:\.\d+)?\s*%?\s*\)\s*", text)
+        if match:
+            return match.group(1).replace(",", "")
+
+        tokens = re.findall(r"\d[\d,]*", text)
+        if len(tokens) == 1:
+            return tokens[0].replace(",", "")
+        return text
 
     @staticmethod
     def _record_stage_error(state: PipelineState, stage_name: str, exc: Exception) -> None:
