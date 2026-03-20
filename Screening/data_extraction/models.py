@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, List
 
@@ -118,9 +118,34 @@ class ValidationReport:
     duplicate_row_signatures: List[str] = field(default_factory=list)
     empty_outcome_groups: List[str] = field(default_factory=list)
     field_not_reported_ratio: Dict[str, float] = field(default_factory=dict)
+    error_type_counts: Dict[str, int] = field(default_factory=dict)
+    recovery_attempt_count: int = 0
+    recovery_success_count: int = 0
+    recovery_attempted_row_ids: List[str] = field(default_factory=list)
+    recovery_recovered_row_ids: List[str] = field(default_factory=list)
     error_count: int = 0
     warning_count: int = 0
     issues: List[ValidationIssue] = field(default_factory=list)
+
+    def to_summary_dict(self) -> Dict[str, object]:
+        """Return a stable, extensible summary payload for logs/evals."""
+        return {
+            "is_valid": self.is_valid,
+            "total_row_candidates": self.total_row_candidates,
+            "total_extraction_rows": self.total_extraction_rows,
+            "missing_row_count": self.missing_row_count,
+            "duplicate_row_count": self.duplicate_row_count,
+            "error_count": self.error_count,
+            "warning_count": self.warning_count,
+            "empty_outcome_groups": list(self.empty_outcome_groups),
+            "field_not_reported_ratio": dict(self.field_not_reported_ratio),
+            "error_type_counts": dict(self.error_type_counts),
+            "recovery_attempt_count": self.recovery_attempt_count,
+            "recovery_success_count": self.recovery_success_count,
+            "recovery_attempted_row_ids": list(self.recovery_attempted_row_ids),
+            "recovery_recovered_row_ids": list(self.recovery_recovered_row_ids),
+            "issues": [asdict(issue) for issue in self.issues],
+        }
 
 
 @dataclass

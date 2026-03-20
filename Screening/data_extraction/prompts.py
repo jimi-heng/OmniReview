@@ -279,22 +279,77 @@ Target review criteria:
 Study units discovered in Stage 2:
 {study_units_json}
 
-Return ONLY a raw JSON array with this exact schema:
-[{{"row_id": "R-1", "study_unit_id": "SU-1", "outcome_name": str, "outcome_type": "continuous|binary|other", "timepoint": str, "value_type": "endpoint|change_from_baseline|other", "outcome_unit": str, "statistic_description": str, "note": str}}]
+Return ONLY one raw JSON object with this exact schema:
+{{
+  "study_units": [
+    {{
+      "study_unit_id": "SU-1",
+      "comparisons": [
+        {{
+          "comparison_label": str,
+          "arms": [str, str],
+          "outcomes": [
+            {{
+              "outcome_name": str,
+              "outcome_type": "continuous|binary|other",
+              "source_basis": ["text|table|figure"],
+              "uncertainty": "low|medium|high",
+              "timepoints": [
+                {{
+                  "timepoint": str,
+                  "value_types": [
+                    {{
+                      "value_type": "endpoint|change_from_baseline|other",
+                      "outcome_unit": str,
+                      "statistic_description": str,
+                      "source_basis": ["text|table|figure"],
+                      "uncertainty": "low|medium|high",
+                      "evidence_location": str
+                    }}
+                  ]
+                }}
+              ]
+            }}
+          ]
+        }}
+      ]
+    }}
+  ],
+  "row_candidates": [
+    {{
+      "row_id": "R-1",
+      "study_unit_id": "SU-1",
+      "outcome_name": str,
+      "outcome_type": "continuous|binary|other",
+      "timepoint": str,
+      "value_type": "endpoint|change_from_baseline|other",
+      "outcome_unit": str,
+      "statistic_description": str,
+      "source_basis": ["text|table|figure"],
+      "uncertainty": "low|medium|high",
+      "evidence_location": str,
+      "note": str
+    }}
+  ]
+}}
 
 Rules:
-- Enumerate one object per final extraction row.
+- First enumerate study units/comparisons, then outcomes, then timepoints, then value types, and ONLY THEN create `row_candidates`.
+- Do not directly jump to final rows without filling the dimension-enumeration structure above.
 - One row means: study_unit x outcome x timepoint x value_type.
 - Comparison is NOT a row dimension. Arm1 and Arm2 values stay in the same row.
 - `study_unit_id` must match one of the Stage 2 unit IDs exactly.
 - `row_id` values must be unique within this response.
-- Do not output duplicate rows for the same study_unit x outcome x timepoint x value_type combination.
+- Do not output duplicate row candidates for the same study_unit x outcome x timepoint x value_type combination.
 - Split different timepoints into separate rows. Do not merge "4, 8, 12 weeks" into one row.
-- Distinguish endpoint values from change-from-baseline values.
-- If `value_type` is unclear, use `other`.
+- Distinguish endpoint values from baseline values and change-from-baseline values. Use `value_type = "other"` if the paper is explicit but the category is still unclear.
 - If a timepoint is not explicitly reported, use an empty string rather than inventing one.
 - Use `continuous` for means/SDs/medians/CI-style measurements, `binary` for event/prevalence/count outcomes, and `other` otherwise.
-- `statistic_description` should briefly describe the reported summary style, for example "mean, SD" or "events, total".
+- `statistic_description` should briefly describe the reported summary style, for example "mean, SD", "mean change, SD", or "events, total".
+- `source_basis` must identify where the row was found: one or more of `text`, `table`, `figure`.
+- Preserve uncertain items instead of dropping them. Mark uncertainty using `uncertainty = low|medium|high`.
+- `evidence_location` should briefly say where the row candidate comes from, for example "Results text", "Table 2", or "Figure 3".
+- `note` should stay short and explain only residual ambiguity or disambiguation needs.
 - Use empty strings instead of inventing data.
 - No markdown fences, no explanation, no extra keys.
 """
@@ -305,11 +360,11 @@ def get_stage4_prompt(
     paper_id: int,
     paper_profile: Dict[str, str],
     study_unit: Dict[str, object],
-    row_candidates: List[Dict[str, str]],
+    row_candidate: Dict[str, str],
 ) -> str:
     pt = (project_type or "").upper() or "PICOS"
     study_unit_json = json.dumps(study_unit, ensure_ascii=False, indent=2)
-    row_candidates_json = json.dumps(row_candidates, ensure_ascii=False, indent=2)
+    row_candidate_json = json.dumps(row_candidate, ensure_ascii=False, indent=2)
 
     return f"""You are running Stage 4: Row Extraction for a systematic review data extraction pipeline.
 
@@ -325,22 +380,45 @@ Paper context:
 Study unit context:
 {study_unit_json}
 
-Requested rows for this single study_unit x outcome group:
-{row_candidates_json}
+Requested single row candidate:
+{row_candidate_json}
 
-Return ONLY a raw JSON array with this exact schema:
-[{{"row_id": "R-1", "study_unit_id": "SU-1", "outcome_name": str, "outcome_type": "continuous|binary|other", "timepoint": str, "value_type": "endpoint|change_from_baseline|other", "outcome_unit": str, "statistic_description": str, "note": str, "values": {{"Arm1_Mean": {{"value": str, "evidence": str}}, "Arm1_SD": {{"value": str, "evidence": str}}, "Arm1_Total": {{"value": str, "evidence": str}}, "Arm2_Mean": {{"value": str, "evidence": str}}, "Arm2_SD": {{"value": str, "evidence": str}}, "Arm2_Total": {{"value": str, "evidence": str}}, "Arm1_Events": {{"value": str, "evidence": str}}, "Arm2_Events": {{"value": str, "evidence": str}}}}}}]
+Return ONLY one raw JSON object with this exact schema:
+{{
+  "row_id": "R-1",
+  "study_unit_id": "SU-1",
+  "outcome_name": str,
+  "outcome_type": "continuous|binary|other",
+  "timepoint": str,
+  "value_type": "endpoint|change_from_baseline|other",
+  "outcome_unit": str,
+  "statistic_description": str,
+  "note": str,
+  "values": {{
+    "Arm1_Mean": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm1_SD": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm1_Total": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm2_Mean": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm2_SD": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm2_Total": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm1_Events": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}},
+    "Arm2_Events": {{"value": str, "evidence_span": str, "evidence_location": str, "confidence": "high|medium|low", "missing_reason": "reported|not_reported|not_applicable|unclear|reported_graphically_only"}}
+  }}
+}}
 
 Rules:
-- Return exactly one object for each requested `row_id`, in the same order as the requested rows.
-- Preserve each `row_id` exactly.
-- Do not return any extra rows or any `row_id` that is not listed above.
+- Return exactly one object for the requested `row_id`.
+- Preserve the requested `row_id`, `study_unit_id`, `outcome_name`, `timepoint`, and `value_type` exactly. Do not merge with any other row.
 - Every returned object must include all eight keys inside `values`: `Arm1_Mean`, `Arm1_SD`, `Arm1_Total`, `Arm2_Mean`, `Arm2_SD`, `Arm2_Total`, `Arm1_Events`, `Arm2_Events`.
-- Keep `study_unit_id`, `outcome_name`, `timepoint`, and `value_type` aligned to the requested row. Do not merge rows across timepoints.
-- For continuous outcomes, fill Mean/SD/Total when available. Use empty-string values for non-applicable event fields.
-- For binary outcomes, fill Events and Total when available. Use empty-string values for non-applicable mean/SD fields.
-- If an applicable field is not reported, use {{"value": "Not Reported", "evidence": ""}}.
-- Evidence must be copied verbatim from the PDF.
-- Extract only from the attached PDF. Do not infer or calculate missing values.
+- Perform field-level extraction. Evaluate each field independently instead of trying to fill the whole row in one shot.
+- Arm mapping is strict: Arm1 corresponds to the first arm in `study_unit.arms`; Arm2 corresponds to the second arm. Never swap arms.
+- For continuous outcomes, prioritize mean/SD/total style summaries. For binary outcomes, prioritize events/total style summaries. If the paper reports percentages, counts, or `x/y (%)`, capture the exact reported string in the most relevant field rather than inventing a conversion.
+- `evidence_span` must be a verbatim quote from the PDF. `evidence_location` should identify where it came from, such as "Results text", "Table 2", or "Figure 1".
+- `confidence` must be `high`, `medium`, or `low`.
+- `missing_reason` must be one of: `reported`, `not_reported`, `not_applicable`, `unclear`, `reported_graphically_only`.
+- For non-applicable fields, return `value = ""` and `missing_reason = "not_applicable"`.
+- If a field is mentioned only in a graph or figure without a numeric value, return `value = "Not Reported"` and `missing_reason = "reported_graphically_only"`.
+- If an applicable field is not reported numerically, return `value = "Not Reported"` and an empty `evidence_span`.
+- Extract only from the attached PDF. Do not infer, impute, or calculate missing values.
 - No markdown fences, no explanation, no extra keys.
 """

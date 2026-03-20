@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import traceback
 from collections import defaultdict
@@ -22,7 +23,7 @@ from .models import (
 )
 from .output import state_to_final_rows
 from .parsing import BINARY_ONLY_FIELDS, CANONICAL_VALUE_FIELDS, CONTINUOUS_ONLY_FIELDS, RobustJSONParser
-from .pdf import load_pdf_bytes
+from .pdf import build_targeted_pdf_bytes, load_pdf_bytes
 from .prompts import (
     generate_columns_section,
     generate_user_prompt,
@@ -200,7 +201,14 @@ class PipelineOrchestrator:
         try:
             state.row_candidates = await self._run_stage3(
                 paper=paper,
-                pdf_bytes=pdf_bytes,
+                pdf_bytes=self._build_stage3_pdf_bytes(
+                    paper=paper,
+                    pages_spec=request.pages_spec,
+                    pico_dict=pico_dict,
+                    profile=state.profile,
+                    study_units=state.study_units,
+                    fallback_pdf_bytes=pdf_bytes,
+                ),
                 project_type=request.project_type,
                 pico_dict=pico_dict,
                 profile=state.profile,
@@ -217,13 +225,20 @@ class PipelineOrchestrator:
             state=state,
             paper=paper,
             pdf_bytes=pdf_bytes,
+            pages_spec=request.pages_spec,
             project_type=request.project_type,
             study_units=state.study_units,
             row_candidates=state.row_candidates,
             profile=state.profile,
         )
         try:
-            self.validate_state(state)
+            state.validation_report = await self._run_stage5_with_recovery(
+                state=state,
+                paper=paper,
+                request=request,
+                pdf_bytes=pdf_bytes,
+            )
+            self._log_phase2_validation_summary(state)
         except Exception as exc:
             self._record_stage_error(state, "stage5", exc)
 
@@ -312,7 +327,14 @@ class PipelineOrchestrator:
         try:
             state.row_candidates = await self._run_stage3(
                 paper=paper,
-                pdf_bytes=pdf_bytes,
+                pdf_bytes=self._build_stage3_pdf_bytes(
+                    paper=paper,
+                    pages_spec=request.pages_spec,
+                    pico_dict=pico_dict,
+                    profile=state.profile,
+                    study_units=state.study_units,
+                    fallback_pdf_bytes=pdf_bytes,
+                ),
                 project_type=request.project_type,
                 pico_dict=pico_dict,
                 profile=state.profile,
@@ -338,13 +360,20 @@ class PipelineOrchestrator:
             state=state,
             paper=paper,
             pdf_bytes=pdf_bytes,
+            pages_spec=request.pages_spec,
             project_type=request.project_type,
             study_units=state.study_units,
             row_candidates=state.row_candidates,
             profile=state.profile,
         )
         try:
-            self.validate_state(state)
+            state.validation_report = await self._run_stage5_with_recovery(
+                state=state,
+                paper=paper,
+                request=request,
+                pdf_bytes=pdf_bytes,
+            )
+            self._log_phase2_validation_summary(state)
         except Exception as exc:
             self._record_stage_error(state, "stage5", exc)
         state.final_value_rows, state.final_evidence_rows = state_to_final_rows(state)
@@ -444,46 +473,301 @@ class PipelineOrchestrator:
         state: PipelineState,
         paper: Paper,
         pdf_bytes: bytes,
+        pages_spec: Optional[List[int]],
         project_type: str,
         study_units: List[StudyUnit],
         row_candidates: List[RowCandidate],
         profile: PaperProfile,
     ) -> List[ExtractionRow]:
         study_unit_by_id = {study_unit.unit_id: study_unit for study_unit in study_units}
-        grouped_candidates: Dict[Tuple[str, str], List[RowCandidate]] = defaultdict(list)
-        for candidate in row_candidates:
-            group_key = (candidate.study_unit_id, candidate.outcome_name.strip().casefold())
-            grouped_candidates[group_key].append(candidate)
-
         extraction_rows: List[ExtractionRow] = []
-        for (study_unit_id, outcome_name_key), candidates in grouped_candidates.items():
-            study_unit = study_unit_by_id.get(study_unit_id, self._default_study_unit())
+        for candidate in row_candidates:
+            study_unit = study_unit_by_id.get(candidate.study_unit_id, self._default_study_unit())
             try:
                 raw_text = await self._call_stage(
-                    stage_name=f"stage4:{study_unit_id}:{outcome_name_key}",
-                    pdf_bytes=pdf_bytes,
+                    stage_name=f"stage4:{candidate.row_id}",
+                    pdf_bytes=self._build_row_pdf_bytes(
+                        paper=paper,
+                        pages_spec=pages_spec,
+                        study_unit=study_unit,
+                        candidate=candidate,
+                        fallback_pdf_bytes=pdf_bytes,
+                    ),
                     filename=paper.path.name,
                     prompt=get_stage4_prompt(
                         project_type=project_type,
                         paper_id=paper.paper_id,
                         paper_profile=self._paper_profile_as_dict(profile),
                         study_unit=self._study_unit_as_dict(study_unit),
-                        row_candidates=[self._row_candidate_as_dict(candidate) for candidate in candidates],
+                        row_candidate=self._row_candidate_as_dict(candidate),
                     ),
                 )
-                parsed_rows = self._parser.parse_extraction_rows(raw_text, candidates)
-                extraction_rows.extend(self._parser.normalize_extraction_rows(parsed_rows, candidates))
+                parsed_rows = self._parser.parse_extraction_rows(raw_text, [candidate])
+                extraction_rows.extend(self._parser.normalize_extraction_rows(parsed_rows, [candidate]))
             except Exception as exc:
-                stage_key = f"stage4:{study_unit_id}:{outcome_name_key}"
+                stage_key = f"stage4:{candidate.row_id}"
                 self._record_stage_error(state, stage_key, exc)
-                for candidate in candidates:
-                    extraction_rows.append(self._blank_extraction_row(candidate, error=str(exc)))
+                extraction_rows.append(self._blank_extraction_row(candidate, error=str(exc)))
         return extraction_rows
+
+    async def _run_stage5_with_recovery(
+        self,
+        *,
+        state: PipelineState,
+        paper: Paper,
+        request: ExtractionRequest,
+        pdf_bytes: bytes,
+    ) -> ValidationReport:
+        initial_report = self._run_stage5(state=state)
+        candidate_by_id = {candidate.row_id: candidate for candidate in state.row_candidates}
+        study_unit_by_id = {study_unit.unit_id: study_unit for study_unit in state.study_units}
+        recovery_candidates = self._identify_recovery_candidates(state=state, report=initial_report)
+        if not recovery_candidates:
+            state.validation_report = initial_report
+            return initial_report
+
+        row_by_id = {row.row_id: row for row in state.extraction_rows}
+        attempted_row_ids: List[str] = []
+        recovered_row_ids: List[str] = []
+
+        for candidate in recovery_candidates:
+            attempted_row_ids.append(candidate.row_id)
+            current_row = row_by_id.get(candidate.row_id, self._blank_extraction_row(candidate, error="Missing before recovery."))
+            study_unit = study_unit_by_id.get(candidate.study_unit_id, self._default_study_unit())
+            try:
+                raw_text = await self._call_stage(
+                    stage_name=f"stage5:recovery:{candidate.row_id}",
+                    pdf_bytes=self._build_row_pdf_bytes(
+                        paper=paper,
+                        pages_spec=request.pages_spec,
+                        study_unit=study_unit,
+                        candidate=candidate,
+                        fallback_pdf_bytes=pdf_bytes,
+                        recovery=True,
+                    ),
+                    filename=paper.path.name,
+                    prompt=get_stage4_prompt(
+                        project_type=request.project_type,
+                        paper_id=paper.paper_id,
+                        paper_profile=self._paper_profile_as_dict(state.profile),
+                        study_unit=self._study_unit_as_dict(study_unit),
+                        row_candidate=self._row_candidate_as_dict(candidate),
+                    ),
+                )
+                parsed_rows = self._parser.parse_extraction_rows(raw_text, [candidate])
+                recovered_row = self._parser.normalize_extraction_rows(parsed_rows, [candidate])[0]
+                merged_row = self._parser.normalize_extraction_rows([current_row, recovered_row], [candidate])[0]
+                if self._row_quality_score(merged_row) > self._row_quality_score(current_row):
+                    if not recovered_row.error and self._row_quality_score(recovered_row) >= self._row_quality_score(current_row):
+                        merged_row.error = ""
+                    row_by_id[candidate.row_id] = merged_row
+                    recovered_row_ids.append(candidate.row_id)
+            except Exception as exc:
+                logger.exception("stage5 recovery failed for paper_id=%s row_id=%s", state.paper_id, candidate.row_id)
+                row = row_by_id.get(candidate.row_id)
+                if row is not None:
+                    row.error = self._merge_error_messages(row.error, f"Recovery failed: {exc}")
+
+        state.extraction_rows = [
+            row_by_id.get(candidate.row_id, self._blank_extraction_row(candidate, error="Missing after recovery."))
+            for candidate in state.row_candidates
+        ]
+        final_report = self._run_stage5(state=state)
+        if recovered_row_ids:
+            for row_id in recovered_row_ids:
+                candidate = candidate_by_id.get(row_id)
+                self._add_validation_issue(
+                    final_report,
+                    severity="warning",
+                    code="false_not_reported_recovered",
+                    message=f"Targeted recovery replaced missing values for row {row_id}.",
+                    row_id=row_id,
+                    study_unit_id=getattr(candidate, "study_unit_id", ""),
+                )
+        final_report.recovery_attempt_count = len(attempted_row_ids)
+        final_report.recovery_success_count = len(recovered_row_ids)
+        final_report.recovery_attempted_row_ids = attempted_row_ids
+        final_report.recovery_recovered_row_ids = recovered_row_ids
+        for candidate in recovery_candidates:
+            if candidate.row_id not in recovered_row_ids:
+                self._add_validation_issue(
+                    final_report,
+                    severity="warning",
+                    code="recovery_failed",
+                    message=f"Targeted recovery did not improve row {candidate.row_id}; original extraction was kept.",
+                    row_id=candidate.row_id,
+                    study_unit_id=candidate.study_unit_id,
+                )
+        final_report.error_type_counts = self._summarize_error_type_counts(final_report)
+        state.validation_report = final_report
+        return final_report
 
     async def _call_stage(self, *, stage_name: str, pdf_bytes: bytes, filename: str, prompt: str) -> str:
         if self._debug_prompt:
             logger.debug("%s prompt (first 500 chars) for %s: %s", stage_name, filename, prompt[:500])
         return await self._llm.extract_text(pdf_bytes=pdf_bytes, filename=filename, prompt=prompt)
+
+    def _build_stage3_pdf_bytes(
+        self,
+        *,
+        paper: Paper,
+        pages_spec: Optional[List[int]],
+        pico_dict: Dict[str, str],
+        profile: PaperProfile,
+        study_units: List[StudyUnit],
+        fallback_pdf_bytes: bytes,
+    ) -> bytes:
+        try:
+            return build_targeted_pdf_bytes(
+                paper.path,
+                pages_spec,
+                keywords=self._build_stage3_keywords(pico_dict=pico_dict, profile=profile, study_units=study_units),
+                anchor_terms=["methods", "results", "table", "figure", "baseline characteristics", "follow-up"],
+            )
+        except Exception:
+            logger.exception("stage3 targeted slicing failed for paper_id=%s", paper.paper_id)
+            return fallback_pdf_bytes
+
+    def _build_row_pdf_bytes(
+        self,
+        *,
+        paper: Paper,
+        pages_spec: Optional[List[int]],
+        study_unit: StudyUnit,
+        candidate: RowCandidate,
+        fallback_pdf_bytes: bytes,
+        recovery: bool = False,
+    ) -> bytes:
+        anchor_terms = [
+            "results",
+            "table",
+            "figure",
+            "baseline characteristics",
+            "methods" if recovery else "",
+        ]
+        try:
+            return build_targeted_pdf_bytes(
+                paper.path,
+                pages_spec,
+                keywords=self._build_row_keywords(study_unit=study_unit, candidate=candidate, recovery=recovery),
+                anchor_terms=anchor_terms,
+                max_pages=6 if recovery else 8,
+            )
+        except Exception:
+            logger.exception("targeted row slicing failed for paper_id=%s row_id=%s", paper.paper_id, candidate.row_id)
+            return fallback_pdf_bytes
+
+    @staticmethod
+    def _build_stage3_keywords(
+        *,
+        pico_dict: Dict[str, str],
+        profile: PaperProfile,
+        study_units: List[StudyUnit],
+    ) -> List[str]:
+        keywords = [
+            pico_dict.get("o", ""),
+            pico_dict.get("p", ""),
+            pico_dict.get("i", ""),
+            pico_dict.get("c", ""),
+            profile.follow_up,
+            profile.sample_size,
+        ]
+        for study_unit in study_units:
+            keywords.extend(
+                [
+                    study_unit.label,
+                    study_unit.population_note,
+                    study_unit.intervention,
+                    study_unit.comparison,
+                    *study_unit.arms,
+                ]
+            )
+        return [keyword.strip() for keyword in keywords if isinstance(keyword, str) and keyword.strip()]
+
+    @staticmethod
+    def _build_row_keywords(*, study_unit: StudyUnit, candidate: RowCandidate, recovery: bool) -> List[str]:
+        keywords = [
+            candidate.outcome_name,
+            candidate.timepoint,
+            candidate.outcome_unit,
+            candidate.statistic_description,
+            candidate.value_type.replace("_", " "),
+            study_unit.intervention,
+            study_unit.comparison,
+            study_unit.population_note,
+            *study_unit.arms,
+        ]
+        if candidate.outcome_type == "continuous":
+            keywords.extend(["mean", "sd", "standard deviation"])
+        elif candidate.outcome_type == "binary":
+            keywords.extend(["events", "total", "incidence", "prevalence"])
+        if recovery:
+            keywords.extend(["table", "figure", "results"])
+        return [keyword.strip() for keyword in keywords if isinstance(keyword, str) and keyword.strip()]
+
+    def _identify_recovery_candidates(
+        self,
+        *,
+        state: PipelineState,
+        report: ValidationReport,
+    ) -> List[RowCandidate]:
+        candidate_by_id = {candidate.row_id: candidate for candidate in state.row_candidates}
+        target_ids: set[str] = set(report.missing_row_ids)
+
+        for row in state.extraction_rows:
+            if self._row_missing_ratio(row) >= 0.5 or row.error:
+                target_ids.add(row.row_id)
+
+        empty_groups = set(report.empty_outcome_groups)
+        for candidate in state.row_candidates:
+            group_label = f"{candidate.study_unit_id}:{candidate.outcome_name.casefold()}"
+            if group_label in empty_groups:
+                target_ids.add(candidate.row_id)
+
+        for issue in report.issues:
+            if issue.code in {"duplicate_row_signature", "conflicting_field_values"} and issue.row_id:
+                target_ids.update(part.strip() for part in issue.row_id.split(",") if part.strip())
+
+        ordered: List[RowCandidate] = []
+        for candidate in state.row_candidates:
+            if candidate.row_id in target_ids:
+                ordered.append(candidate_by_id[candidate.row_id])
+        return ordered
+
+    @staticmethod
+    def _row_missing_ratio(row: ExtractionRow) -> float:
+        applicable_fields = PipelineOrchestrator._applicable_value_fields(row.outcome_type)
+        if not applicable_fields:
+            return 0.0
+        missing_count = sum(1 for field_name in applicable_fields if row.values.get(field_name, ExtractedCell()).value == "Not Reported")
+        return missing_count / len(applicable_fields)
+
+    @staticmethod
+    def _row_quality_score(row: ExtractionRow) -> int:
+        applicable_fields = PipelineOrchestrator._applicable_value_fields(row.outcome_type)
+        if not applicable_fields:
+            applicable_fields = list(CANONICAL_VALUE_FIELDS)
+        reported_count = sum(
+            1
+            for field_name in applicable_fields
+            if row.values.get(field_name) and row.values[field_name].value not in {"", "Not Reported"}
+        )
+        evidence_count = sum(
+            1
+            for field_name in applicable_fields
+            if row.values.get(field_name) and RobustJSONParser._clean_whitespace(row.values[field_name].evidence)
+        )
+        return (reported_count * 10) + evidence_count - (20 if row.error else 0)
+
+    @staticmethod
+    def _merge_error_messages(existing: str, new_message: str) -> str:
+        left = RobustJSONParser._clean_whitespace(existing)
+        right = RobustJSONParser._clean_whitespace(new_message)
+        if not left:
+            return right
+        if not right or left == right:
+            return left
+        return f"{left} | {right}"
 
     def _run_stage5(self, *, state: PipelineState) -> ValidationReport:
         report = ValidationReport(
@@ -564,6 +848,25 @@ class PipelineOrchestrator:
                     study_unit_id=row.study_unit_id,
                 )
 
+            if "candidate_outcome_mismatch=" in row.note:
+                self._add_validation_issue(
+                    report,
+                    severity="warning",
+                    code="wrong_outcome",
+                    message=f"Row {row.row_id} returned an outcome label inconsistent with the requested candidate.",
+                    row_id=row.row_id,
+                    study_unit_id=row.study_unit_id,
+                )
+            if "candidate_timepoint_mismatch=" in row.note:
+                self._add_validation_issue(
+                    report,
+                    severity="warning",
+                    code="wrong_timepoint",
+                    message=f"Row {row.row_id} returned a timepoint inconsistent with the requested candidate.",
+                    row_id=row.row_id,
+                    study_unit_id=row.study_unit_id,
+                )
+
             applicable_fields = self._applicable_value_fields(row.outcome_type)
             missing_fields: List[str] = []
             for field_name in applicable_fields:
@@ -571,6 +874,16 @@ class PipelineOrchestrator:
                 if row.values[field_name].value == "Not Reported":
                     not_reported_counts[field_name] += 1
                     missing_fields.append(field_name)
+                elif self._is_value_parse_failure(field_name, row.values[field_name].value, row.outcome_type):
+                    self._add_validation_issue(
+                        report,
+                        severity="warning",
+                        code="value_parse_failure",
+                        message=f"Field {field_name} in row {row.row_id} could not be normalized cleanly.",
+                        row_id=row.row_id,
+                        study_unit_id=row.study_unit_id,
+                        field_name=field_name,
+                    )
 
             if self._row_has_reported_value(row):
                 reported_groups.add((row.study_unit_id, row.outcome_name.casefold()))
@@ -598,6 +911,17 @@ class PipelineOrchestrator:
                     study_unit_id=row.study_unit_id,
                 )
 
+            study_unit = next((unit for unit in state.study_units if unit.unit_id == row.study_unit_id), None)
+            if study_unit and self._is_arm_swap_suspected(row, study_unit):
+                self._add_validation_issue(
+                    report,
+                    severity="warning",
+                    code="arm_swap",
+                    message=f"Row {row.row_id} may have intervention/control evidence assigned to the wrong arm.",
+                    row_id=row.row_id,
+                    study_unit_id=row.study_unit_id,
+                )
+
         for row_id, seen in row_ids_seen.items():
             if len(seen) > 1:
                 self._add_validation_issue(
@@ -619,6 +943,16 @@ class PipelineOrchestrator:
                     message=f"Duplicate extraction rows found for {signature_text}.",
                     row_id=",".join(row_ids),
                 )
+                conflicting_fields = self._find_conflicting_fields_for_signature(state.extraction_rows, signature)
+                for field_name in conflicting_fields:
+                    self._add_validation_issue(
+                        report,
+                        severity="warning",
+                        code="conflicting_field_values",
+                        message=f"Duplicate rows for {signature_text} disagree on field {field_name}.",
+                        row_id=",".join(row_ids),
+                        field_name=field_name,
+                    )
 
         candidate_groups = {(candidate.study_unit_id, candidate.outcome_name.casefold()) for candidate in state.row_candidates}
         for study_unit_id, outcome_name_key in sorted(candidate_groups):
@@ -648,6 +982,7 @@ class PipelineOrchestrator:
                 )
 
         report.duplicate_row_count = len(report.duplicate_row_signatures)
+        report.error_type_counts = self._summarize_error_type_counts(report)
         report.is_valid = report.error_count == 0
         return report
 
@@ -836,6 +1171,99 @@ class PipelineOrchestrator:
     def _format_row_signature(signature: Tuple[str, str, str, str]) -> str:
         study_unit_id, outcome_name, timepoint, value_type = signature
         return f"{study_unit_id}/{outcome_name}/{timepoint or '[no-timepoint]'}/{value_type or 'other'}"
+
+    @staticmethod
+    def _find_conflicting_fields_for_signature(
+        rows: List[ExtractionRow],
+        signature: Tuple[str, str, str, str],
+    ) -> List[str]:
+        matching_rows = [row for row in rows if PipelineOrchestrator._row_signature(row) == signature]
+        if len(matching_rows) < 2:
+            return []
+
+        field_names = set()
+        for row in matching_rows:
+            field_names.update(PipelineOrchestrator._applicable_value_fields(row.outcome_type))
+
+        conflicting_fields: List[str] = []
+        for field_name in sorted(field_names):
+            values = {
+                row.values[field_name].value
+                for row in matching_rows
+                if row.values.get(field_name) and row.values[field_name].value not in {"", "Not Reported"}
+            }
+            if len(values) > 1:
+                conflicting_fields.append(field_name)
+        return conflicting_fields
+
+    @staticmethod
+    def _summarize_error_type_counts(report: ValidationReport) -> Dict[str, int]:
+        counts = {
+            "missing_rows": report.missing_row_count,
+            "duplicate_rows": report.duplicate_row_count,
+            "wrong_outcome": 0,
+            "wrong_timepoint": 0,
+            "arm_swap": 0,
+            "value_parse_failure": 0,
+            "false_not_reported": 0,
+        }
+        issue_to_category = {
+            "wrong_outcome": "wrong_outcome",
+            "wrong_timepoint": "wrong_timepoint",
+            "arm_swap": "arm_swap",
+            "value_parse_failure": "value_parse_failure",
+            "false_not_reported_recovered": "false_not_reported",
+        }
+        for issue in report.issues:
+            category = issue_to_category.get(issue.code)
+            if category:
+                counts[category] += 1
+        return counts
+
+    @staticmethod
+    def _is_value_parse_failure(field_name: str, value: str, outcome_type: str) -> bool:
+        text = RobustJSONParser._clean_whitespace(value)
+        if text in {"", "Not Reported"}:
+            return False
+
+        if field_name.endswith("_Total") or field_name.endswith("_Events"):
+            return any(char.isalpha() for char in text)
+        if outcome_type == "continuous" and field_name.endswith(("_Mean", "_SD")):
+            return any(char.isalpha() for char in text) or "/" in text
+        return False
+
+    @staticmethod
+    def _is_arm_swap_suspected(row: ExtractionRow, study_unit: StudyUnit) -> bool:
+        arm1_label = RobustJSONParser._clean_whitespace(study_unit.arms[0] if study_unit.arms else study_unit.intervention).casefold()
+        arm2_label = RobustJSONParser._clean_whitespace(study_unit.arms[1] if len(study_unit.arms) > 1 else study_unit.comparison).casefold()
+        if not arm1_label or not arm2_label:
+            return False
+
+        arm1_evidence = " ".join(
+            RobustJSONParser._clean_whitespace(row.values.get(field_name, ExtractedCell()).evidence)
+            for field_name in CANONICAL_VALUE_FIELDS
+            if field_name.startswith("Arm1_")
+        ).casefold()
+        arm2_evidence = " ".join(
+            RobustJSONParser._clean_whitespace(row.values.get(field_name, ExtractedCell()).evidence)
+            for field_name in CANONICAL_VALUE_FIELDS
+            if field_name.startswith("Arm2_")
+        ).casefold()
+
+        arm1_mentions_other = arm2_label in arm1_evidence and arm1_label not in arm1_evidence
+        arm2_mentions_other = arm1_label in arm2_evidence and arm2_label not in arm2_evidence
+        return arm1_mentions_other and arm2_mentions_other
+
+    @staticmethod
+    def _log_phase2_validation_summary(state: PipelineState) -> None:
+        try:
+            logger.info(
+                "phase2_validation_summary paper_id=%s stats=%s",
+                state.paper_id,
+                json.dumps(state.validation_report.to_summary_dict(), ensure_ascii=False, sort_keys=True),
+            )
+        except Exception:
+            logger.exception("failed to log phase2 validation summary for paper_id=%s", state.paper_id)
 
     @staticmethod
     def _add_validation_issue(

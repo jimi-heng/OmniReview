@@ -21,6 +21,44 @@ CANONICAL_VALUE_FIELDS = [
 CONTINUOUS_ONLY_FIELDS = {"Arm1_Mean", "Arm1_SD", "Arm2_Mean", "Arm2_SD"}
 BINARY_ONLY_FIELDS = {"Arm1_Events", "Arm2_Events"}
 
+TIME_UNIT_ALIASES = {
+    "d": "day",
+    "day": "day",
+    "days": "day",
+    "wk": "week",
+    "wks": "week",
+    "week": "week",
+    "weeks": "week",
+    "mo": "month",
+    "mos": "month",
+    "month": "month",
+    "months": "month",
+    "yr": "year",
+    "yrs": "year",
+    "year": "year",
+    "years": "year",
+    "hr": "hour",
+    "hrs": "hour",
+    "hour": "hour",
+    "hours": "hour",
+}
+
+OUTCOME_NAME_ALIASES = {
+    "haemoglobin": "Hemoglobin",
+    "hemoglobin": "Hemoglobin",
+    "hb": "Hb",
+}
+
+STATISTIC_DESCRIPTION_ALIASES = {
+    "mean sd": "mean, SD",
+    "mean,sd": "mean, SD",
+    "mean and sd": "mean, SD",
+    "mean(sd)": "mean, SD",
+    "events total": "events, total",
+    "events,total": "events, total",
+    "events and total": "events, total",
+}
+
 
 class RobustJSONParser:
     """Robust JSON parser with fallback strategies plus typed helpers."""
@@ -50,33 +88,36 @@ class RobustJSONParser:
     @staticmethod
     def parse_row_candidates(text: str) -> List[RowCandidate]:
         parsed = RobustJSONParser.parse_json_payload(text)
-        if isinstance(parsed, dict):
-            rows = [parsed]
-        elif isinstance(parsed, list):
-            rows = parsed
-        else:
-            raise ValueError("Stage 3 JSON root must be object or array")
+        rows = RobustJSONParser._extract_stage3_row_candidate_items(parsed)
 
         candidates: List[RowCandidate] = []
         for index, item in enumerate(rows, start=1):
             if not isinstance(item, dict):
                 continue
 
-            outcome_name = RobustJSONParser._normalize_text(item.get("outcome_name"))
+            outcome_name = RobustJSONParser._normalize_outcome_name(
+                item.get("outcome_name") or item.get("outcome") or item.get("name")
+            )
             if not outcome_name:
                 continue
 
+            note = RobustJSONParser._build_stage3_candidate_note(item)
             candidates.append(
                 RowCandidate(
                     row_id=RobustJSONParser._normalize_text(item.get("row_id")) or f"R-{index}",
-                    study_unit_id=RobustJSONParser._normalize_text(item.get("study_unit_id")) or "SU-1",
+                    study_unit_id=RobustJSONParser._normalize_study_unit_id(item.get("study_unit_id")) or "SU-1",
                     outcome_name=outcome_name,
-                    outcome_type=RobustJSONParser._normalize_outcome_type(item.get("outcome_type")),
-                    timepoint=RobustJSONParser._normalize_text(item.get("timepoint")),
+                    outcome_type=RobustJSONParser._normalize_outcome_type(
+                        item.get("outcome_type"),
+                        statistic_description=item.get("statistic_description"),
+                    ),
+                    timepoint=RobustJSONParser._normalize_timepoint(item.get("timepoint")),
                     value_type=RobustJSONParser._normalize_value_type(item.get("value_type")),
                     outcome_unit=RobustJSONParser._normalize_text(item.get("outcome_unit")),
-                    statistic_description=RobustJSONParser._normalize_text(item.get("statistic_description")),
-                    note=RobustJSONParser._normalize_text(item.get("note")),
+                    statistic_description=RobustJSONParser._normalize_statistic_description(
+                        item.get("statistic_description")
+                    ),
+                    note=note,
                 )
             )
 
@@ -91,26 +132,41 @@ class RobustJSONParser:
         valid_study_unit_ids: List[str] | None = None,
     ) -> List[RowCandidate]:
         valid_ids = [unit_id.strip() for unit_id in (valid_study_unit_ids or []) if isinstance(unit_id, str) and unit_id.strip()]
+        valid_id_lookup = {unit_id.casefold(): unit_id for unit_id in valid_ids}
         default_unit_id = valid_ids[0] if valid_ids else "SU-1"
         deduped: Dict[tuple[str, str, str, str], RowCandidate] = {}
 
         for candidate in row_candidates:
-            study_unit_id = RobustJSONParser._normalize_text(candidate.study_unit_id) or default_unit_id
-            if valid_ids and study_unit_id not in valid_ids:
-                if len(valid_ids) == 1:
+            study_unit_id = RobustJSONParser._normalize_study_unit_id(candidate.study_unit_id) or default_unit_id
+            if valid_id_lookup:
+                matched = valid_id_lookup.get(study_unit_id.casefold())
+                if matched:
+                    study_unit_id = matched
+                elif len(valid_ids) == 1:
                     study_unit_id = default_unit_id
                 else:
                     continue
 
+            normalized_outcome_name = RobustJSONParser._normalize_outcome_name(candidate.outcome_name)
+            normalized_timepoint = RobustJSONParser._normalize_timepoint(candidate.timepoint)
+            normalized_statistic_description = RobustJSONParser._normalize_statistic_description(
+                candidate.statistic_description
+            )
+            normalized_value_type = RobustJSONParser._normalize_value_type(candidate.value_type)
+            normalized_outcome_type = RobustJSONParser._normalize_outcome_type(
+                candidate.outcome_type,
+                statistic_description=normalized_statistic_description,
+            )
+
             normalized = RowCandidate(
                 row_id="",
                 study_unit_id=study_unit_id,
-                outcome_name=RobustJSONParser._clean_whitespace(candidate.outcome_name),
-                outcome_type=RobustJSONParser._normalize_outcome_type(candidate.outcome_type),
-                timepoint=RobustJSONParser._clean_whitespace(candidate.timepoint),
-                value_type=RobustJSONParser._normalize_value_type(candidate.value_type) or "other",
+                outcome_name=normalized_outcome_name,
+                outcome_type=normalized_outcome_type,
+                timepoint=normalized_timepoint,
+                value_type=normalized_value_type or "other",
                 outcome_unit=RobustJSONParser._clean_whitespace(candidate.outcome_unit),
-                statistic_description=RobustJSONParser._clean_whitespace(candidate.statistic_description),
+                statistic_description=normalized_statistic_description,
                 note=RobustJSONParser._clean_whitespace(candidate.note),
             )
             if not normalized.outcome_name:
@@ -132,12 +188,12 @@ class RobustJSONParser:
                 row_id="",
                 study_unit_id=existing.study_unit_id,
                 outcome_name=existing.outcome_name,
-                outcome_type=existing.outcome_type if existing.outcome_type != "other" else normalized.outcome_type,
+                outcome_type=RobustJSONParser._prefer_outcome_type(existing.outcome_type, normalized.outcome_type),
                 timepoint=existing.timepoint or normalized.timepoint,
-                value_type=existing.value_type if existing.value_type != "other" else normalized.value_type,
+                value_type=RobustJSONParser._prefer_value_type(existing.value_type, normalized.value_type),
                 outcome_unit=existing.outcome_unit or normalized.outcome_unit,
                 statistic_description=existing.statistic_description or normalized.statistic_description,
-                note=existing.note or normalized.note,
+                note=RobustJSONParser._merge_notes(existing.note, normalized.note),
             )
 
         finalized = [
@@ -183,45 +239,65 @@ class RobustJSONParser:
 
             candidate = by_row_id.get(row_id)
             outcome_type = RobustJSONParser._normalize_outcome_type(
-                item.get("outcome_type") if item.get("outcome_type") is not None else getattr(candidate, "outcome_type", "")
+                item.get("outcome_type") if item.get("outcome_type") is not None else getattr(candidate, "outcome_type", ""),
+                statistic_description=item.get("statistic_description"),
             )
             raw_values = item.get("values", {})
             if not isinstance(raw_values, dict):
-                raw_values = {}
+                raw_values = {
+                    field_name: item.get(field_name)
+                    for field_name in CANONICAL_VALUE_FIELDS
+                    if item.get(field_name) is not None
+                }
 
             values: Dict[str, ExtractedCell] = {}
+            metadata_note_parts: List[str] = []
             for field_name in CANONICAL_VALUE_FIELDS:
                 default_value = RobustJSONParser._default_field_value(outcome_type, field_name)
                 cell = raw_values.get(field_name)
-                if isinstance(cell, dict):
-                    values[field_name] = ExtractedCell(
-                        value=RobustJSONParser._normalize_cell_value(cell.get("value"), default_value),
-                        evidence=RobustJSONParser._clean_whitespace(cell.get("evidence")),
-                    )
-                elif cell is None:
-                    values[field_name] = ExtractedCell(value=default_value, evidence="")
-                else:
-                    values[field_name] = ExtractedCell(
-                        value=RobustJSONParser._normalize_cell_value(cell, default_value),
-                        evidence="",
-                    )
+                parsed_cell, metadata_fragment = RobustJSONParser._parse_stage4_value_cell(
+                    cell,
+                    field_name=field_name,
+                    default_value=default_value,
+                )
+                values[field_name] = parsed_cell
+                if metadata_fragment:
+                    metadata_note_parts.append(metadata_fragment)
+
+            values = RobustJSONParser._normalize_row_value_cells(values)
+            candidate_note_fragments: List[str] = []
+            if candidate is not None:
+                returned_outcome_name = RobustJSONParser._normalize_outcome_name(item.get("outcome_name"))
+                if returned_outcome_name and returned_outcome_name.casefold() != candidate.outcome_name.casefold():
+                    candidate_note_fragments.append(f"candidate_outcome_mismatch={returned_outcome_name}")
+
+                returned_timepoint = RobustJSONParser._normalize_timepoint(item.get("timepoint"))
+                candidate_timepoint = RobustJSONParser._normalize_timepoint(candidate.timepoint)
+                if returned_timepoint and returned_timepoint.casefold() != candidate_timepoint.casefold():
+                    candidate_note_fragments.append(f"candidate_timepoint_mismatch={returned_timepoint}")
+
+            normalized_note = RobustJSONParser._merge_notes(
+                RobustJSONParser._normalize_text(item.get("note")),
+                " | ".join(metadata_note_parts + candidate_note_fragments),
+            )
 
             extraction_rows.append(
                 ExtractionRow(
                     row_id=row_id,
-                    study_unit_id=RobustJSONParser._normalize_text(item.get("study_unit_id"))
+                    study_unit_id=RobustJSONParser._normalize_study_unit_id(item.get("study_unit_id"))
                     or getattr(candidate, "study_unit_id", "SU-1"),
-                    outcome_name=RobustJSONParser._normalize_text(item.get("outcome_name"))
+                    outcome_name=RobustJSONParser._normalize_outcome_name(item.get("outcome_name"))
                     or getattr(candidate, "outcome_name", ""),
                     outcome_type=outcome_type,
-                    timepoint=RobustJSONParser._normalize_text(item.get("timepoint")) or getattr(candidate, "timepoint", ""),
+                    timepoint=RobustJSONParser._normalize_timepoint(item.get("timepoint"))
+                    or getattr(candidate, "timepoint", ""),
                     value_type=RobustJSONParser._normalize_value_type(item.get("value_type"))
                     or getattr(candidate, "value_type", ""),
                     outcome_unit=RobustJSONParser._normalize_text(item.get("outcome_unit"))
                     or getattr(candidate, "outcome_unit", ""),
-                    statistic_description=RobustJSONParser._normalize_text(item.get("statistic_description"))
+                    statistic_description=RobustJSONParser._normalize_statistic_description(item.get("statistic_description"))
                     or getattr(candidate, "statistic_description", ""),
-                    note=RobustJSONParser._normalize_text(item.get("note")) or getattr(candidate, "note", ""),
+                    note=normalized_note or getattr(candidate, "note", ""),
                     values=values,
                     error=RobustJSONParser._normalize_text(item.get("error")),
                 )
@@ -393,6 +469,314 @@ class RobustJSONParser:
         return value_rows, evidence_rows
 
     @staticmethod
+    def _extract_stage3_row_candidate_items(parsed: Any) -> List[Dict[str, Any]]:
+        if isinstance(parsed, list):
+            return [item for item in parsed if isinstance(item, dict)]
+        if not isinstance(parsed, dict):
+            raise ValueError("Stage 3 JSON root must be object or array")
+
+        direct_candidates = parsed.get("row_candidates") or parsed.get("rows")
+        if isinstance(direct_candidates, list):
+            return [item for item in direct_candidates if isinstance(item, dict)]
+
+        if "outcome_name" in parsed or "outcome" in parsed:
+            return [parsed]
+
+        collected: List[Dict[str, Any]] = []
+        for value in parsed.values():
+            if isinstance(value, dict):
+                collected.extend(RobustJSONParser._collect_stage3_row_candidate_items(value))
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        if "outcome_name" in item or "outcome" in item:
+                            collected.append(item)
+                        else:
+                            collected.extend(RobustJSONParser._collect_stage3_row_candidate_items(item))
+        if collected:
+            return collected
+        raise ValueError("Stage 3 JSON root must contain row_candidates or row-like objects")
+
+    @staticmethod
+    def _collect_stage3_row_candidate_items(parsed: Any) -> List[Dict[str, Any]]:
+        try:
+            return RobustJSONParser._extract_stage3_row_candidate_items(parsed)
+        except ValueError:
+            return []
+
+    @staticmethod
+    def _build_stage3_candidate_note(item: Dict[str, Any]) -> str:
+        note = RobustJSONParser._normalize_text(item.get("note"))
+        source_basis = RobustJSONParser._normalize_source_basis(item.get("source_basis") or item.get("source"))
+        uncertainty = RobustJSONParser._normalize_uncertainty(item.get("uncertainty"))
+        evidence_location = RobustJSONParser._normalize_text(item.get("evidence_location"))
+        metadata_parts: List[str] = []
+        if source_basis:
+            metadata_parts.append(f"source={'+'.join(source_basis)}")
+        if uncertainty:
+            metadata_parts.append(f"uncertainty={uncertainty}")
+        if evidence_location:
+            metadata_parts.append(f"location={evidence_location}")
+        return RobustJSONParser._merge_notes(note, "; ".join(metadata_parts))
+
+    @staticmethod
+    def _parse_stage4_value_cell(
+        cell: Any,
+        *,
+        field_name: str,
+        default_value: str,
+    ) -> Tuple[ExtractedCell, str]:
+        if isinstance(cell, dict):
+            missing_reason = RobustJSONParser._normalize_missing_reason(cell.get("missing_reason"))
+            confidence = RobustJSONParser._normalize_confidence(cell.get("confidence"))
+            evidence_span = RobustJSONParser._clean_whitespace(
+                cell.get("evidence_span") if cell.get("evidence_span") is not None else cell.get("evidence")
+            )
+            evidence_location = RobustJSONParser._clean_whitespace(cell.get("evidence_location"))
+            normalized_value = RobustJSONParser._normalize_stage4_field_value(
+                cell.get("value"),
+                default_value=default_value,
+                missing_reason=missing_reason,
+            )
+            metadata = RobustJSONParser._build_field_metadata_fragment(
+                field_name=field_name,
+                missing_reason=missing_reason,
+                confidence=confidence,
+                evidence_location=evidence_location,
+            )
+            return ExtractedCell(value=normalized_value, evidence=evidence_span), metadata
+
+        if cell is None:
+            return ExtractedCell(value=default_value, evidence=""), ""
+
+        return ExtractedCell(
+            value=RobustJSONParser._normalize_stage4_field_value(
+                cell,
+                default_value=default_value,
+                missing_reason="",
+            ),
+            evidence="",
+        ), ""
+
+    @staticmethod
+    def _normalize_row_value_cells(values: Dict[str, ExtractedCell]) -> Dict[str, ExtractedCell]:
+        normalized = {
+            field_name: ExtractedCell(
+                value=RobustJSONParser._clean_whitespace(cell.value),
+                evidence=RobustJSONParser._clean_whitespace(cell.evidence),
+            )
+            for field_name, cell in values.items()
+        }
+
+        for arm_index in (1, 2):
+            mean_field = f"Arm{arm_index}_Mean"
+            sd_field = f"Arm{arm_index}_SD"
+            total_field = f"Arm{arm_index}_Total"
+            events_field = f"Arm{arm_index}_Events"
+
+            normalized[total_field] = RobustJSONParser._normalize_numeric_cell(
+                normalized.get(total_field, ExtractedCell()),
+                allow_decimal=False,
+            )
+            normalized[events_field] = RobustJSONParser._normalize_numeric_cell(
+                normalized.get(events_field, ExtractedCell()),
+                allow_decimal=False,
+            )
+
+            mean_sd_pair = RobustJSONParser._extract_mean_sd_pair(
+                normalized.get(mean_field, ExtractedCell()).value,
+                normalized.get(mean_field, ExtractedCell()).evidence,
+            )
+            if mean_sd_pair is None:
+                mean_sd_pair = RobustJSONParser._extract_mean_sd_pair(
+                    normalized.get(sd_field, ExtractedCell()).value,
+                    normalized.get(sd_field, ExtractedCell()).evidence,
+                )
+
+            if mean_sd_pair is not None:
+                mean_value, sd_value = mean_sd_pair
+                if mean_value and RobustJSONParser._cell_needs_backfill(normalized.get(mean_field, ExtractedCell())):
+                    normalized[mean_field] = ExtractedCell(
+                        value=mean_value,
+                        evidence=normalized.get(mean_field, ExtractedCell()).evidence,
+                    )
+                else:
+                    normalized[mean_field] = RobustJSONParser._normalize_numeric_cell(
+                        normalized.get(mean_field, ExtractedCell()),
+                        allow_decimal=True,
+                    )
+                if sd_value and RobustJSONParser._cell_needs_backfill(normalized.get(sd_field, ExtractedCell())):
+                    normalized[sd_field] = ExtractedCell(
+                        value=sd_value,
+                        evidence=normalized.get(sd_field, ExtractedCell()).evidence,
+                    )
+                else:
+                    normalized[sd_field] = RobustJSONParser._normalize_numeric_cell(
+                        normalized.get(sd_field, ExtractedCell()),
+                        allow_decimal=True,
+                    )
+            else:
+                normalized[mean_field] = RobustJSONParser._normalize_numeric_cell(
+                    normalized.get(mean_field, ExtractedCell()),
+                    allow_decimal=True,
+                )
+                normalized[sd_field] = RobustJSONParser._normalize_numeric_cell(
+                    normalized.get(sd_field, ExtractedCell()),
+                    allow_decimal=True,
+                )
+
+            events_total_pair = RobustJSONParser._extract_events_total_pair(
+                normalized.get(events_field, ExtractedCell()).value,
+                normalized.get(events_field, ExtractedCell()).evidence,
+            )
+            if events_total_pair is None:
+                events_total_pair = RobustJSONParser._extract_events_total_pair(
+                    normalized.get(total_field, ExtractedCell()).value,
+                    normalized.get(total_field, ExtractedCell()).evidence,
+                )
+            if events_total_pair is not None:
+                events_value, total_value = events_total_pair
+                current_events = normalized.get(events_field, ExtractedCell())
+                current_total = normalized.get(total_field, ExtractedCell())
+                if events_value and (
+                    RobustJSONParser._cell_needs_backfill(current_events)
+                    or "/" in RobustJSONParser._clean_whitespace(current_events.value)
+                ):
+                    normalized[events_field] = ExtractedCell(
+                        value=events_value,
+                        evidence=current_events.evidence,
+                    )
+                if total_value and (
+                    RobustJSONParser._cell_needs_backfill(current_total)
+                    or "/" in RobustJSONParser._clean_whitespace(current_total.value)
+                ):
+                    normalized[total_field] = ExtractedCell(
+                        value=total_value,
+                        evidence=current_total.evidence,
+                    )
+
+        return normalized
+
+    @staticmethod
+    def _normalize_stage4_field_value(
+        value: Any,
+        *,
+        default_value: str,
+        missing_reason: str,
+    ) -> str:
+        if missing_reason == "not_applicable" or default_value == "":
+            return ""
+
+        normalized = RobustJSONParser._normalize_cell_value(value, default_value)
+        if missing_reason in {"not_reported", "unclear", "reported_graphically_only"} and normalized in {"", "Not Reported"}:
+            return "Not Reported"
+        if not normalized:
+            return default_value
+        if normalized.casefold() in {"not reported", "nr", "n/r", "not available", "not stated"}:
+            return "Not Reported" if default_value != "" else ""
+        return normalized
+
+    @staticmethod
+    def _normalize_numeric_cell(cell: ExtractedCell, *, allow_decimal: bool) -> ExtractedCell:
+        value = RobustJSONParser._clean_whitespace(cell.value)
+        evidence = RobustJSONParser._clean_whitespace(cell.evidence)
+        if value == "":
+            return ExtractedCell(value="", evidence=evidence)
+        if value == "Not Reported":
+            return ExtractedCell(value="Not Reported", evidence=evidence)
+        if "/" in value:
+            return ExtractedCell(value=value, evidence=evidence)
+        if "%" in value and not allow_decimal:
+            return ExtractedCell(value=value, evidence=evidence)
+
+        numeric_token = RobustJSONParser._extract_numeric_token(value, allow_decimal=allow_decimal)
+        if numeric_token:
+            return ExtractedCell(value=numeric_token, evidence=evidence)
+        return ExtractedCell(value=value, evidence=evidence)
+
+    @staticmethod
+    def _extract_mean_sd_pair(value: str, evidence: str) -> Optional[Tuple[str, str]]:
+        for text in (RobustJSONParser._clean_whitespace(value), RobustJSONParser._clean_whitespace(evidence)):
+            if not text:
+                continue
+            normalized = text.replace("\u00b1", "+/-")
+            match = re.search(r"(-?\d+(?:\.\d+)?)\s*(?:\+/-)\s*(-?\d+(?:\.\d+)?)", normalized)
+            if match:
+                return (
+                    RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=True),
+                    RobustJSONParser._sanitize_numeric_token(match.group(2), allow_decimal=True),
+                )
+
+            match = re.search(
+                r"mean\s*[=:]?\s*(-?\d+(?:\.\d+)?)\D+sd\s*[=:]?\s*(-?\d+(?:\.\d+)?)",
+                normalized,
+                re.IGNORECASE,
+            )
+            if match:
+                return (
+                    RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=True),
+                    RobustJSONParser._sanitize_numeric_token(match.group(2), allow_decimal=True),
+                )
+        return None
+
+    @staticmethod
+    def _extract_events_total_pair(value: str, evidence: str) -> Optional[Tuple[str, str]]:
+        for text in (RobustJSONParser._clean_whitespace(value), RobustJSONParser._clean_whitespace(evidence)):
+            if not text:
+                continue
+            match = re.search(r"(\d[\d,]*)\s*/\s*(\d[\d,]*)", text)
+            if match:
+                return (
+                    RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=False),
+                    RobustJSONParser._sanitize_numeric_token(match.group(2), allow_decimal=False),
+                )
+
+            match = re.search(r"(\d[\d,]*)\s+(?:of|out of)\s+(\d[\d,]*)", text, re.IGNORECASE)
+            if match:
+                return (
+                    RobustJSONParser._sanitize_numeric_token(match.group(1), allow_decimal=False),
+                    RobustJSONParser._sanitize_numeric_token(match.group(2), allow_decimal=False),
+                )
+        return None
+
+    @staticmethod
+    def _cell_needs_backfill(cell: ExtractedCell) -> bool:
+        return RobustJSONParser._clean_whitespace(cell.value) in {"", "Not Reported"}
+
+    @staticmethod
+    def _extract_numeric_token(text: str, *, allow_decimal: bool) -> str:
+        match = re.search(r"-?\d[\d,]*(?:\.\d+)?", text)
+        if not match:
+            return ""
+        return RobustJSONParser._sanitize_numeric_token(match.group(0), allow_decimal=allow_decimal)
+
+    @staticmethod
+    def _sanitize_numeric_token(token: str, *, allow_decimal: bool) -> str:
+        cleaned = token.replace(",", "").strip()
+        if not allow_decimal and re.fullmatch(r"-?\d+(?:\.0+)?", cleaned):
+            return str(int(float(cleaned)))
+        return cleaned
+
+    @staticmethod
+    def _build_field_metadata_fragment(
+        *,
+        field_name: str,
+        missing_reason: str,
+        confidence: str,
+        evidence_location: str,
+    ) -> str:
+        details: List[str] = []
+        if missing_reason and missing_reason != "reported":
+            details.append(f"missing={missing_reason}")
+        if confidence and confidence != "high":
+            details.append(f"confidence={confidence}")
+        if evidence_location:
+            details.append(f"location={evidence_location}")
+        if not details:
+            return ""
+        return f"{field_name}[{', '.join(details)}]"
+
+    @staticmethod
     def _split_nested_row(row: Dict[str, Any], columns: List[str]) -> Tuple[Dict[str, str], Dict[str, str]]:
         values: Dict[str, str] = {}
         evidences: Dict[str, str] = {}
@@ -410,11 +794,16 @@ class RobustJSONParser:
         return values, evidences
 
     @staticmethod
-    def _normalize_outcome_type(value: Any) -> str:
+    def _normalize_outcome_type(value: Any, *, statistic_description: Any = "") -> str:
         text = RobustJSONParser._normalize_text(value).lower()
         if text in {"continuous", "binary", "other"}:
             return text
         if text in {"dichotomous", "event"}:
+            return "binary"
+        statistic_text = RobustJSONParser._normalize_statistic_description(statistic_description).casefold()
+        if any(token in statistic_text for token in {"mean", "median", "sd", "iqr"}):
+            return "continuous"
+        if any(token in statistic_text for token in {"event", "events", "count", "prevalence", "risk"}):
             return "binary"
         return "other"
 
@@ -427,12 +816,168 @@ class RobustJSONParser:
             "endpoint": "endpoint",
             "endpoint_value": "endpoint",
             "final_value": "endpoint",
+            "post_treatment": "endpoint",
+            "post-treatment": "endpoint",
+            "follow_up": "endpoint",
+            "follow-up": "endpoint",
             "change": "change_from_baseline",
             "change_from_baseline": "change_from_baseline",
+            "change score": "change_from_baseline",
+            "mean_change": "change_from_baseline",
+            "delta change": "change_from_baseline",
+            "baseline_change": "change_from_baseline",
             "delta": "change_from_baseline",
             "other": "other",
         }
         return aliases.get(text, text)
+
+    @staticmethod
+    def _normalize_outcome_name(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value)
+        if not text:
+            return ""
+        normalized = text.replace("\u2013", "-").replace("\u2014", "-")
+        alias = OUTCOME_NAME_ALIASES.get(normalized.casefold())
+        return alias or normalized
+
+    @staticmethod
+    def _normalize_timepoint(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value)
+        if not text:
+            return ""
+
+        normalized = text.casefold()
+        normalized = normalized.replace("\u2013", "-").replace("\u2014", "-")
+        normalized = re.sub(r"^(at|after|following|follow-up at)\s+", "", normalized)
+        if normalized in {"baseline", "pre-treatment", "pretreatment", "pre intervention", "before intervention"}:
+            return "baseline"
+        if normalized in {"endpoint", "final", "end of treatment", "follow-up"}:
+            return "endpoint"
+
+        match = re.search(
+            r"(\d+(?:\.\d+)?)\s*[- ]?\s*(d|day|days|wk|wks|week|weeks|mo|mos|month|months|yr|yrs|year|years|hr|hrs|hour|hours)\b",
+            normalized,
+        )
+        if match:
+            quantity = match.group(1)
+            unit = TIME_UNIT_ALIASES.get(match.group(2), match.group(2))
+            suffix = unit if quantity == "1" else f"{unit}s"
+            return f"{quantity} {suffix}"
+
+        reverse_match = re.search(
+            r"\b(day|days|week|weeks|month|months|year|years|hour|hours)\s*(\d+(?:\.\d+)?)\b",
+            normalized,
+        )
+        if reverse_match:
+            quantity = reverse_match.group(2)
+            unit = TIME_UNIT_ALIASES.get(reverse_match.group(1), reverse_match.group(1))
+            suffix = unit if quantity == "1" else f"{unit}s"
+            return f"{quantity} {suffix}"
+
+        return text
+
+    @staticmethod
+    def _normalize_statistic_description(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value)
+        if not text:
+            return ""
+        normalized = text.replace("\u00b1", " +/- ").replace("卤", " +/- ")
+        normalized = re.sub(r"[\(\)\[\]]", " ", normalized)
+        normalized = re.sub(r"[;/]+", ", ", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip(" ,")
+        alias = STATISTIC_DESCRIPTION_ALIASES.get(normalized.casefold())
+        if alias:
+            return alias
+        lowered = normalized.casefold()
+        if "mean" in lowered and "sd" in lowered:
+            return "mean, SD"
+        if "event" in lowered and "total" in lowered:
+            return "events, total"
+        return normalized
+
+    @staticmethod
+    def _normalize_source_basis(value: Any) -> List[str]:
+        if isinstance(value, list):
+            items = value
+        elif value is None:
+            items = []
+        else:
+            items = [value]
+
+        normalized_items: List[str] = []
+        for item in items:
+            text = RobustJSONParser._clean_whitespace(item).lower()
+            if not text:
+                continue
+            if "table" in text:
+                candidate = "table"
+            elif "figure" in text or "graph" in text:
+                candidate = "figure"
+            else:
+                candidate = "text"
+            if candidate not in normalized_items:
+                normalized_items.append(candidate)
+        return normalized_items
+
+    @staticmethod
+    def _normalize_uncertainty(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value).lower()
+        if text in {"low", "medium", "high"}:
+            return text
+        if text in {"uncertain", "possible", "ambiguous"}:
+            return "high"
+        if text in {"moderate", "medium confidence"}:
+            return "medium"
+        if text in {"low confidence"}:
+            return "high"
+        if text in {"high confidence", "certain"}:
+            return "low"
+        return ""
+
+    @staticmethod
+    def _normalize_missing_reason(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value).lower()
+        aliases = {
+            "reported": "reported",
+            "not reported": "not_reported",
+            "not_reported": "not_reported",
+            "n/r": "not_reported",
+            "nr": "not_reported",
+            "not applicable": "not_applicable",
+            "not_applicable": "not_applicable",
+            "n/a": "not_applicable",
+            "unclear": "unclear",
+            "ambiguous": "unclear",
+            "reported graphically only": "reported_graphically_only",
+            "reported_graphically_only": "reported_graphically_only",
+            "graphical_only": "reported_graphically_only",
+        }
+        return aliases.get(text, "")
+
+    @staticmethod
+    def _normalize_confidence(value: Any) -> str:
+        text = RobustJSONParser._clean_whitespace(value).lower()
+        if text in {"high", "medium", "low"}:
+            return text
+        if text == "moderate":
+            return "medium"
+        return ""
+
+    @staticmethod
+    def _normalize_study_unit_id(value: Any) -> str:
+        return RobustJSONParser._clean_whitespace(value).upper()
+
+    @staticmethod
+    def _prefer_outcome_type(primary: str, secondary: str) -> str:
+        if primary and primary != "other":
+            return primary
+        return secondary or primary or "other"
+
+    @staticmethod
+    def _prefer_value_type(primary: str, secondary: str) -> str:
+        if primary and primary != "other":
+            return primary
+        return secondary or primary or "other"
 
     @staticmethod
     def _normalize_text(value: Any) -> str:
@@ -504,17 +1049,18 @@ class RobustJSONParser:
                 value=RobustJSONParser._normalize_cell_value(raw_cell.value, default_value),
                 evidence=RobustJSONParser._clean_whitespace(raw_cell.evidence),
             )
+        values = RobustJSONParser._normalize_row_value_cells(values)
 
         return ExtractionRow(
             row_id=candidate.row_id,
             study_unit_id=candidate.study_unit_id,
             outcome_name=candidate.outcome_name,
             outcome_type=outcome_type,
-            timepoint=candidate.timepoint or RobustJSONParser._clean_whitespace(extraction_row.timepoint),
+            timepoint=candidate.timepoint or RobustJSONParser._normalize_timepoint(extraction_row.timepoint),
             value_type=candidate.value_type or RobustJSONParser._normalize_value_type(extraction_row.value_type) or "other",
             outcome_unit=candidate.outcome_unit or RobustJSONParser._clean_whitespace(extraction_row.outcome_unit),
             statistic_description=candidate.statistic_description
-            or RobustJSONParser._clean_whitespace(extraction_row.statistic_description),
+            or RobustJSONParser._normalize_statistic_description(extraction_row.statistic_description),
             note=RobustJSONParser._merge_notes(candidate.note, extraction_row.note),
             values=values,
             error=RobustJSONParser._clean_whitespace(extraction_row.error),
