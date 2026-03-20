@@ -4,11 +4,6 @@ from typing import Any, Mapping
 
 import httpx
 
-try:
-    from Screening.TextHighlight import highlight_pdf
-except ImportError:
-    from TextHighlight import highlight_pdf
-
 from .models import FullTextRequest, FullTextScreeningConfig, FullTextScreeningRuntime
 from .parsing import extract_conclusion, extract_evidence, extract_flag, extract_output_text
 from .pdf import load_pdf_bytes, parse_pages_spec
@@ -64,14 +59,20 @@ async def process_single_paper(
         print(evidences)
 
         hl_path_str = None
-        try:
-            hl_dir = pdf_path.parent / "highlighted"
-            hl_dir.mkdir(exist_ok=True)
-            out_pdf = hl_dir / f"HL_{pdf_path.name}"
-            highlight_pdf(pdf_path, out_pdf, evidences)
-            hl_path_str = str(out_pdf)
-        except Exception as exc:
-            print(f"Highlight error for ID {paper.paper_id}: {exc}")
+        if runtime.enable_highlight:
+            try:
+                try:
+                    from Screening.TextHighlight import highlight_pdf
+                except ImportError:
+                    from TextHighlight import highlight_pdf
+
+                hl_dir = pdf_path.parent / "highlighted"
+                hl_dir.mkdir(exist_ok=True)
+                out_pdf = hl_dir / f"HL_{pdf_path.name}"
+                highlight_pdf(pdf_path, out_pdf, evidences)
+                hl_path_str = str(out_pdf)
+            except Exception as exc:
+                print(f"Highlight error for ID {paper.paper_id}: {exc}")
 
         evidence_json = json.dumps({"evidences": evidences, "conclusion": conclusion}, ensure_ascii=False)
         return {"id": paper.paper_id, "decision": decision, "evidence": evidence_json, "hl_path": hl_path_str}

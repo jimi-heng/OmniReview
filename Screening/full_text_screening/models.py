@@ -27,6 +27,7 @@ class FullTextScreeningConfig:
     retry_delay: float = 3.0
     max_concurrency: int = 5
     pdf_pages: str = "all"
+    enable_highlight: bool = True
 
 
 @dataclass(frozen=True)
@@ -40,3 +41,4 @@ class FullTextScreeningRuntime:
     max_concurrency: int
     pdf_pages: str
     selected_pages: Optional[list[int]]
+    enable_highlight: bool

@@ -100,6 +100,27 @@ def _flatten_outcome(value: Any) -> str:
     return str(value)
 
 
+def _flatten_extra(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        parts = [str(item).strip() for item in value if str(item).strip()]
+        return "\n".join(parts)
+    if isinstance(value, Mapping):
+        parts: list[str] = []
+        for key, item in value.items():
+            key_text = str(key).strip()
+            item_text = str(item).strip()
+            if key_text and item_text:
+                parts.append(f"{key_text}: {item_text}")
+            elif item_text:
+                parts.append(item_text)
+        return "\n".join(parts)
+    return str(value).strip()
+
+
 def load_pico_payload(path: Path) -> dict[str, str]:
     """Load `datasets/PICO15.json` and normalize it into the frontend payload shape."""
 
@@ -117,7 +138,7 @@ def load_pico_payload(path: Path) -> dict[str, str]:
         "i": str(data.get("I", "") or ""),
         "c": _join_maybe_list(data.get("C", "")),
         "o": _flatten_outcome(data.get("O", "")),
-        "es": "",
+        "es": _flatten_extra(data.get("ES", data.get("es", ""))),
     }
 
 
@@ -336,6 +357,7 @@ def main(argv: Optional[list[str]] = None) -> None:
                 "retries": int(args.retries),
                 "retry_delay": float(args.retry_delay),
                 "max_concurrency": int(args.max_concurrency),
+                "enable_highlight": False,
             },
         )
     except RuntimeError as exc:

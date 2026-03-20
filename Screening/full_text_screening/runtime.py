@@ -15,6 +15,21 @@ SCRIPT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
 
 
+def _coerce_bool(value: Any, *, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in {"0", "false", "no", "n", "off"}:
+        return False
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    return default
+
+
 def normalize_pico_dict(pico_dict: Mapping[str, Any] | None) -> dict[str, str]:
     return {
         str(key): "" if value is None else str(value)
@@ -64,6 +79,7 @@ def read_env_config() -> FullTextScreeningConfig:
         retry_delay=float(os.getenv("WEB_FULLTEXT_RETRY_DELAY", "3.0")),
         max_concurrency=int(os.getenv("WEB_FULLTEXT_MAX_CONCURRENCY", "5")),
         pdf_pages=os.getenv("WEB_FULLTEXT_PDF_PAGES", "all"),
+        enable_highlight=_coerce_bool(os.getenv("WEB_FULLTEXT_ENABLE_HIGHLIGHT", "1"), default=True),
     )
 
 
@@ -104,6 +120,7 @@ def resolve_runtime_config(
         max_concurrency=max(1, int(resolved.max_concurrency)),
         pdf_pages=pdf_pages,
         selected_pages=parse_pages_spec(pdf_pages),
+        enable_highlight=_coerce_bool(resolved.enable_highlight, default=True),
     )
 
 

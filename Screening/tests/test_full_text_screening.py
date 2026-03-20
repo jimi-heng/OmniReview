@@ -48,13 +48,17 @@ class FullTextScreeningTests(unittest.TestCase):
             "WEB_FULLTEXT_TIMEOUT": "120",
         }
         with patch.dict(os.environ, env, clear=False):
-            runtime = resolve_runtime_config({"max_concurrency": 9, "pdf_pages": "2-4"}, parse_pages_spec=parse_pages_spec)
+            runtime = resolve_runtime_config(
+                {"max_concurrency": 9, "pdf_pages": "2-4", "enable_highlight": False},
+                parse_pages_spec=parse_pages_spec,
+            )
 
         self.assertEqual(runtime.api_key, "test-key")
         self.assertEqual(runtime.model, "gpt-from-env")
         self.assertEqual(runtime.timeout, 120.0)
         self.assertEqual(runtime.max_concurrency, 9)
         self.assertEqual(runtime.selected_pages, [2, 3, 4])
+        self.assertFalse(runtime.enable_highlight)
 
 
 if __name__ == "__main__":
