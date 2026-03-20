@@ -39,6 +39,9 @@ function updateProgressStep(activeStepId) {
 
 // 通用页面切换函数（所有按钮跳转核心）
 function showPage(pageId) {
+    // 🌟 核心修复：每次切换页面时瞬间回到顶部，彻底解决底部白屏渲染 Bug！
+    window.scrollTo(0, 0);
+    
     if (pageId === 'home-page' && currentUser && currentUser.email === 'admin@neural.net') {
         pageId = 'admin-dashboard-page';
         const navBar = document.querySelector('.progress-header');

@@ -1,0 +1,1433 @@
+/* =======================================================
+   🌟 新增：禁止拖拽 3D 模型时意外选中右侧文字
+   ======================================================= */
+#auth-mega-wrapper {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE/Edge */
+    user-select: none;         /* 标准语法 */
+}
+
+/* ⚠️ 极其重要：必须给输入框开绿灯，否则账号密码也点不进去了 */
+#auth-mega-wrapper input {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+/* 引入 Apple 系统字体生态 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 背景：清爽的弥散渐变色 (类似 iOS 锁屏/天气背景) */
+body {
+    background: linear-gradient(135deg, #e4efe9 0%, #93a5ce 100%);
+    background-attachment: fixed;
+    color: #1d1d1f; /* Apple 经典深灰文字 */
+    padding-top: 100px;
+    min-height: 100vh;
+}
+
+/* 顶部导航：超强毛玻璃 (VisionOS 风格) */
+.progress-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    /* 半透明白色 + 强效背景模糊 */
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 16px 32px;
+    
+    /* 🌟 核心修复 1：将层级拔高到 2000，绝对压制大标题的 999 */
+    z-index: 2000 !important; 
+    /* 🌟 核心修复 2：强制开启 Windows 浏览器的 GPU 硬件加速，确保毛玻璃不失效 */
+    transform: translateZ(0); 
+    
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.progress-header .title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #1d1d1f;
+    margin-bottom: 0;
+}
+
+.progress-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.progress-step {
+    padding: 8px 16px;
+    border-radius: 999px; /* Apple 喜欢的胶囊形状 */
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.progress-step.active {
+    background-color: #0071e3; /* 经典的苹果蓝 */
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+
+
+.progress-step.disabled {
+    background-color: rgba(0, 0, 0, 0.04);
+    color: #86868b;
+}
+
+/* 主内容区 */
+.main-content {
+    width: 92%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 0 60px 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+}
+
+/* 核心元素：毛玻璃拟态卡片 (Glassmorphism Cards) */
+.card {
+    background: rgba(255, 255, 255, 0.7); /* 半透白 */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px; /* iOS 大圆角 */
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+    margin-bottom: 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+}
+
+.card h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* 苹果风格的灵动按钮 */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 999px; /* 胶囊圆角 */
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: #0071e3; /* 苹果蓝 */
+    color: white;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+}
+
+.btn-primary:hover {
+    background: #0077ed;
+    transform: scale(1.02); /* 悬浮呼吸感放大 */
+    box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1d1d1f;
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: scale(1.02);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+.btn:disabled, .btn[disabled] {
+    background-color: #a1a1a6 !important; /* 苹果标准禁用灰 */
+    box-shadow: none !important; /* 彻底去掉违和的荧光阴影 */
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: not-allowed !important;
+    transform: none !important; /* 加载时禁止悬浮放大动效 */
+    border: none !important;
+}
+
+
+/* 输入框优化：内嵌光泽与柔和边框 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 14px; /* iOS输入框圆角 */
+    background-color: rgba(255,255,255,0.8);
+    font-size: 15px;
+    transition: all 0.2s ease;
+    outline: none;
+    color: #1d1d1f;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+    background-color: #ffffff;
+}
+
+/* 表格重构：留白与分隔线 */
+.table {
+    width: 100%;
+    border-collapse: separate; /* 为了实现行间距和圆角 */
+    border-spacing: 0;
+    margin-top: 10px;
+    table-layout: fixed;
+}
+
+.table th {
+    padding: 16px 12px;
+    text-align: left;
+    font-size: 12px;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    font-weight: 600;
+}
+
+.table td {
+    padding: 16px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    font-size: 14px;
+    vertical-align: middle;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* 列表悬浮高光 */
+.table tbody tr:hover td {
+    background-color: rgba(0,0,0,0.015);
+}
+
+.table .reason-col { width: 35%; }
+.table .title-col { width: 25%; }
+
+/* 标签页 (Tab) 优化：浮动感 */
+.tabs {
+    display: inline-flex;
+    background: rgba(0,0,0,0.04);
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+}
+
+.tab {
+    padding: 8px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #86868b;
+    transition: all 0.3s ease;
+}
+
+.tab.active {
+    background-color: white;
+    color: #1d1d1f;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* 项目列表项 (Project Item) */
+.project-item {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.project-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    transform: scale(1.005);
+}
+
+/* 弹窗 (Modal) 毛玻璃遮罩 */
+.reason-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px); /* 弹窗背后的模糊 */
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    display: none;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 700px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    transform: scale(0.95);
+    animation: modalPop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes modalPop {
+    to { transform: scale(1); }
+}
+
+/* 其他微调 */
+.empty-data {
+    color: #86868b;
+    text-align: center;
+    padding: 40px;
+    font-size: 15px;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; appearance: none; margin: 0; 
+}
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+.custom-number-input { display: flex; align-items: stretch; }
+.custom-number-input input { border-radius: 14px 0 0 14px; border-right: none; margin: 0; }
+.custom-number-input .spin-btns { display: flex; flex-direction: column; }
+.spin-btn { 
+    background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); cursor: pointer; 
+    height: 50%; width: 32px; font-size: 10px; 
+    display: flex; align-items: center; justify-content: center; color: #86868b;
+}
+.spin-btn.up { border-radius: 0 14px 0 0; border-bottom: none; }
+.spin-btn.down { border-radius: 0 0 14px 0; }
+.spin-btn:hover { background: rgba(0,0,0,0.06); color: #1d1d1f; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+/* =======================================================
+   🚀 全新黑科技：3D星河 DNA 封面与平移空间 CSS
+   ======================================================= */
+/* 隐藏导航栏的专属类 (封面态触发) */
+body.hide-nav .progress-header {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+.progress-header {
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* 超级聚合容器：包裹 3D画布、文字、表单 */
+#auth-mega-wrapper {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    /* 🌟 将之前的 #05050A 替换为更高级的夜晚渐变色 */
+    /* 模拟从极深蓝/紫 (#020612) 到纯黑 (#010101) 的幽暗过渡 */
+    background: radial-gradient(circle at 75% 50%, #0a1128 0%, #030610 60%, #010101 100%);
+    overflow: hidden; z-index: 2000;
+    
+    /* (保留之前加的 user-select，防止文字被选中) */
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+}
+
+/* 3D DNA 画布容器 */
+#dna-canvas-container {
+    position: absolute; left: 0; top: 0; width: 50vw; height: 100vh;
+    /* 赋予它轻微的视差平移效果 */
+    transition: transform 1.2s cubic-bezier(0.25, 1, 0.25, 1), opacity 1.2s;
+}
+
+/* 横向平移轨道：总宽 200vw，左半边是封面文字，右半边是表单 */
+.auth-slider-track {
+    position: absolute; left: 0; top: 0; width: 200vw; height: 100vh;
+    display: flex; align-items: center;
+    transition: transform 1.2s cubic-bezier(0.25, 1, 0.25, 1);
+}
+
+/* 封面文字区 (初始在右半屏 x: 50vw) */
+.intro-panel {
+    width: 50vw; height: 100vh; margin-left: 50vw;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 6vw 8vw;
+    transition: opacity 1s;
+}
+
+/* 表单区 (初始在屏幕外右侧 x: 100vw) */
+.auth-forms-panel {
+    width: 50vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center; position: relative;
+}
+
+/* ===== 状态控制器 ===== */
+/* 1. 封面态：轨道在 0，显示右半屏文字 */
+#auth-mega-wrapper.state-cover .auth-slider-track { transform: translateX(0); }
+#auth-mega-wrapper.state-cover #dna-canvas-container { transform: translateX(0); opacity: 1; }
+
+/* 2. 登录/注册态：轨道左移 50vw，文字去左边，表单进右边 */
+#auth-mega-wrapper.state-auth .auth-slider-track { transform: translateX(-50vw); }
+/* 3D DNA 往左稍微退缩，产生空间纵深感 */
+#auth-mega-wrapper.state-auth #dna-canvas-container { transform: translateX(-15vw); opacity: 0.1; pointer-events: none; }
+
+/* 暗黑毛玻璃通用类 */
+.dark-glass {
+    background: linear-gradient(145deg, rgba(30, 30, 35, 0.6), rgba(20, 20, 25, 0.8));
+    backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); color: #ffffff;
+}
+
+/* 表单丝滑切换容器 */
+.form-container {
+    position: absolute; width: 100%; max-width: 440px;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    opacity: 0; pointer-events: none; transform: translateX(30px);
+}
+.form-container.active {
+    opacity: 1; pointer-events: auto; transform: translateX(0);
+}
+
+.dark-input {
+    background-color: rgba(0, 0, 0, 0.3) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: #ffffff !important;
+}
+.dark-input:focus { border-color: #00d2ff !important; box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.2) !important; }
+
+
+/* ====== 设置错落有致的延迟 (Staggered Delays) ====== */
+#login-title.play-animation { animation-delay: 0.2s; }
+#login-subtitle.play-animation { animation-delay: 0.3s; }
+#feature-1.play-animation { animation-delay: 0.4s; }
+#feature-2.play-animation { animation-delay: 0.5s; }
+#feature-3.play-animation { animation-delay: 0.6s; }
+#login-card.play-animation { animation-delay: 0.8s; animation-duration: 0.7s; }
+
+/* =======================================================
+   🌟 高级入场动画：Blur + Fade Up (Apple/Vercel 风格)
+   ======================================================= */
+.animate-item {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px); /* 初始带有强烈的深空模糊感 */
+    transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                filter 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.animate-item.play-animation {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+/* 错落有致的发车延迟，引导视觉焦点 */
+.delay-1 { transition-delay: 0.1s; }
+.delay-2 { transition-delay: 0.25s; }
+.delay-3 { transition-delay: 0.4s; }
+.delay-4 { transition-delay: 0.55s; }
+
+/* =======================================================
+   🌓 昼夜切换按钮样式 (极简玻璃拟物)
+   ======================================================= */
+.theme-toggle {
+    position: fixed; top: 12px; right: 12px; width: 44px; height: 44px;
+    border-radius: 50%; background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+    font-size: 20px; cursor: pointer; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.theme-toggle:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.2); }
+body.dark-theme .theme-toggle { background: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.1); }
+
+/* =======================================================
+   🌙 全局夜晚模式 (Dark Theme) - 匹配极光 DNA 风格
+   ======================================================= */
+/* 1. 基础背景 */
+body.dark-theme {
+    background: radial-gradient(circle at top left, #0a1128 0%, #030610 60%, #010101 100%) !important;
+    color: #f5f5f7;
+}
+
+/* 2. 顶部导航栏 (深色毛玻璃) */
+body.dark-theme .progress-header {
+    background-color: rgba(10, 15, 30, 0.6) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+body.dark-theme .step { color: #636366; }
+body.dark-theme .step.active { color: #f5f5f7; border-bottom: 2px solid #00d2ff; }
+
+/* 3. 工作台卡片 (深空透明质感) */
+body.dark-theme .card,
+body.dark-theme .project-item,
+body.dark-theme .modal-content {
+    background: rgba(20, 25, 40, 0.45) !important;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    color: #f5f5f7;
+}
+
+/* 4. 表单与输入框 */
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+}
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder { color: #86868b !important; }
+body.dark-theme input:focus,
+body.dark-theme textarea:focus { border-color: #00d2ff !important; box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.2) !important; }
+
+/* 5. 表格设计 */
+body.dark-theme table { border-color: rgba(255, 255, 255, 0.05) !important; }
+body.dark-theme th {
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: #a1a1a6 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-theme td { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; color: #d1d1d6 !important; }
+body.dark-theme tr:hover td { background: rgba(255, 255, 255, 0.03) !important; }
+
+/* 6. 文字与标签页细节 */
+body.dark-theme h2, body.dark-theme h3 { color: #ffffff; }
+body.dark-theme .tabs .tab { color: #636366; }
+body.dark-theme .tabs .tab.active { color: #00d2ff; border-bottom: 2px solid #00d2ff; }
+body.dark-theme .modal-content p, body.dark-theme .modal-content span { color: #a1a1a6; }
+
+/* 7. 浅色模式下的封面重置 (如果用户切回白天，封面背景也要跟着变亮) */
+body:not(.dark-theme) #auth-mega-wrapper {
+    background: radial-gradient(circle at 75% 50%, #e4efe9 0%, #c4d7e6 60%, #93a5ce 100%) !important;
+}
+body:not(.dark-theme) #auth-mega-wrapper h1, 
+body:not(.dark-theme) #auth-mega-wrapper p { color: #1d1d1f !important; }
+body:not(.dark-theme) #auth-mega-wrapper .intro-panel { background: rgba(255,255,255,0.4); border-radius: 20px; padding: 24px; }
+
+/* 8. 按钮与次要操作的高对比度适配 (修复灰色按钮看不清) */
+/* 适配 Continue, Back 等次要按钮 */
+body.dark-theme .btn-secondary,
+body.dark-theme .btn-outline {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important; /* 霜白文字 */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+body.dark-theme .btn-secondary:hover,
+body.dark-theme .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 适配纯文字类型的返回按钮或链接 (例如 Back to home) */
+body.dark-theme a,
+body.dark-theme .back-link,
+body.dark-theme .btn-link {
+    color: #00d2ff !important; /* 赛博蓝，保证绝对醒目 */
+    text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+body.dark-theme a:hover,
+body.dark-theme .back-link:hover {
+    color: #fff !important;
+}
+
+/* 修复有些特定的灰色提示文字在夜晚太刺暗 */
+body.dark-theme .text-muted, 
+body.dark-theme small {
+    color: #a1a1a6 !important; /* 苹果深空灰 */
+}
+
+/* =======================================================
+   🌙 暗黑模式深度护眼优化 (修复按钮刺眼与亮灰区块)
+   ======================================================= */
+
+/* 1. 修复 Upload / Search 等主按钮 (去除非自然的纯白底蓝边) */
+body.dark-theme .btn-primary,
+body.dark-theme button[id*="upload"],
+body.dark-theme button[id*="search"] {
+    background: rgba(0, 210, 255, 0.15) !important;
+    color: #00d2ff !important;
+    border: 1px solid rgba(0, 210, 255, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+}
+body.dark-theme .btn-primary:hover,
+body.dark-theme button[id*="upload"]:hover,
+body.dark-theme button[id*="search"]:hover {
+    background: rgba(0, 210, 255, 0.25) !important;
+}
+
+/* 2. 修复 Keep AI 按钮在暗黑模式下刺眼的白底 */
+body.dark-theme td button[style*="#f2f2f7"],
+body.dark-theme td button[style*="rgb(242, 242, 247)"],
+body.dark-theme td button[style*="background-color: #f2f2f7"] {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: none !important;
+}
+body.dark-theme td button[style*="#f2f2f7"]:hover,
+body.dark-theme td button[style*="rgb(242, 242, 247)"]:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 3. 修复 Data Extraction 中间大框和列表的亮灰色扎眼问题 */
+body.dark-theme #extraction-paper-list li[style*="rgba(255,255,255,0.4)"],
+body.dark-theme #extraction-paper-list li[style*="rgba(255, 255, 255, 0.4)"] {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+body.dark-theme #extraction-paper-list li {
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+body.dark-theme #extraction-paper-list li:hover {
+    background: rgba(0, 210, 255, 0.1) !important;
+}
+body.dark-theme #extraction-paper-list li span[style*="color: #1d1d1f"],
+body.dark-theme #extraction-paper-list li span[style*="color: rgb(29, 29, 31)"] {
+    color: #e5e5ea !important; 
+}
+body.dark-theme #extraction-paper-list li span[style*="background: rgba(0,0,0,0.05)"],
+body.dark-theme #extraction-paper-list li span[style*="background: rgba(0, 0, 0, 0.05)"] {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #a1a1a6 !important;
+}
+
+/* 4. 修复其它预设的浅灰色占位大框 */
+body.dark-theme [style*="background: #e9ecef"],
+body.dark-theme [style*="background-color: #e9ecef"],
+body.dark-theme [style*="rgb(233, 236, 239)"],
+body.dark-theme .empty-data {
+    background: rgba(0, 0, 0, 0.25) !important;
+    color: #a1a1a6 !important;
+    border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+}
+
+/* =======================================================
+   🌙 终极暗黑模式：全局渐变按钮与深度护眼 (强制覆盖)
+   ======================================================= */
+
+/* 1. 赛博蓝渐变 */
+body.dark-theme .btn-primary,
+body.dark-theme .btn-outline-primary,
+body.dark-theme button[style*="color: #0071e3"],
+body.dark-theme button[style*="border: 1px solid #0071e3"],
+body.dark-theme button[style*="rgb(0, 113, 227)"],
+body.dark-theme button[id*="upload"],
+body.dark-theme button[id*="search"] {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+    color: #05050A !important; 
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
+    text-shadow: none !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+}
+
+body.dark-theme .btn-primary:hover,
+body.dark-theme button[id*="upload"]:hover,
+body.dark-theme button[id*="search"]:hover {
+    box-shadow: 0 0 25px rgba(0, 210, 255, 0.5) !important;
+    transform: scale(1.02) !important;
+}
+
+/* 2. 极光绿渐变 */
+body.dark-theme .btn-success,
+body.dark-theme button[style*="#34c759"],
+body.dark-theme button[style*="rgb(52, 199, 89)"],
+body.dark-theme button[style*="#28a745"],
+body.dark-theme button[style*="rgb(40, 167, 69)"],
+body.dark-theme button[id*="run-ai"] {
+    background: linear-gradient(135deg, #34c759 0%, #008744 100%) !important;
+    color: #05050A !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(52, 199, 89, 0.3) !important;
+    text-shadow: none !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+}
+
+body.dark-theme .btn-success:hover,
+body.dark-theme button[style*="#34c759"]:hover,
+body.dark-theme button[id*="run-ai"]:hover {
+    box-shadow: 0 0 25px rgba(52, 199, 89, 0.5) !important;
+    transform: scale(1.02) !important;
+}
+
+/* 3. 彻底剿灭 Data Extraction 等界面的所有【顽固亮灰框】 */
+body.dark-theme .bg-light,
+body.dark-theme [style*="background: #e9ecef"],
+body.dark-theme [style*="background-color: #e9ecef"],
+body.dark-theme [style*="background: #f8f9fa"],
+body.dark-theme [style*="background-color: #f8f9fa"],
+body.dark-theme [style*="background: #f4f5f7"],
+body.dark-theme [style*="background-color: #f4f5f7"],
+body.dark-theme [style*="background: #f2f2f7"],
+body.dark-theme [style*="background-color: #f2f2f7"],
+body.dark-theme [style*="rgb(233, 236, 239)"],
+body.dark-theme [style*="rgb(248, 249, 250)"] {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #e5e5ea !important;
+    backdrop-filter: blur(10px);
+}
+
+body.dark-theme .bg-light *,
+body.dark-theme [style*="background: #e9ecef"] *,
+body.dark-theme [style*="background: #f8f9fa"] *,
+body.dark-theme [style*="background-color: #f8f9fa"] * {
+    color: #e5e5ea !important;
+}
+
+/* =======================================================
+   🌙 终极细节修复：Tab样式、纯色小按钮与AI决策文字颜色
+   ======================================================= */
+
+body.dark-theme .tabs .tab.active {
+    background-color: rgba(0, 210, 255, 0.15) !important;
+    color: #00d2ff !important;
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.2) !important;
+    border: 1px solid rgba(0, 210, 255, 0.3) !important;
+}
+
+body.dark-theme td button[style*="#34c759"] {
+    background: #34c759 !important; 
+    box-shadow: 0 2px 6px rgba(52, 199, 89, 0.2) !important;
+}
+body.dark-theme td button[style*="#ff3b30"] {
+    background: #ff3b30 !important; 
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2) !important;
+}
+
+body.dark-theme td[style*="#34c759"],
+body.dark-theme td[style*="rgb(52, 199, 89)"] {
+    color: #34c759 !important;
+    text-shadow: 0 0 8px rgba(52, 199, 89, 0.2) !important;
+}
+body.dark-theme td[style*="#ff3b30"],
+body.dark-theme td[style*="rgb(255, 59, 48)"] {
+    color: #ff3b30 !important;
+    text-shadow: 0 0 8px rgba(255, 59, 48, 0.2) !important;
+}
+body.dark-theme td[style*="#ff9500"],
+body.dark-theme td[style*="rgb(255, 149, 0)"] {
+    color: #ff9500 !important; 
+    text-shadow: 0 0 8px rgba(255, 149, 0, 0.2) !important;
+}
+
+/* =======================================================
+   🌙 终极精准修复补丁 (覆盖表格按钮与提取页白框)
+   ======================================================= */
+
+body.dark-theme td button {
+    background-image: none !important; 
+}
+body.dark-theme td button[style*="52, 199, 89"],
+body.dark-theme td button[style*="#34c759"] {
+    background-color: #34c759 !important;
+    color: #ffffff !important;
+}
+body.dark-theme td button[style*="255, 59, 48"],
+body.dark-theme td button[style*="#ff3b30"] {
+    background-color: #ff3b30 !important;
+    color: #ffffff !important;
+}
+body.dark-theme td button[style*="242, 242, 247"],
+body.dark-theme td button[style*="#f2f2f7"] {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+}
+
+body.dark-theme #extraction-unstarted-view {
+    background: rgba(20, 25, 40, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-theme #extraction-unstarted-view > div:nth-of-type(2) {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+body.dark-theme #extraction-completed-view > div:nth-of-type(2) {
+    background: rgba(20, 25, 40, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-theme #extraction-completed-view thead {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+}
+body.dark-theme #extraction-completed-view th {
+    color: #a1a1a6 !important;
+}
+
+/* =======================================================
+   🌟 最终视觉打磨：完美修复导航栏、提取页及纯色按钮覆盖
+   ======================================================= */
+
+body.dark-theme .progress-header .title {
+    color: #f5f5f7 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+body.dark-theme td[style*="#34c759"],
+body.dark-theme td[style*="rgb(52, 199, 89)"] {
+    color: #34c759 !important;
+    text-shadow: none !important; 
+    font-weight: 700 !important;
+}
+body.dark-theme td[style*="#ff3b30"],
+body.dark-theme td[style*="rgb(255, 59, 48)"] {
+    color: #ff3b30 !important;
+    text-shadow: none !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme [style*="color: #1d1d1f"],
+body.dark-theme [style*="color: rgb(29, 29, 31)"] {
+    color: #f5f5f7 !important;
+}
+
+body.dark-theme #data-extraction-page h2,
+body.dark-theme #extraction-unstarted-view h3,
+body.dark-theme #extraction-completed-view h3 {
+    color: #ffffff !important;
+}
+
+/* =======================================================
+   🌟 悬停光晕修复：强制注入高亮渐变，彻底干掉变暗的旧逻辑
+   ======================================================= */
+
+body.dark-theme .btn-primary:hover,
+body.dark-theme .btn-outline-primary:hover,
+body.dark-theme button[id*="upload"]:hover,
+body.dark-theme button[id*="search"]:hover,
+body.dark-theme button[style*="color: #0071e3"]:hover,
+body.dark-theme button[style*="border: 1px solid #0071e3"]:hover,
+body.dark-theme button[style*="rgb(0, 113, 227)"]:hover {
+    background: linear-gradient(135deg, #33ddff 0%, #548ce6 100%) !important;
+    box-shadow: 0 0 30px rgba(0, 210, 255, 0.6) !important;
+    transform: scale(1.02) !important;
+}
+
+body.dark-theme .btn-success:hover,
+body.dark-theme button[style*="#34c759"]:hover,
+body.dark-theme button[style*="rgb(52, 199, 89)"]:hover,
+body.dark-theme button[style*="#28a745"]:hover,
+body.dark-theme button[style*="rgb(40, 167, 69)"]:hover,
+body.dark-theme button[id*="run-ai"]:hover {
+    background: linear-gradient(135deg, #4ede65 0%, #00a050 100%) !important;
+    box-shadow: 0 0 30px rgba(52, 199, 89, 0.6) !important;
+    transform: scale(1.02) !important;
+}
+
+/* =======================================================
+   🌟 导航栏终极补丁：赛博渐变激活状态与暗色未激活状态
+   ======================================================= */
+
+body.dark-theme .progress-step.active {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+    color: #05050A !important; 
+    font-weight: 700 !important;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
+    border: none !important;
+}
+
+body.dark-theme .progress-step.disabled {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #86868b !important;
+    box-shadow: none !important;
+}
+
+body.dark-theme .progress-step.disabled:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e5e5ea !important;
+}
+
+/* =======================================================
+   🌞 终极白天模式：封面排版、颜色与按钮修复
+   ======================================================= */
+
+.cover-badge {
+    display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 24px; letter-spacing: 1px; width: fit-content; transition: all 0.3s;
+}
+.cover-title {
+    font-size: 72px; font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px; transition: all 0.3s;
+}
+.cover-title span {
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; transition: all 0.3s;
+}
+.cover-desc {
+    font-size: 19px; line-height: 1.6; margin-bottom: 48px; font-weight: 400; max-width: 500px; transition: all 0.3s;
+}
+.cover-btn-primary, .cover-btn-secondary {
+    padding: 16px 48px; font-size: 16px; font-weight: 700; border-radius: 14px; border: none; transition: all 0.3s;
+}
+
+body.dark-theme .cover-badge { background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); color: #00d2ff; box-shadow: 0 0 15px rgba(0,210,255,0.2); }
+body.dark-theme .cover-title { color: #ffffff; }
+body.dark-theme .cover-title span { background-image: linear-gradient(135deg, #00d2ff 0%, #8a2be2 50%, #34c759 100%); text-shadow: 0 0 30px rgba(0,210,255,0.3); }
+body.dark-theme .cover-desc { color: #a1a1a6; }
+body.dark-theme .cover-btn-primary { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: #05050A; box-shadow: 0 0 20px rgba(0,210,255,0.4); }
+body.dark-theme .cover-btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
+body.dark-theme .cover-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+body:not(.dark-theme) #auth-mega-wrapper {
+    background: radial-gradient(circle at top left, #ffffff 0%, #f5f5f7 60%, #e5e5ea 100%) !important;
+}
+body:not(.dark-theme) #auth-mega-wrapper .intro-panel {
+    background: transparent !important; padding: 6vw 8vw !important; border: none !important;
+}
+body:not(.dark-theme) .cover-badge { background: rgba(0, 113, 227, 0.1); border: 1px solid rgba(0, 113, 227, 0.3); color: #0071e3; }
+body:not(.dark-theme) .cover-title { color: #1d1d1f; }
+body:not(.dark-theme) .cover-title span { background-image: linear-gradient(135deg, #0071e3 0%, #5e5ce6 50%, #34c759 100%); }
+body:not(.dark-theme) .cover-desc { color: #555555; }
+body:not(.dark-theme) .cover-btn-primary { background: linear-gradient(135deg, #0071e3 0%, #30b0ff 100%); color: #ffffff; box-shadow: 0 8px 24px rgba(0,113,227,0.3); }
+body:not(.dark-theme) .cover-btn-secondary { background: rgba(0,0,0,0.05); color: #1d1d1f; border: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+body:not(.dark-theme) .cover-btn-secondary:hover { background: rgba(0,0,0,0.08); }
+
+/* =======================================================
+   🌅 终极昼夜平滑切换：高级铝合金背景与双轨流光字
+   ======================================================= */
+
+body:not(.dark-theme) #auth-mega-wrapper {
+    background: radial-gradient(circle at 75% 50%, #0a1128 0%, #030610 60%, #010101 100%) !important; 
+}
+#auth-mega-wrapper::before {
+    content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at top left, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+    opacity: 0; transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: -1;
+}
+body:not(.dark-theme) #auth-mega-wrapper::before {
+    opacity: 1; 
+}
+
+.cover-title span { background-image: none; -webkit-text-fill-color: initial; text-shadow: none !important; }
+
+.knowledge-night {
+    display: inline-block;
+    background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 50%, #34c759 100%) !important;
+    -webkit-background-clip: text !important; background-clip: text !important; 
+    -webkit-text-fill-color: transparent !important; color: transparent !important;
+    filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.3)); 
+    opacity: 1; transition: opacity 1s ease;
+    padding-bottom: 15px !important; 
+}
+
+.knowledge-day {
+    display: inline-block;
+    background: linear-gradient(135deg, #0055ff 0%, #00aadd 50%, #5e5ce6 100%) !important;
+    -webkit-background-clip: text !important; background-clip: text !important; 
+    -webkit-text-fill-color: transparent !important; color: transparent !important;
+    filter: drop-shadow(0 8px 16px rgba(0, 85, 255, 0.2));
+    opacity: 0; transition: opacity 1s ease;
+    padding-bottom: 15px !important; 
+}
+
+body:not(.dark-theme) .knowledge-night { opacity: 0; }
+body:not(.dark-theme) .knowledge-day { opacity: 1; }
+
+body:not(.dark-theme) .dark-glass {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05) !important;
+    color: #1d1d1f !important;
+}
+body:not(.dark-theme) .dark-glass h2 { color: #1d1d1f !important; }
+body:not(.dark-theme) .dark-glass p { color: #86868b !important; }
+body:not(.dark-theme) .dark-glass label { color: #555555 !important; }
+body:not(.dark-theme) .dark-input {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #1d1d1f !important;
+}
+body:not(.dark-theme) .dark-input:focus {
+    border-color: #0055ff !important;
+    box-shadow: 0 0 0 4px rgba(0, 85, 255, 0.15) !important;
+    background-color: #ffffff !important;
+}
+
+body:not(.dark-theme) .auth-forms-panel > button,
+body:not(.dark-theme) .auth-forms-panel p { color: #86868b !important; }
+body:not(.dark-theme) .auth-forms-panel > button:hover { color: #1d1d1f !important; }
+
+/* =======================================================
+   🌟 补充修复：白天模式表单错误提示颜色被误伤
+   ======================================================= */
+body:not(.dark-theme) #login-error,
+body:not(.dark-theme) #register-error {
+    color: #ff3b30 !important; 
+}
+
+body:not(.dark-theme) p#login-error,
+body:not(.dark-theme) p#register-error {
+    color: #ff3b30 !important; 
+    font-weight: 600 !important;
+    text-shadow: 0 2px 8px rgba(255, 59, 48, 0.15) !important; 
+}
+
+/* =======================================================
+   🌟 补充修复：白天模式主按钮纯色化 (去除渐变，回归克制高级感)
+   ======================================================= */
+
+body:not(.dark-theme) .cover-btn-primary,
+body:not(.dark-theme) #login-btn {
+    background: #0071e3 !important; 
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
+    border: none !important;
+}
+body:not(.dark-theme) .cover-btn-primary:hover,
+body:not(.dark-theme) #login-btn:hover {
+    background: #0077ed !important;
+    box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4) !important;
+}
+
+body:not(.dark-theme) #register-btn {
+    background: #34c759 !important; 
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(52, 199, 89, 0.3) !important;
+    border: none !important;
+}
+body:not(.dark-theme) #register-btn:hover {
+    background: #32d75b !important;
+    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.4) !important;
+}
+
+/* =======================================================
+   🌟 新增功能：项目分析类型选择器 (Radio Cards) & 状态角标
+   ======================================================= */
+
+.type-selector { display: flex; flex-direction: column; gap: 10px; }
+.type-option {
+    border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; padding: 14px 16px;
+    cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.6);
+    text-align: left; position: relative; overflow: hidden;
+}
+.type-option:hover { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.2); }
+.type-option.active {
+    background: rgba(0, 113, 227, 0.05); border-color: #0071e3;
+    box-shadow: 0 0 0 1px #0071e3;
+}
+.type-option .type-title { font-size: 14px; font-weight: 700; color: #1d1d1f; margin-bottom: 4px; transition: color 0.2s; }
+.type-option .type-desc { font-size: 12px; color: #86868b; line-height: 1.4; }
+
+.type-badge {
+    display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; 
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px;
+    vertical-align: middle;
+}
+body:not(.dark-theme) .type-badge.spico { background: rgba(0, 113, 227, 0.1); color: #0071e3; }
+body:not(.dark-theme) .type-badge.peco  { background: rgba(52, 199, 89, 0.1); color: #28a745; }
+body:not(.dark-theme) .type-badge.piro  { background: rgba(175, 82, 222, 0.1); color: #af52de; }
+
+body.dark-theme .type-option {
+    background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.1);
+}
+body.dark-theme .type-option:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+body.dark-theme .type-option.active {
+    background: rgba(0, 210, 255, 0.1); border-color: #00d2ff;
+    box-shadow: 0 0 0 1px #00d2ff;
+}
+body.dark-theme .type-option .type-title { color: #f5f5f7; }
+body.dark-theme .type-option .type-desc { color: #a1a1a6; }
+body.dark-theme .type-option.active .type-title { color: #00d2ff; }
+
+body.dark-theme .type-badge.spico { background: rgba(0, 210, 255, 0.15); color: #00d2ff; }
+body.dark-theme .type-badge.peco  { background: rgba(52, 199, 89, 0.15); color: #34c759; }
+body.dark-theme .type-badge.piro  { background: rgba(191, 90, 242, 0.15); color: #bf5af2; }
+
+/* =======================================================
+   🌟 最新 UI 打磨：极简黑白灰风格 (提取页、搜索标签、弹窗)
+   ======================================================= */
+
+body.dark-theme #re-run-extraction-btn,
+body.dark-theme #download-csv-btn,
+body.dark-theme #download-xlsx-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+body.dark-theme #re-run-extraction-btn:hover,
+body.dark-theme #download-csv-btn:hover,
+body.dark-theme #download-xlsx-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+body.dark-theme #extraction-completed-view > div:first-child > div:last-child {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+body.dark-theme .tabs .tab.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f5f5f7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+body.dark-theme #createProjectModal .dark-input:focus {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-theme .type-option.active {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    transform: scale(1.02) !important; 
+}
+body.dark-theme .type-option.active .type-title {
+    color: #ffffff !important;
+    font-size: 15.5px !important; 
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); 
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* =======================================================
+   🌟 终极视觉打磨：夜晚模式蓝色主按钮 (真正的全透明镂空 + 渐变描边)
+   ======================================================= */
+
+body.dark-theme .btn-primary,
+body.dark-theme .cover-btn-primary,
+body.dark-theme #login-btn,
+body.dark-theme #confirmCreateProjectBtn {
+    position: relative;
+    background: transparent !important; 
+    color: #ffffff !important; 
+    border: 1.5px solid transparent !important; 
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.15) !important;
+    font-weight: 700 !important;
+    z-index: 1; 
+}
+
+/* =======================================================
+   🌟 终极主按钮阵列：渐变实心(封面/执行) + 纯色勾边(导航)
+   ======================================================= */
+   
+body.dark-theme .btn-primary:not([id*="run"]):not([id*="Run"]):not(.cover-btn-primary):not(#login-btn),
+body.dark-theme #confirmCreateProjectBtn {
+    background: transparent !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(0, 210, 255, 0.85) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .btn-primary:not([id*="run"]):not([id*="Run"]):not(.cover-btn-primary):not(#login-btn):hover,
+body.dark-theme #confirmCreateProjectBtn:hover {
+    background: rgba(0, 210, 255, 0.15) !important; 
+    border-color: rgba(0, 210, 255, 1) !important;
+    transform: scale(1.02) !important;
+}
+
+body.dark-theme .cover-btn-primary,
+body.dark-theme #login-btn {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important;
+    color: #05050A !important; 
+    border: none !important;
+    box-shadow: none !important; 
+    text-shadow: none !important;
+    font-weight: 700 !important;
+}
+body.dark-theme .cover-btn-primary:hover,
+body.dark-theme #login-btn:hover {
+    background: linear-gradient(135deg, #33ddff 0%, #548ce6 100%) !important; 
+    transform: scale(1.02) !important;
+}
+
+body.dark-theme .btn-success,
+body.dark-theme button[id*="run"],
+body.dark-theme button[id*="Run"],
+body.dark-theme #register-btn {
+    background: linear-gradient(135deg, #34c759 0%, #008744 100%) !important;
+    color: #05050A !important; 
+    border: none !important; 
+    box-shadow: none !important; 
+    text-shadow: none !important;
+    font-weight: 700 !important;
+}
+body.dark-theme .btn-success:hover,
+body.dark-theme button[id*="run"]:hover,
+body.dark-theme button[id*="Run"]:hover,
+body.dark-theme #register-btn:hover {
+    background: linear-gradient(135deg, #4ede65 0%, #00a050 100%) !important; 
+    transform: scale(1.02) !important;
+}
+
+body.dark-theme .btn-primary::before, body.dark-theme .btn-success::before,
+body.dark-theme .cover-btn-primary::before, body.dark-theme #login-btn::before,
+body.dark-theme #register-btn::before, body.dark-theme #confirmCreateProjectBtn::before {
+    display: none !important;
+}
+
+body.dark-theme .btn-success::before,
+body.dark-theme button[id*="run"]::before,
+body.dark-theme button[id*="Run"]::before,
+body.dark-theme #register-btn::before {
+    display: none !important;
+}
+
+/* =======================================================
+   🌟 终极修复：Data Extraction 提取表格黑夜悬停亮瞎眼问题
+   ======================================================= */
+
+body.dark-theme #extraction-table-body tr:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important; 
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2) !important; 
+}
+
+body.dark-theme #extraction-table-body tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* =======================================================
+   🌟 苹果 iOS 设置界面风格 (分组列表) - 终极修复版
+   ======================================================= */
+.ios-list-container {
+    background: rgba(128, 128, 128, 0.04);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(128, 128, 128, 0.08);
+    margin-bottom: 24px;
+}
+
+.ios-list-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2) !important;
+    width: 100% !important;
+}
+
+.ios-list-item:last-child {
+    border-bottom: none !important; 
+}
+
+.ios-list-item:hover {
+    background: rgba(128, 128, 128, 0.08);
+}
+
+.ios-list-item-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 15px;
+    color: #1d1d1f;
+}
+
+body.dark-theme .ios-list-item-left {
+    color: #f5f5f7;
+}
+
+.ios-chevron {
+    display: flex !important;
+    align-items: center !important;
+    color: #86868b !important; 
+    flex-shrink: 0 !important; 
+}
+
+.profile-subview-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+/* =======================================================
+   🌟 苹果风毛玻璃悬浮提示框 (Tooltip)
+   ======================================================= */
+#profile-btn {
+    position: relative;
+    overflow: visible !important; 
+}
+
+.apple-tooltip {
+    position: absolute;
+    top: 130%; 
+    right: 0;
+    background: rgba(255, 255, 255, 0.75); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08); 
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+    color: #1d1d1f; 
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    z-index: 1000;
+    pointer-events: none; 
+}
+
+body.dark-theme .apple-tooltip {
+    background: rgba(30, 30, 30, 0.65); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
+    color: #f5f5f7; 
+}
+
+#profile-btn:hover .apple-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* =======================================================
+   🌟 修复：提升全局头部的物理层级，防止 Apple 悬浮窗被遮挡
+   ======================================================= */
+.header {
+    position: relative !important;
+    z-index: 999 !important; 
+    overflow: visible !important; 
+}
+
+.header > div {
+    position: relative !important;
+    z-index: 1000 !important;
+    overflow: visible !important;
+}
+
+/* =======================================================
+   🌟 数据库选择胶囊按钮 (Apple Chip Style)
+   ======================================================= */
+.db-chip {
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: rgba(128, 128, 128, 0.08);
+    color: #86868b;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(128, 128, 128, 0.1);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.db-chip:hover {
+    background: rgba(128, 128, 128, 0.15);
+}
+.db-chip.active {
+    background: #0071e3;
+    color: #ffffff;
+    border-color: #0071e3;
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+}
+body.dark-theme .db-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #a1a1a6;
+}
+body.dark-theme .db-chip.active {
+    background: rgba(255, 255, 255, 0.08);   
+    border-color: rgba(255, 255, 255, 0.3);  
+    color: #ffffff;                          
+    box-shadow: none;                        
+}
+
+/* =======================================================
+   🌟 苹果风：SPA 页面层级滑动过渡动画
+   ======================================================= */
+.ios-slide-in-forward {
+    animation: iosSlideForward 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+.ios-slide-in-backward {
+    animation: iosSlideBackward 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes iosSlideForward {
+    0% { transform: translateX(30px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes iosSlideBackward {
+    0% { transform: translateX(-30px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* 👑 超级管理员：Premium 圆形头像按钮 */
+.avatar-admin-wrapper {
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    background: linear-gradient(#1c1c1e, #1c1c1e) padding-box, 
+                linear-gradient(135deg, #0071e3, #8f52de) border-box; 
+}
+[data-theme="light"] .avatar-admin-wrapper {
+    background: linear-gradient(#ffffff, #ffffff) padding-box, 
+                linear-gradient(135deg, #0071e3, #8f52de) border-box;
+}
+.avatar-admin-wrapper:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 15px rgba(143, 82, 222, 0.4);
+}
+.avatar-admin-text {
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0071e3, #8f52de);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; 
+}
