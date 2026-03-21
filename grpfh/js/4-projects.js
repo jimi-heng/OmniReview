@@ -30,9 +30,9 @@ function renderProjects(projects) {
     } else {
         let projectsHtml = headerHtml;
         projects.forEach(project => {
-            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'SPICO';
-            if (pType === 'PICOS') pType = 'SPICO';
-            let badgeClass = pType.toLowerCase();
+            let pType = project.project_type ? project.project_type.replace(/"/g, '') : 'PICOS';
+            if (pType === 'SPICO') pType = 'PICOS';
+            let badgeClass = pType === 'PICOS' ? 'spico' : pType.toLowerCase(); // 继续借用 spico 的蓝色 CSS 样式
 
             projectsHtml += `
                 <div class="project-item" data-project-id="${project.id}">

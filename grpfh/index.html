@@ -198,7 +198,7 @@
                 
                 <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
-                        <span>Intervention (SPICO)</span>
+                        <span>Intervention (PICOS)</span>
                         <span id="dist-spico-text">0% (0)</span>
                     </div>
                     <div style="width: 100%; height: 8px; background: rgba(128,128,128,0.2); border-radius: 4px; overflow: hidden;">
@@ -337,7 +337,7 @@
             </div>
             <div class="card" id="pico-setup-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 id="pico-setup-title" style="margin: 0;">Enter the SPICO Elements</h3>
+                    <h3 id="pico-setup-title" style="margin: 0;">Enter the PICOS Elements</h3>
                     <span id="current-project-type-badge" class="type-badge spico">Intervention (SPICO)</span>
                 </div>
 
@@ -634,7 +634,7 @@
                 <label style="font-size: 11px; letter-spacing: 1px; color: #86868b; display: block; margin-bottom: 12px; text-align: center; font-weight: 600;">SELECT ANALYSIS TYPE</label>
                 <div class="type-selector">
                     <div class="type-option active" data-type="SPICO" onclick="selectProjectType(this, 'SPICO')">
-                        <div class="type-title">Intervention (SPICO)</div>
+                        <div class="type-title">Intervention (PICOS)</div>
                         <div class="type-desc">Study Design, Population, Intervention, Comparison, Outcome</div>
                     </div>
 
@@ -991,10 +991,10 @@
             const navStepPico = document.getElementById('step-pico'); 
 
             if (type === 'SPICO' || type === 'PICOS') {
-                titleEl.textContent = "Enter the SPICO Elements";
-                badgeEl.textContent = "Intervention (SPICO)";
+                titleEl.textContent = "Enter the PICOS Elements";
+                badgeEl.textContent = "Intervention (PICOS)";
                 badgeEl.className = "type-badge spico";
-                if (navStepPico) navStepPico.textContent = "2. SPICO Setup"; 
+                if (navStepPico) navStepPico.textContent = "2. PICOS Setup"; 
             } else if (type === 'PECO') {
                 titleEl.textContent = "Enter the PECO Elements";
                 badgeEl.textContent = "Prognosis (PECO)";
