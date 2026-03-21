@@ -392,10 +392,19 @@
             <!-- 上传标签页（还原支持格式、多文件上传，新增ID和上传按钮事件） -->
             <div id="import-section" class="card">
                 <p style="color: #6c757d; margin-bottom: 20px;">Supported citation formats: .bib, .ris (EndNote/Mendeley/RefWorks export)</p>
-                <div class="form-group">
-                    <label for="file-upload">Upload Citation Files</label>
-                    <!-- 保留原属性，仅新增ID（已存在），无需修改 -->
-                    <input type="file" id="file-upload" multiple accept=".bib,.ris" style="padding: 3px;">
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="font-size: 13px; color: #86868b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: block;">UPLOAD CITATION FILES</label>
+                    <div style="display: flex; align-items: center; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); border-radius: 14px; padding: 6px; transition: all 0.2s ease;">
+                        <!-- 伪装成按钮的 label，点击它等于点击隐藏的 file input -->
+                        <label for="file-upload" class="btn btn-secondary" style="margin: 0; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; font-size: 13px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Choose Files
+                        </label>
+                        <!-- 自己写英文来显示文件状态 -->
+                        <span id="file-chosen-text" style="margin-left: 12px; font-size: 14px; color: #86868b; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">No file chosen</span>
+                        <!-- 真正的 input 彻底隐藏！ -->
+                        <input type="file" id="file-upload" multiple accept=".bib,.ris" style="display: none;">
+                    </div>
                 </div>
                 <div style="margin-top: 10px;">
                     <!-- 关键修改：给按钮加ID+点击事件，关联JS上传逻辑 -->

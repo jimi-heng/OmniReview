@@ -190,6 +190,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (errorFiles.length > 0) message += `- Failed: ${errorFiles.join(', ')}`;
             alert(message);
             fileInput.value = ''; window.loadLiteratureList();
+
+            // 👇 补上这句：上传完重置文本
+            if (fileChosenText) {
+                fileChosenText.textContent = 'No file chosen';
+                fileChosenText.style.color = '#86868b';
+            }
+        });
+    }
+
+    // ====== 修复：Apple 风格自定义文件上传文本联动 ======
+    const fileInput = document.getElementById('file-upload');
+    const fileChosenText = document.getElementById('file-chosen-text');
+    
+    if (fileInput && fileChosenText) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 1) {
+                // 选了多个文件显示：3 files chosen
+                fileChosenText.textContent = `${this.files.length} files chosen`;
+                fileChosenText.style.color = '#1d1d1f'; // 变成深色表示已选
+            } else if (this.files && this.files.length === 1) {
+                // 选了单个文件显示文件名
+                fileChosenText.textContent = this.files[0].name;
+                fileChosenText.style.color = '#1d1d1f';
+            } else {
+                // 没选文件恢复默认
+                fileChosenText.textContent = 'No file chosen';
+                fileChosenText.style.color = '#86868b';
+            }
         });
     }
 
