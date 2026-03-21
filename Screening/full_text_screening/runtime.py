@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 import os
 from dataclasses import asdict
 from pathlib import Path
@@ -9,6 +10,7 @@ import httpx
 from dotenv import load_dotenv
 
 from .models import FullTextPaper, FullTextScreeningConfig, FullTextScreeningRuntime
+from .pico_normalizer import coerce_pico_payload, flatten_text
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent.parent
@@ -30,10 +32,10 @@ def _coerce_bool(value: Any, *, default: bool = False) -> bool:
     return default
 
 
-def normalize_pico_dict(pico_dict: Mapping[str, Any] | None) -> dict[str, str]:
+def normalize_pico_dict(pico_dict: Mapping[str, Any] | list[Any] | None) -> dict[str, str]:
     return {
-        str(key): "" if value is None else str(value)
-        for key, value in (pico_dict or {}).items()
+        str(key).strip().lower(): flatten_text(value)
+        for key, value in coerce_pico_payload(pico_dict).items()
     }
 
 
@@ -65,8 +67,20 @@ def build_payload(model_name: str, pdf_bytes: bytes, filename: str, prompt: str)
     }
 
 
-def error_result(paper_id: int) -> dict[str, Any]:
-    return {"id": paper_id, "decision": "Error", "evidence": "{}", "hl_path": None}
+def error_result(
+    paper_id: int,
+    *,
+    error_type: str = "runtime_error",
+    message: str = "",
+    raw_output: str = "",
+) -> dict[str, Any]:
+    evidence = {
+        "error_type": error_type,
+        "message": message,
+    }
+    if raw_output:
+        evidence["raw_output"] = raw_output
+    return {"id": paper_id, "decision": "Error", "evidence": json.dumps(evidence, ensure_ascii=False), "hl_path": None}
 
 
 def read_env_config() -> FullTextScreeningConfig:

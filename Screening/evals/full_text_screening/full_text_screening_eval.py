@@ -44,6 +44,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from Screening.FullTextScreening import run_fulltext_ai_sync  # noqa: E402
+from Screening.full_text_screening.pico_normalizer import coerce_pico_payload  # noqa: E402
 
 
 def _normalize_label(value: str) -> str:
@@ -70,85 +71,26 @@ def _safe_int(text: str) -> Optional[int]:
         return None
 
 
-def _join_maybe_list(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return "; ".join(str(item) for item in value if str(item).strip())
-    return str(value)
-
-
-def _flatten_outcome(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, list):
-        return "; ".join(str(item) for item in value if str(item).strip())
-    if isinstance(value, Mapping):
-        parts: list[str] = []
-        for category, items in value.items():
-            if isinstance(items, list):
-                joined = ", ".join(str(item) for item in items if str(item).strip())
-                if joined:
-                    parts.append(f"{category}: {joined}")
-            else:
-                item_text = str(items).strip()
-                if item_text:
-                    parts.append(f"{category}: {item_text}")
-        return "; ".join(parts)
-    return str(value)
-
-
-def _flatten_extra(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value.strip()
-    if isinstance(value, list):
-        parts = [str(item).strip() for item in value if str(item).strip()]
-        return "\n".join(parts)
-    if isinstance(value, Mapping):
-        parts: list[str] = []
-        for key, item in value.items():
-            key_text = str(key).strip()
-            item_text = str(item).strip()
-            if key_text and item_text:
-                parts.append(f"{key_text}: {item_text}")
-            elif item_text:
-                parts.append(item_text)
-        return "\n".join(parts)
-    return str(value).strip()
-
-
-def load_pico_payload(path: Path) -> dict[str, str]:
-    """Load `datasets/PICO15.json` and normalize it into the frontend payload shape."""
+def load_pico_payload(path: Path) -> dict[str, Any]:
+    """Load the eval PICO payload without flattening away its original structure."""
 
     with path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
 
-    if isinstance(data, list):
-        data = data[0] if data else {}
-    if not isinstance(data, Mapping):
-        raise ValueError(f"PICO JSON must be an object or a non-empty list of objects: {path}")
-
-    return {
-        "s": str(data.get("S", "") or ""),
-        "p": str(data.get("P", "") or ""),
-        "i": str(data.get("I", "") or ""),
-        "c": _join_maybe_list(data.get("C", "")),
-        "o": _flatten_outcome(data.get("O", "")),
-        "es": _flatten_extra(data.get("ES", data.get("es", ""))),
-    }
+    try:
+        return coerce_pico_payload(data)
+    except TypeError as exc:
+        raise ValueError(f"PICO JSON must be an object or a non-empty list of objects: {path}") from exc
 
 
-def _parse_pico_json(value: str) -> dict[str, str]:
+def _parse_pico_json(value: str) -> dict[str, Any]:
     if not value:
         return {}
     parsed = json.loads(value)
-    if not isinstance(parsed, Mapping):
-        raise ValueError("--pico-json must decode to a JSON object")
-    return {str(key): "" if item is None else str(item) for key, item in parsed.items()}
+    try:
+        return coerce_pico_payload(parsed)
+    except TypeError as exc:
+        raise ValueError(f"--pico-json {exc}") from exc
 
 
 def load_reference_labels(path: Path) -> dict[str, str]:
@@ -237,7 +179,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1", help="API base URL")
-    parser.add_argument("--model", type=str, default="gpt-4.1", help="Model name to use")
+    parser.add_argument("--model", type=str, default="gpt-5.2", help="Model name to use")
     parser.add_argument("--api-key-env", type=str, default="DMX_API_KEY_1", help="Environment variable name for API key")
     parser.add_argument(
         "--pdf-pages",
@@ -248,7 +190,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout", type=float, default=300.0, help="API timeout in seconds")
     parser.add_argument("--retries", type=int, default=3, help="Number of retry attempts on failure")
     parser.add_argument("--retry-delay", type=float, default=3.0, help="Delay between retries in seconds")
-    parser.add_argument("--max-concurrency", type=int, default=5, help="Maximum concurrent API requests")
+    parser.add_argument("--max-concurrency", type=int, default=10, help="Maximum concurrent API requests")
     parser.add_argument("--limit", type=int, default=0, help="Optional cap on number of PDFs to evaluate (0 = all).")
     return parser
 

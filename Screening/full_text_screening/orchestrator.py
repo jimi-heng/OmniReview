@@ -5,15 +5,15 @@ from typing import Any, Mapping
 import httpx
 
 from .models import FullTextRequest, FullTextScreeningConfig, FullTextScreeningRuntime
-from .parsing import extract_conclusion, extract_evidence, extract_flag, extract_output_text
+from .parsing import StructuredOutputError, extract_output_text, parse_structured_output
 from .pdf import load_pdf_bytes, parse_pages_spec
+from .pico_normalizer import coerce_pico_payload, normalize_pico_input
 from .prompts import build_user_prompt, get_system_prompt, normalize_project_type
 from .runtime import (
     build_payload,
     call_with_retry,
     coerce_paper,
     error_result,
-    normalize_pico_dict,
     post_with_auth_fallback,
     resolve_runtime_config,
 )
@@ -27,36 +27,61 @@ async def process_single_paper(
     paper = request.paper
     pdf_path = paper.pdf_path
     if not pdf_path.exists():
-        return error_result(paper.paper_id)
+        return error_result(paper.paper_id, error_type="missing_pdf", message=f"PDF not found: {pdf_path}")
 
     try:
-        prompt = get_system_prompt(request.project_type) + "\n\n" + build_user_prompt(request)
         pdf_bytes = load_pdf_bytes(pdf_path, runtime.selected_pages)
-        payload = build_payload(runtime.model, pdf_bytes, pdf_path.name, prompt)
-    except Exception:
-        return error_result(paper.paper_id)
+    except Exception as exc:
+        return error_result(paper.paper_id, error_type="pdf_error", message=str(exc))
 
     try:
-        response = await call_with_retry(
-            post_with_auth_fallback,
-            client,
-            runtime.endpoint,
-            runtime.api_key,
-            payload,
-            runtime.timeout,
-            retries=runtime.retries,
-            delay_s=runtime.retry_delay,
-        )
-        if response.status_code != 200:
-            return error_result(paper.paper_id)
+        parsed_output: dict[str, Any] | None = None
+        raw_text = ""
+        for parse_retry in (False, True):
+            prompt = get_system_prompt(request.project_type) + "\n\n" + build_user_prompt(request, parse_retry=parse_retry)
+            payload = build_payload(runtime.model, pdf_bytes, pdf_path.name, prompt)
+            response = await call_with_retry(
+                post_with_auth_fallback,
+                client,
+                runtime.endpoint,
+                runtime.api_key,
+                payload,
+                runtime.timeout,
+                retries=runtime.retries,
+                delay_s=runtime.retry_delay,
+            )
+            if response.status_code != 200:
+                return error_result(
+                    paper.paper_id,
+                    error_type="http_error",
+                    message=f"Upstream returned status {response.status_code}",
+                )
 
-        text = extract_output_text(response.json())
-        flag = extract_flag(text)
-        evidences = extract_evidence(text)
-        conclusion = extract_conclusion(text)
-        decision = "Included" if flag == "1" else "Excluded"
+            raw_text = extract_output_text(response.json())
+            try:
+                parsed_output = parse_structured_output(raw_text)
+                break
+            except StructuredOutputError as exc:
+                raw_text = exc.raw_output or raw_text
+                if parse_retry:
+                    return error_result(
+                        paper.paper_id,
+                        error_type="parse_error",
+                        message=str(exc),
+                        raw_output=raw_text,
+                    )
 
-        print(evidences)
+        if parsed_output is None:
+            return error_result(
+                paper.paper_id,
+                error_type="parse_error",
+                message="Failed to parse structured output",
+                raw_output=raw_text,
+            )
+
+        decision = str(parsed_output["decision"])
+        evidences = dict(parsed_output["evidence"])
+        conclusion = str(parsed_output["reason"])
 
         hl_path_str = None
         if runtime.enable_highlight:
@@ -76,8 +101,8 @@ async def process_single_paper(
 
         evidence_json = json.dumps({"evidences": evidences, "conclusion": conclusion}, ensure_ascii=False)
         return {"id": paper.paper_id, "decision": decision, "evidence": evidence_json, "hl_path": hl_path_str}
-    except Exception:
-        return error_result(paper.paper_id)
+    except Exception as exc:
+        return error_result(paper.paper_id, error_type="runtime_error", message=str(exc))
 
 
 async def run_fulltext(
@@ -88,12 +113,14 @@ async def run_fulltext(
 ):
     runtime = resolve_runtime_config(config, parse_pages_spec=parse_pages_spec)
     normalized_project_type = normalize_project_type(project_type)
-    normalized_pico = normalize_pico_dict(pico_dict)
+    raw_pico = coerce_pico_payload(pico_dict)
+    normalized_pico = normalize_pico_input(raw_pico)
     requests = [
         FullTextRequest(
             paper=coerce_paper(paper),
-            pico_dict=normalized_pico,
+            pico_dict=raw_pico,
             project_type=normalized_project_type,
+            normalized_pico=normalized_pico,
         )
         for paper in papers
     ]

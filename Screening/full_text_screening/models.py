@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass(frozen=True)
@@ -11,10 +11,23 @@ class FullTextPaper:
 
 
 @dataclass(frozen=True)
+class NormalizedPICO:
+    study_design: str = ""
+    population: str = ""
+    intervention: str = ""
+    comparison: str = ""
+    outcomes: str = ""
+    extra_rules: str = ""
+    raw_fields: dict[str, Any] = field(default_factory=dict)
+    normalized_fields: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class FullTextRequest:
     paper: FullTextPaper
-    pico_dict: dict[str, str]
+    pico_dict: dict[str, Any]
     project_type: str
+    normalized_pico: Optional[NormalizedPICO] = None
 
 
 @dataclass(frozen=True)

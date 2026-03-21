@@ -7,10 +7,11 @@ import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from .orchestrator import run_fulltext
 from .pdf import discover_pdfs
+from .pico_normalizer import coerce_pico_payload
 
 
 @dataclass(frozen=True)
@@ -84,13 +85,14 @@ def _safe_relative(path: Path, base: Path) -> str:
         return str(path)
 
 
-def _parse_pico_json(value: str) -> dict[str, str]:
+def _parse_pico_json(value: str) -> dict[str, Any]:
     if not value:
         return {}
     parsed = json.loads(value)
-    if not isinstance(parsed, dict):
-        raise ValueError("--pico-json must decode to a JSON object")
-    return {str(key): "" if item is None else str(item) for key, item in parsed.items()}
+    try:
+        return coerce_pico_payload(parsed)
+    except TypeError as exc:
+        raise ValueError(f"--pico-json {exc}") from exc
 
 
 def _write_results_csv(output_csv: Path, papers, results, project_dir: Path) -> None:

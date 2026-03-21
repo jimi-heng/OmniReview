@@ -1,4 +1,40 @@
 from .models import FullTextRequest
+from .pico_normalizer import normalize_pico_input
+
+
+JSON_OUTPUT_INSTRUCTIONS = """
+STRICT OUTPUT FORMAT (JSON ONLY):
+- Return exactly one JSON object.
+- Do not wrap the JSON in markdown or code fences.
+- Do not output any text before or after the JSON object.
+- `decision` must be exactly `"Included"` or `"Excluded"`.
+- `reason` must be a concise explanation based strictly on visible PDF evidence.
+- `evidence` must be an object that uses these keys exactly:
+  - `study_design`
+  - `population`
+  - `intervention`
+  - `comparison`
+  - `outcomes`
+  - `extra_rules`
+- Every `evidence` value must be a string. Use `""` if the evidence is absent or the component is not evaluated.
+- For PECO, put Exposure evidence in `intervention`.
+- For PIRO, put Indicator evidence in `intervention` and Reference evidence in `comparison`.
+- Evidence strings must be verbatim spans copied from the PDF, or `""` if absent.
+
+Return this shape exactly:
+{
+  "decision": "Included",
+  "reason": "Brief justification based strictly on the visible PDF evidence.",
+  "evidence": {
+    "study_design": "",
+    "population": "",
+    "intervention": "",
+    "comparison": "",
+    "outcomes": "",
+    "extra_rules": ""
+  }
+}
+"""
 
 
 PICOS_SYSTEM_PROMPT = """
@@ -47,8 +83,8 @@ Final Inclusion Rule:
   Outcome (only if provided)
   Extra requirements (if provided)
 
-- If >=4 components are Matched -> Flag = 1
-- If <4 components are Matched -> Flag = 0
+- If >=4 components are Matched -> decision = "Included"
+- If <4 components are Matched -> decision = "Excluded"
 
 
 CRITICAL Evidence Extraction Rule (STRICT):
@@ -92,42 +128,7 @@ Only ONE piece of evidence is allowed per component.
 The evidence must be a single continuous span of text from one location in the document.
 
 Do NOT combine multiple sentences from different locations.
-
-
-STRICT OUTPUT TEMPLATE:
-
-DOI : the doi of this paper
-Flag: <0 or 1>
-
-Reason:
-
-Study Design:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Population:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Intervention:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Comparison:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Outcome: (ONLY if Outcome requirement is provided)
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Extra:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Conclusion:
-"<concise explanation why the paper is included or excluded based strictly on matched component count>"
-"""
+""" + JSON_OUTPUT_INSTRUCTIONS
 
 PECO_SYSTEM_PROMPT = """
 Role:
@@ -166,8 +167,8 @@ Final Inclusion Rule:
 - Count matched components among:
   P, E, C, O
 
-- If >=3 components are Matched -> Flag = 1
-- If <3 components are Matched -> Flag = 0
+- If >=3 components are Matched -> decision = "Included"
+- If <3 components are Matched -> decision = "Excluded"
 
 
 CRITICAL Evidence Extraction Rule (STRICT):
@@ -211,34 +212,7 @@ Only ONE piece of evidence is allowed per component.
 The evidence must be a single continuous span of text from one location in the document.
 
 Do NOT combine multiple sentences from different locations.
-
-
-STRICT OUTPUT TEMPLATE:
-
-DOI : the doi of this paper
-Flag: <0 or 1>
-
-Reason:
-
-Population:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Exposure:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Comparison:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Outcome:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Conclusion:
-"<concise explanation why the paper is included or excluded based strictly on matched component count>"
-"""
+""" + JSON_OUTPUT_INSTRUCTIONS
 
 PIRO_SYSTEM_PROMPT = """
 Role:
@@ -283,8 +257,8 @@ Final Inclusion Rule:
 - Count matched components among:
   P, I, R, O
 
-- If >=3 components are Matched -> Flag = 1
-- If <3 components are Matched -> Flag = 0
+- If >=3 components are Matched -> decision = "Included"
+- If <3 components are Matched -> decision = "Excluded"
 
 
 CRITICAL Evidence Extraction Rule (STRICT):
@@ -328,34 +302,7 @@ Only ONE piece of evidence is allowed per component.
 The evidence must be a single continuous span of text from one location in the document.
 
 Do NOT combine multiple sentences from different locations.
-
-
-STRICT OUTPUT TEMPLATE:
-
-DOI : the doi of this paper
-Flag: <0 or 1>
-
-Reason:
-
-Population:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Indicator:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Reference:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Outcome:
-Matched: <Yes/No>
-Evidence: <exact copied text or empty string>
-
-Conclusion:
-"<concise explanation why the paper is included or excluded based strictly on matched component count>"
-"""
+""" + JSON_OUTPUT_INSTRUCTIONS
 
 
 def normalize_project_type(project_type: str) -> str:
@@ -372,22 +319,33 @@ def get_system_prompt(project_type: str) -> str:
     return PICOS_SYSTEM_PROMPT
 
 
-def build_user_prompt(request: FullTextRequest) -> str:
+def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) -> str:
     paper = request.paper
-    pico_dict = request.pico_dict
+    criteria = request.normalized_pico or normalize_pico_input(request.pico_dict)
     project_type = normalize_project_type(request.project_type)
+    retry_note = ""
+    if parse_retry:
+        retry_note = """
+
+        Retry instruction:
+        Your previous answer was rejected because it was not valid for the required JSON-only format.
+        Return exactly one valid JSON object matching the schema in the system instructions.
+        Do not include markdown, labels, commentary, or any text outside the JSON object.
+        """
 
     if project_type == "PECO":
         return f"""
         Target PECO Criteria for this Evaluation:
-        - Population (P): {pico_dict.get('p', '')}
-        - Exposure (E): {pico_dict.get('e', '')}
-        - Comparison (C): {pico_dict.get('c', '')}
-        - Outcome (O): {pico_dict.get('o', '')}
-        - Additional Criteria: {pico_dict.get('es', '')}
+        - Population: {criteria.population}
+        - Exposure: {criteria.intervention}
+        - Comparison: {criteria.comparison}
+        - Outcome: {criteria.outcomes}
+        - Extra Rules: {criteria.extra_rules}
 
         Instructions for this task:
-        Evaluate the paper below against the Target PECO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, E, C, O, and Extra separately.
+        Evaluate the paper below against the Target PECO Criteria using the strict rules and output template defined in your system instructions.
+        Use the Extra Rules only as separate eligibility constraints; do not merge them into the Population, Exposure, Comparison, or Outcome text.
+        {retry_note}
 
         Input Data:
         [Paper ID: {paper.paper_id}]
@@ -398,14 +356,16 @@ def build_user_prompt(request: FullTextRequest) -> str:
     if project_type == "PIRO":
         return f"""
         Target PIRO Criteria for this Evaluation:
-        - Population (P): {pico_dict.get('p', '')}
-        - Indicator (I): {pico_dict.get('i', '')}
-        - Reference (R): {pico_dict.get('r', '')}
-        - Outcome (O): {pico_dict.get('o', '')}
-        - Additional Criteria: {pico_dict.get('es', '')}
+        - Population: {criteria.population}
+        - Indicator: {criteria.intervention}
+        - Reference: {criteria.comparison}
+        - Outcome: {criteria.outcomes}
+        - Extra Rules: {criteria.extra_rules}
 
         Instructions for this task:
-        Evaluate the paper below against the Target PIRO Criteria using the strict rules and output template defined in your system instructions. Evaluate P, I, R, O, and Extra separately.
+        Evaluate the paper below against the Target PIRO Criteria using the strict rules and output template defined in your system instructions.
+        Use the Extra Rules only as separate eligibility constraints; do not merge them into the Population, Indicator, Reference, or Outcome text.
+        {retry_note}
 
         Input Data:
         [Paper ID: {paper.paper_id}]
@@ -415,15 +375,17 @@ def build_user_prompt(request: FullTextRequest) -> str:
 
     return f"""
             Target SPICO Criteria for this Evaluation:
-            - Study Design (S): {pico_dict.get('s', '')}
-            - Population (P): {pico_dict.get('p', '')}
-            - Intervention (I): {pico_dict.get('i', '')}
-            - Comparison (C): {pico_dict.get('c', '')}
-            - Outcome (O): {pico_dict.get('o', '')}
-            - Additional Criteria: {pico_dict.get('es', '')}
+            - Study Design: {criteria.study_design}
+            - Population: {criteria.population}
+            - Intervention: {criteria.intervention}
+            - Comparison: {criteria.comparison}
+            - Outcome: {criteria.outcomes}
+            - Extra Rules: {criteria.extra_rules}
 
             Instructions for this task:
-            Evaluate the paper below against the Target SPICO Criteria using the strict rules and output template defined in your system instructions. Evaluate S, P, I, C, O, and Extra separately.
+            Evaluate the paper below against the Target SPICO Criteria using the strict rules and output template defined in your system instructions.
+            Use the Extra Rules only as separate eligibility constraints; do not merge them into the Study Design, Population, Intervention, Comparison, or Outcome text.
+            {retry_note}
 
             Input Data:
             [Paper ID: {paper.paper_id}]
