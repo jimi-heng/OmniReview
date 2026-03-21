@@ -77,7 +77,7 @@ window.loadLiteratureList = async function() {
       const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: currentProject.id })
+        body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
       });
       const result = await response.json();
 

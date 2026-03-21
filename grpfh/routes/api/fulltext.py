@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 
 from flask import request, send_file
@@ -13,6 +14,26 @@ from . import bp
 from ._context import get_paths, get_settings
 from ._db_helpers import resolve_literature_context, resolve_project_context
 from ._helpers import fail, json_body, ok
+
+
+def _legacy_shared_pdf_path(paths, doi: str, paper_id: int) -> Path:
+    filename = safe_storage_name(doi.replace("/", "_") + ".pdf", f"paper_{paper_id}.pdf")
+    return paths.resources_root / "pdf" / filename
+
+
+def _copy_legacy_pdf_into_project(paths, *, user_id: int, project_id: int, paper_id: int, doi: str) -> Path | None:
+    legacy_pdf = _legacy_shared_pdf_path(paths, doi, paper_id)
+    if not legacy_pdf.exists():
+        return None
+
+    target_dir = paths.project_pdf_dir(user_id, project_id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_pdf = target_dir / legacy_pdf.name
+
+    if legacy_pdf.resolve() != target_pdf.resolve():
+        shutil.copy2(legacy_pdf, target_pdf)
+
+    return target_pdf
 
 
 @bp.post("/fetch-pdfs")
@@ -47,7 +68,10 @@ def fetch_pdfs_api():
         papers = cursor.fetchall()
 
         if not papers:
-            return ok(message="No new included papers require PDF download.", count=0)
+            return ok(
+                message="No included papers are ready for PDF download yet. Run abstract screening or mark papers as Include first.",
+                count=0,
+            )
 
         downloader = ImprovedPaperDownloader()
         output_dir = paths.project_storage_dir(project["user_id"], project["id"])
@@ -58,6 +82,21 @@ def fetch_pdfs_api():
             doi = paper["doi"]
             if not doi:
                 cursor.execute("UPDATE literatures SET pdf_status = 'Failed (No DOI)' WHERE id = ?", (paper["id"],))
+                continue
+
+            migrated_pdf = _copy_legacy_pdf_into_project(
+                paths,
+                user_id=int(project["user_id"]),
+                project_id=int(project["id"]),
+                paper_id=int(paper["id"]),
+                doi=str(doi),
+            )
+            if migrated_pdf is not None:
+                cursor.execute(
+                    "UPDATE literatures SET pdf_status = 'Downloaded', pdf_path = ? WHERE id = ?",
+                    (str(migrated_pdf), paper["id"]),
+                )
+                success_count += 1
                 continue
 
             downloaded = downloader.download_paper(doi, output_dir=str(output_dir))
