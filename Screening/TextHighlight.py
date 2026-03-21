@@ -4,15 +4,15 @@ from rapidfuzz import fuzz
 from pathlib import Path
 
 COLORS = {
-    "Study Design": (0.7, 0.6, 0.1),  # 深黄（方法学）
-    "Population": (0.9, 0.2, 0.2),  # 红（人群）
-    "Intervention": (0.2, 0.3, 0.9),  # 蓝（干预）
+    "study_design": (0.7, 0.6, 0.1),  # 深黄（方法学）
+    "population": (0.9, 0.2, 0.2),  # 红（人群）
+    "intervention": (0.2, 0.3, 0.9),  # 蓝（干预）
     "Indicator": (0.9, 0.4, 0.1),  # 深橙（指标/测量）
-    "Comparison": (0.4, 0.8, 0.4),  # 绿（比较）
-    "Reference": (0.8, 0.3, 0.8),  # 紫（参考组）
-    "Exposure": (0.2, 0.7, 0.7),  # 青（暴露）
-    "Outcome": (1.0, 0.6, 0.1),  # 橙（结局）
-    "Extra": (0.5, 0.5, 0.5)  # 灰（额外条件）
+    "comparison": (0.4, 0.8, 0.4),  # 绿（比较）
+    "reference": (0.8, 0.3, 0.8),  # 紫（参考组）
+    "exposure": (0.2, 0.7, 0.7),  # 青（暴露）
+    "outcomes": (1.0, 0.6, 0.1),  # 橙（结局）
+    "extra_rules": (0.5, 0.5, 0.5)  # 灰（额外条件）
 }
 
 def rgb255_to_1(rgb):
