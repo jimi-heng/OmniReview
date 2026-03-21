@@ -633,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: currentProject.id })
+        body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
       });
       const result = await response.json();
 
@@ -1225,7 +1225,7 @@ window.loadAbstractScreening = async function() {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -1430,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_BASE_URL}/api/run-ai-screening`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
 
                 const result = await response.json();
@@ -1518,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_BASE_URL}/api/fetch-pdfs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
 
@@ -1549,7 +1549,7 @@ window.loadFullTextScreening = async function() {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -1600,10 +1600,9 @@ window.loadFullTextScreening = async function() {
 
                 // 【核心逻辑】：根据下载状态，动态决定 Action 列显示什么
                 if (rawStatus === 'Downloaded' && lit.pdf_path) {
-                    const safePath = encodeURIComponent(lit.pdf_path);
                     actionContent = `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 120px; z-index: 10;">
-                            <button id="view-pdf-btn-${lit.id}" class="btn btn-primary" onclick="togglePdfView(${lit.id}, '${safePath}')" 
+                            <button id="view-pdf-btn-${lit.id}" class="btn btn-primary" onclick="togglePdfView(${lit.id})" 
                                 style="font-size: 13px; padding: 8px 20px; border-radius: 20px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,113,227,0.3); border: none;">
                                 View PDF
                             </button>
@@ -1719,6 +1718,7 @@ window.autoUploadPDF = function(paperId, inputElement) {
 
     const formData = new FormData();
     formData.append("paper_id", paperId);
+    formData.append("user_id", currentUser.id);
     formData.append("file", file);
 
     fetch(`${API_BASE_URL}/api/upload-pdf`, {
@@ -1760,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_BASE_URL}/api/run-fulltext-ai`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
 
@@ -1784,7 +1784,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ====== Full-Text: 展开/关闭行内 PDF 视图 ======
-window.togglePdfView = function(litId, safePath) {
+window.togglePdfView = function(litId) {
     const pdfRow = document.getElementById(`pdf-row-${litId}`);
     const pdfContainer = document.getElementById(`pdf-container-${litId}`);
     const actionCell = document.getElementById(`action-cell-${litId}`);
@@ -1798,7 +1798,7 @@ window.togglePdfView = function(litId, safePath) {
 
         // 懒加载：只有第一次点击才生成 iframe 获取文件
         if (!pdfContainer.innerHTML.trim()) {
-            pdfContainer.innerHTML = `<iframe src="${API_BASE_URL}/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
+            pdfContainer.innerHTML = `<iframe src="${API_BASE_URL}/api/view-pdf?literature_id=${litId}&user_id=${currentUser.id}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
         }
 
         // 按钮变红，文字变为关闭
@@ -2000,7 +2000,7 @@ window.loadDataExtraction = async function() {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -2079,7 +2079,7 @@ window.loadDataExtraction = async function() {
 async function checkExtractionStatus() {
     if (!currentProject) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/get-extraction-preview?project_id=${currentProject.id}`);
+        const response = await fetch(`${API_BASE_URL}/api/get-extraction-preview?project_id=${currentProject.id}&user_id=${currentUser.id}`);
         const result = await response.json();
 
         const unstartedView = document.getElementById('extraction-unstarted-view');
@@ -2174,7 +2174,7 @@ document.getElementById('start-extraction-btn')?.addEventListener('click', async
         const response = await fetch(`${API_BASE_URL}/api/run-data-extraction`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
         if(result.success) {
@@ -2209,7 +2209,7 @@ async function handleDownload(type) {
     btn.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/download-extraction?project_id=${currentProject.id}&type=${type}`);
+        const response = await fetch(`${API_BASE_URL}/api/download-extraction?project_id=${currentProject.id}&user_id=${currentUser.id}&type=${type}`);
         if (response.ok) {
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);

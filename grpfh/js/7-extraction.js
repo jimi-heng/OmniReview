@@ -14,7 +14,7 @@ window.loadDataExtraction = async function() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -54,7 +54,7 @@ window.loadDataExtraction = async function() {
 async function checkExtractionStatus() {
     if (!currentProject) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/api/get-extraction-preview?project_id=${currentProject.id}`);
+        const response = await fetch(`${API_BASE_URL}/api/get-extraction-preview?project_id=${currentProject.id}&user_id=${currentUser.id}`);
         const result = await response.json();
         const unstartedView = document.getElementById('extraction-unstarted-view');
         const completedView = document.getElementById('extraction-completed-view');
@@ -108,7 +108,7 @@ async function handleDownload(type) {
     const originalText = btn.textContent; btn.textContent = 'Downloading...'; btn.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/download-extraction?project_id=${currentProject.id}&type=${type}`);
+        const response = await fetch(`${API_BASE_URL}/api/download-extraction?project_id=${currentProject.id}&user_id=${currentUser.id}&type=${type}`);
         if (response.ok) {
             const blob = await response.blob(); const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a'); a.style.display = 'none'; a.href = downloadUrl; a.download = `Project_${currentProject.id}_Extraction.${type}`;
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/run-data-extraction`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
                 if(result.success) { checkExtractionStatus(); } else { alert('Error: ' + result.message); }

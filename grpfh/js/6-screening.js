@@ -5,7 +5,7 @@ window.loadAbstractScreening = async function() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -103,7 +103,7 @@ window.loadFullTextScreening = async function() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/get-literatures`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: currentProject.id })
+            body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
         });
         const result = await response.json();
 
@@ -134,10 +134,9 @@ window.loadFullTextScreening = async function() {
                 let actionContent = '';
                 const rawStatus = lit.pdf_status || 'Pending';
                 if (rawStatus === 'Downloaded' && lit.pdf_path) {
-                    const safePath = encodeURIComponent(lit.pdf_path);
                     actionContent = `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 120px; z-index: 10;">
-                            <button id="view-pdf-btn-${lit.id}" class="btn btn-primary" onclick="togglePdfView(${lit.id}, '${safePath}')" style="font-size: 13px; padding: 8px 20px; border-radius: 20px; border: none;">View PDF</button>
+                            <button id="view-pdf-btn-${lit.id}" class="btn btn-primary" onclick="togglePdfView(${lit.id})" style="font-size: 13px; padding: 8px 20px; border-radius: 20px; border: none;">View PDF</button>
                             <label style="font-size: 11px; color: #86868b; text-align: center; cursor: pointer; margin: 0;"><input type="file" accept="application/pdf" style="display: none;" onchange="autoUploadPDF(${lit.id}, this)">Replace file</label>
                         </div>`;
                 } else if (rawStatus.includes('Failed')) {
@@ -195,13 +194,13 @@ window.autoUploadPDF = function(paperId, inputElement) {
     const file = inputElement.files[0]; if (!file) return;
     const label = inputElement.parentElement; const originalHtml = label.innerHTML;
     label.innerHTML = '⏳ Uploading...'; label.style.pointerEvents = 'none'; 
-    const formData = new FormData(); formData.append("paper_id", paperId); formData.append("file", file);
+    const formData = new FormData(); formData.append("paper_id", paperId); formData.append("user_id", currentUser.id); formData.append("file", file);
     fetch(`${API_BASE_URL}/api/upload-pdf`, { method: "POST", body: formData }).then(res => res.json())
     .then(data => { if (data.success) loadFullTextScreening(); else { alert(data.message); label.innerHTML = originalHtml; label.style.pointerEvents = 'auto'; }})
     .catch(err => { alert("Upload failed."); label.innerHTML = originalHtml; label.style.pointerEvents = 'auto'; });
 };
 
-window.togglePdfView = function(litId, safePath) {
+window.togglePdfView = function(litId) {
     const pdfRow = document.getElementById(`pdf-row-${litId}`);
     const pdfContainer = document.getElementById(`pdf-container-${litId}`);
     const actionCell = document.getElementById(`action-cell-${litId}`);
@@ -209,7 +208,7 @@ window.togglePdfView = function(litId, safePath) {
 
     if (pdfRow.style.display === 'none') {
         pdfRow.style.display = 'table-row'; actionCell.rowSpan = 2;
-        if (!pdfContainer.innerHTML.trim()) pdfContainer.innerHTML = `<iframe src="${API_BASE_URL}/api/view-pdf?path=${safePath}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
+        if (!pdfContainer.innerHTML.trim()) pdfContainer.innerHTML = `<iframe src="${API_BASE_URL}/api/view-pdf?literature_id=${litId}&user_id=${currentUser.id}" style="width: 100%; height: 800px; border: none; display: block;"></iframe>`;
         btn.innerHTML = 'Close PDF'; btn.classList.replace('btn-primary', 'btn-danger');
     } else {
         pdfRow.style.display = 'none'; actionCell.rowSpan = 1;
@@ -229,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/run-ai-screening`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
                 if (result.success) { alert(result.message); window.loadAbstractScreening(); } else { alert('Error: ' + result.message); }
@@ -248,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/fetch-pdfs`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
                 if (result.success) { alert(result.message); window.loadFullTextScreening(); } else { alert('Error: ' + result.message); }
@@ -267,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/run-fulltext-ai`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: currentProject.id })
+                    body: JSON.stringify({ project_id: currentProject.id, user_id: currentUser.id })
                 });
                 const result = await response.json();
                 if (result.success) { alert(result.message); window.loadFullTextScreening(); } else { alert('Error: ' + result.message); }

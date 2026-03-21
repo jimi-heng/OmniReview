@@ -14,6 +14,7 @@ from flask import make_response
 import shutil  # 【新增】用于复制需要提取的 PDF 文件
 import subprocess  # 【新增】用于独立安全地运行数据提取脚本
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 
 # === 路径注入核心代码 开始 ===
 # 1. 获取上一级根目录 (GRP-MULTIAGENT)
@@ -36,6 +37,96 @@ from Screening.FullTextScreening import run_fulltext_ai_sync  # 新增引入口
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
+
+RESOURCES_ROOT = os.path.join(parent_dir, 'resources')
+OUTPUTS_ROOT = os.path.join(parent_dir, 'outputs')
+
+
+def _safe_storage_name(value, fallback):
+    cleaned = secure_filename(str(value or "").strip())
+    return cleaned or fallback
+
+
+def _project_storage_dir(user_id, project_id):
+    return os.path.join(
+        RESOURCES_ROOT,
+        'users',
+        f'user_{int(user_id)}',
+        'projects',
+        f'project_{int(project_id)}',
+    )
+
+
+def _project_output_dir(user_id, project_id):
+    return os.path.join(
+        OUTPUTS_ROOT,
+        'users',
+        f'user_{int(user_id)}',
+        'projects',
+        f'project_{int(project_id)}',
+    )
+
+
+def _project_pdf_dir(user_id, project_id):
+    return os.path.join(_project_storage_dir(user_id, project_id), 'pdf')
+
+
+def _project_extraction_dir(user_id, project_id):
+    return os.path.join(_project_storage_dir(user_id, project_id), 'extraction_inputs')
+
+
+def _project_output_paths(user_id, project_id):
+    out_dir = _project_output_dir(user_id, project_id)
+    return (
+        os.path.join(out_dir, f'proj_{project_id}_extracted.csv'),
+        os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx'),
+    )
+
+
+def _is_within_directory(candidate_path, base_dir):
+    try:
+        return os.path.commonpath([os.path.abspath(candidate_path), os.path.abspath(base_dir)]) == os.path.abspath(base_dir)
+    except ValueError:
+        return False
+
+
+def _resolve_project_context(cursor, project_id, user_id=None):
+    cursor.execute(
+        '''
+        SELECT p.id, p.user_id, p.project_name
+        FROM projects p
+        WHERE p.id = ?
+        ''',
+        (project_id,),
+    )
+    project = cursor.fetchone()
+    if not project:
+        return None, ('Project not found', 404)
+
+    if user_id is not None and int(project['user_id']) != int(user_id):
+        return None, ('Project does not belong to current user', 403)
+
+    return project, None
+
+
+def _resolve_literature_context(cursor, literature_id, user_id=None):
+    cursor.execute(
+        '''
+        SELECT l.id, l.project_id, l.doi, l.pdf_path, p.user_id
+        FROM literatures l
+        JOIN projects p ON p.id = l.project_id
+        WHERE l.id = ?
+        ''',
+        (literature_id,),
+    )
+    literature = cursor.fetchone()
+    if not literature:
+        return None, ('Paper not found', 404)
+
+    if user_id is not None and int(literature['user_id']) != int(user_id):
+        return None, ('Paper does not belong to current user', 403)
+
+    return literature, None
 
 
 @app.route("/")
@@ -330,9 +421,10 @@ def get_literatures():
 
     data = request.json
     project_id = data.get('project_id')
+    user_id = data.get('user_id')
 
-    if not project_id:
-        return jsonify({'success': False, 'message': 'Project ID required'})
+    if not project_id or not user_id:
+        return jsonify({'success': False, 'message': 'Project ID and user ID required'})
 
     try:
         conn = get_db()
@@ -346,6 +438,10 @@ def get_literatures():
             pass
 
         # 【修改】：SELECT 语句中加入 full_text_user_decision
+        project, error = _resolve_project_context(cursor, project_id, user_id)
+        if error:
+            conn.close()
+            return jsonify({'success': False, 'message': error[0]}), error[1]
         cursor.execute('''
             SELECT id, title, author, journal, year, doi, abstract, ai_decision, user_decision, reasoning,
                    pdf_status, pdf_path, full_text_decision, full_text_user_decision, pico_evidence
@@ -873,8 +969,9 @@ def fetch_pdfs_api():
 
     data = request.json
     project_id = data.get('project_id')
-    if not project_id:
-        return jsonify({'success': False, 'message': 'Project ID required'})
+    user_id = data.get('user_id')
+    if not project_id or not user_id:
+        return jsonify({'success': False, 'message': 'Project ID and user ID required'})
 
     try:
         conn = get_db()
@@ -882,6 +979,10 @@ def fetch_pdfs_api():
 
         # 1. 筛选出所有在摘要阶段被“纳入(Included)”的文献
         # 逻辑：用户手动设为Include，或者(用户未手动排除 且 AI判定为Included)
+        project, error = _resolve_project_context(cursor, project_id, user_id)
+        if error:
+            conn.close()
+            return jsonify({'success': False, 'message': error[0]}), error[1]
         cursor.execute('''
             SELECT id, title, doi FROM literatures 
             WHERE project_id = ? 
@@ -895,7 +996,7 @@ def fetch_pdfs_api():
 
         # 2. 初始化下载器和存储路径
         downloader = ImprovedPaperDownloader()
-        output_dir = os.path.join(parent_dir, 'resources')  # 统一存放在项目的 resources 文件夹
+        output_dir = _project_storage_dir(project['user_id'], project['id'])
         os.makedirs(output_dir, exist_ok=True)
 
         success_count = 0
@@ -910,7 +1011,8 @@ def fetch_pdfs_api():
             # 调用你们的强力下载器
             ok = downloader.download_paper(doi, output_dir=output_dir)
             if ok:
-                filepath = os.path.join(output_dir, "pdf", doi.replace("/", "_") + ".pdf")
+                filename = _safe_storage_name(doi.replace("/", "_") + ".pdf", f"paper_{paper['id']}.pdf")
+                filepath = os.path.join(output_dir, "pdf", filename)
                 cursor.execute("UPDATE literatures SET pdf_status = 'Downloaded', pdf_path = ? WHERE id = ?",
                                (filepath, paper['id']))
                 success_count += 1
@@ -934,22 +1036,21 @@ def fetch_pdfs_api():
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
     paper_id = request.form.get('paper_id')
+    user_id = request.form.get('user_id')
     file = request.files.get('file')
 
     if not file:
         return jsonify({'success': False, 'message': 'No file uploaded'})
+    if not paper_id or not user_id:
+        return jsonify({'success': False, 'message': 'Paper ID and user ID required'})
 
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT doi FROM literatures WHERE id = ?",
-        (paper_id,)
-    )
-    paper = cursor.fetchone()
-
-    if not paper:
-        return jsonify({'success': False, 'message': 'Paper not found'})
+    paper, error = _resolve_literature_context(cursor, paper_id, user_id)
+    if error:
+        conn.close()
+        return jsonify({'success': False, 'message': error[0]}), error[1]
 
     doi = paper['doi']
     # 兜底：如果没有 DOI，就用文献的 ID 命名，防止 replace 报错
@@ -957,8 +1058,9 @@ def upload_pdf():
         filename = f"manual_upload_{paper_id}.pdf"
     else:
         filename = doi.replace("/", "_") + ".pdf"
+    filename = _safe_storage_name(filename, f"paper_{paper_id}.pdf")
 
-    save_dir = os.path.join(parent_dir, "resources", "pdf")
+    save_dir = _project_pdf_dir(paper['user_id'], paper['project_id'])
     os.makedirs(save_dir, exist_ok=True)
 
     filepath = os.path.join(save_dir, filename)
@@ -995,11 +1097,17 @@ def run_fulltext_ai_api():
 
     data = request.json
     project_id = data.get('project_id')
-    if not project_id: return jsonify({'success': False, 'message': 'Project ID required'})
+    user_id = data.get('user_id')
+    if not project_id or not user_id:
+        return jsonify({'success': False, 'message': 'Project ID and user ID required'})
 
     try:
         conn = get_db()
         cursor = conn.cursor()
+        project, error = _resolve_project_context(cursor, project_id, user_id)
+        if error:
+            conn.close()
+            return jsonify({'success': False, 'message': error[0]}), error[1]
 
         cursor.execute("SELECT data_content FROM project_data WHERE project_id = ? AND data_type = 'pico'",
                        (project_id,))
@@ -1064,8 +1172,28 @@ def run_fulltext_ai_api():
 # ==========================================
 @app.route('/api/view-pdf', methods=['GET'])
 def view_pdf():
-    pdf_path = request.args.get('path')
-    if pdf_path and os.path.exists(pdf_path):
+    literature_id = request.args.get('literature_id')
+    user_id = request.args.get('user_id')
+
+    if not literature_id or not user_id:
+        return "Missing literature ID or user ID", 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    literature, error = _resolve_literature_context(cursor, literature_id, user_id)
+    conn.close()
+    if error:
+        return error[0], error[1]
+
+    pdf_path = literature['pdf_path']
+    if not pdf_path:
+        return "PDF not found on server", 404
+
+    allowed_roots = [RESOURCES_ROOT]
+    if not any(_is_within_directory(pdf_path, root) for root in allowed_roots):
+        return "PDF path is not allowed", 403
+
+    if os.path.exists(pdf_path):
         return send_file(pdf_path, mimetype='application/pdf')
     return "PDF not found on server", 404
 
@@ -1084,12 +1212,17 @@ def run_data_extraction():
 
     data = request.json
     project_id = data.get('project_id')
-    if not project_id:
-        return jsonify({'success': False, 'message': 'Project ID required'})
+    user_id = data.get('user_id')
+    if not project_id or not user_id:
+        return jsonify({'success': False, 'message': 'Project ID and user ID required'})
 
     try:
         conn = get_db()
         cursor = conn.cursor()
+        project, error = _resolve_project_context(cursor, project_id, user_id)
+        if error:
+            conn.close()
+            return jsonify({'success': False, 'message': error[0]}), error[1]
 
         # 1. 找出判定为 Included 的文献 (优先听人工决定，如果是 Keep 才听 AI 的)
         cursor.execute('''
@@ -1105,7 +1238,7 @@ def run_data_extraction():
             return jsonify({'success': False, 'message': 'No included papers found for extraction.'})
 
         # 2. 为当前项目创建一个专属的临时 PDF 文件夹，防止与其他项目混淆
-        extract_dir = os.path.join(parent_dir, 'resources', f'proj_{project_id}_extract')
+        extract_dir = _project_extraction_dir(project['user_id'], project['id'])
         os.makedirs(extract_dir, exist_ok=True)
 
         # 清空该文件夹里的历史残留文件
@@ -1127,10 +1260,9 @@ def run_data_extraction():
                 {'success': False, 'message': 'Found included papers, but their PDF files are physically missing.'})
 
         # 4. 设置输出的 CSV 和 Excel 路径
-        out_dir = os.path.join(parent_dir, 'outputs')
+        out_dir = _project_output_dir(project['user_id'], project['id'])
         os.makedirs(out_dir, exist_ok=True)
-        out_csv = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
-        out_xlsx = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
+        out_csv, out_xlsx = _project_output_paths(project['user_id'], project['id'])
 
         # 5. 获取该项目的 PICO 数据和项目类型
         conn2 = get_db()
@@ -1214,19 +1346,27 @@ def run_data_extraction():
 @app.route('/api/download-extraction', methods=['GET'])
 def download_extraction():
     project_id = request.args.get('project_id')
+    user_id = request.args.get('user_id')
     file_type = request.args.get('type', 'xlsx')
 
-    if not project_id:
-        return "Project ID missing", 400
+    if not project_id or not user_id:
+        return "Project ID or user ID missing", 400
 
-    out_dir = os.path.join(parent_dir, 'outputs')
+    conn = get_db()
+    cursor = conn.cursor()
+    project, error = _resolve_project_context(cursor, project_id, user_id)
+    conn.close()
+    if error:
+        return error[0], error[1]
+
+    csv_path, xlsx_path = _project_output_paths(project['user_id'], project['id'])
 
     # 动态匹配请求的文件类型
     if file_type == 'csv':
-        file_path = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
+        file_path = csv_path
         mimetype = 'text/csv'
     else:
-        file_path = os.path.join(out_dir, f'proj_{project_id}_extracted.xlsx')
+        file_path = xlsx_path
         # Excel 的标准 MIME 类型
         mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -1241,11 +1381,18 @@ def download_extraction():
 @app.route('/api/get-extraction-preview', methods=['GET'])
 def get_extraction_preview():
     project_id = request.args.get('project_id')
-    if not project_id:
-        return jsonify({'success': False, 'message': 'Missing project ID'})
+    user_id = request.args.get('user_id')
+    if not project_id or not user_id:
+        return jsonify({'success': False, 'message': 'Missing project ID or user ID'})
 
-    out_dir = os.path.join(parent_dir, 'outputs')
-    csv_path = os.path.join(out_dir, f'proj_{project_id}_extracted.csv')
+    conn = get_db()
+    cursor = conn.cursor()
+    project, error = _resolve_project_context(cursor, project_id, user_id)
+    conn.close()
+    if error:
+        return jsonify({'success': False, 'message': error[0]}), error[1]
+
+    csv_path, _ = _project_output_paths(project['user_id'], project['id'])
 
     if not os.path.exists(csv_path):
         return jsonify({'success': False, 'message': 'Not extracted yet'})
