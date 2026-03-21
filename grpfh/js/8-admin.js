@@ -39,10 +39,11 @@ window.renderAdminTimeRange = function(timeRange) {
 
     document.getElementById('dist-spico-bar').style.width = pSpico + '%';
     document.getElementById('dist-spico-text').textContent = `${pSpico}% (${projData.SPICO})`;
-    document.getElementById('dist-peco-bar').style.width = pPeco + '%';
-    document.getElementById('dist-peco-text').textContent = `${pPeco}% (${projData.PECO})`;
-    document.getElementById('dist-piro-bar').style.width = pPiro + '%';
-    document.getElementById('dist-piro-text').textContent = `${pPiro}% (${projData.PIRO})`;
+    // ⚠️ 暂时拦截对隐藏元素的 DOM 操作，防止 JS 报错！
+    //document.getElementById('dist-peco-bar').style.width = pPeco + '%';
+    //document.getElementById('dist-peco-text').textContent = `${pPeco}% (${projData.PECO})`;
+    //document.getElementById('dist-piro-bar').style.width = pPiro + '%';
+    //document.getElementById('dist-piro-text').textContent = `${pPiro}% (${projData.PIRO})`;
 };
 
 function animateValue(id, start, end, duration) {

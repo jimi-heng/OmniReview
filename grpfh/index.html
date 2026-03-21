@@ -206,6 +206,7 @@
                     </div>
                 </div>
                 
+                <!-- ⚠️ 暂时隐藏 Admin 面板里的 PECO 和 PIRO 数据条
                 <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
                         <span>Prognosis (PECO)</span>
@@ -225,6 +226,7 @@
                         <div id="dist-piro-bar" style="width: 0%; height: 100%; background: #af52de; border-radius: 4px; transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);"></div>
                     </div>
                 </div>
+                -->
             </div>
         </div>
 
@@ -347,6 +349,8 @@
                     <div class="form-group"><label>Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label><input id="spico-o" type="text" placeholder="e.g. HbA1c reduction"></div>
                 </div>
 
+
+                <!-- ⚠️ 暂时隐藏 PECO 和 PIRO 的输入框
                 <div id="fields-PECO" class="pico-fields-group" style="display: none;">
                     <div class="form-group"><label>Population (P)</label><input id="peco-p" type="text" placeholder="e.g. Healthy adults or specific patient groups"></div>
                     <div class="form-group"><label>Exposure (E)</label><input id="peco-e" type="text" placeholder="e.g. Air pollution (PM2.5), Smoking"></div>
@@ -360,6 +364,7 @@
                     <div class="form-group"><label>Reference (R)</label><input id="piro-r" type="text" placeholder="e.g. CT scan or surgical pathology"></div>
                     <div class="form-group"><label>Outcome (O) <span style="text-transform: none; font-weight: 400; color: #a1a1a6;">- Optional</span></label><input id="piro-o" type="text" placeholder="e.g. Diagnostic accuracy (Sensitivity/Specificity)"></div>
                 </div>
+                -->
             </div>
             <div class="card">
                 <h3>Systematic Review Protocol</h3>
@@ -624,7 +629,7 @@
             <p style="color: #86868b; font-size: 13px; margin-bottom: 24px;">Configure your systematic review parameters.</p>
             
             <input type="text" id="newProjectNameInput" class="dark-input" placeholder="Project Name" style="width: 100%; margin-bottom: 24px; text-align: center; font-weight: 500;">
-            
+            <!-- 🛑 彻底隐藏：分析类型选择区 (默认走 SPICO 逻辑)
             <div style="text-align: left; margin-bottom: 32px;">
                 <label style="font-size: 11px; letter-spacing: 1px; color: #86868b; display: block; margin-bottom: 12px; text-align: center; font-weight: 600;">SELECT ANALYSIS TYPE</label>
                 <div class="type-selector">
@@ -632,6 +637,8 @@
                         <div class="type-title">Intervention (SPICO)</div>
                         <div class="type-desc">Study Design, Population, Intervention, Comparison, Outcome</div>
                     </div>
+
+                    
                     <div class="type-option" data-type="PECO" onclick="selectProjectType(this, 'PECO')">
                         <div class="type-title">Prognosis (PECO)</div>
                         <div class="type-desc">Population, Exposure, Comparison, Outcome</div>
@@ -640,8 +647,10 @@
                         <div class="type-title">Diagnosis (PIRO)</div>
                         <div class="type-desc">Population, Indicator, Reference, Outcome</div>
                     </div>
+                    
                 </div>
             </div>
+            -->
 
             <div style="display: flex; gap: 12px; justify-content: center;">
                 <button id="cancelCreateProjectBtn" class="btn btn-secondary" style="flex: 1; padding: 10px 0;">Cancel</button>
