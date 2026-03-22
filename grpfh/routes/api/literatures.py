@@ -66,7 +66,7 @@ def api_search_pubmed():
         return fail("Project ID and keywords are required")
 
     try:
-        from Screening.AbstractScreening import literature_search_all
+        from Screening.abstract_screening.literature_search import literature_search_all
 
         papers = literature_search_all(keywords, max_papers, databases=databases)
     except Exception as e:

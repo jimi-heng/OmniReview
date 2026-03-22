@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT))
 
 from Screening import AbstractScreening
-from Screening import ThreeAgents
+from Screening.abstract_screening import ThreeAgents
 
 import pandas as pd
 import os

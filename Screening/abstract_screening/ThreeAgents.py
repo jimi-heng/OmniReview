@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-load_dotenv(SCRIPT_DIR / ".env", override=True)
+load_dotenv(SCRIPT_DIR.parent / ".env", override=True)
 
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
