@@ -6,11 +6,14 @@ import unittest
 from pathlib import Path
 
 import fitz
+from openpyxl import Workbook, load_workbook
 
 from Screening.data_extraction.models import ExtractedCell, ExtractionRow, Paper, PipelineState, RowCandidate, StudyUnit
+from Screening.data_extraction.output import csv_to_excel
 from Screening.data_extraction.parsing import RobustJSONParser
 from Screening.data_extraction.pdf import select_targeted_pages
 from Screening.data_extraction.service import ExtractionRequest, PipelineOrchestrator
+from Screening.data_extraction.template import read_template_columns
 
 
 class _FakeLLM:
@@ -182,6 +185,53 @@ class _RecoveringFakeLLM(_FakeLLM):
 
 
 class TestDataExtractionPipeline(unittest.IsolatedAsyncioTestCase):
+    def test_read_template_columns_captures_second_row_descriptions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            template_path = Path(tmp_dir) / "template.xlsx"
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "baseline characteristics"
+            ws.append(["Title", "Age", "Arm1_Mean"])
+            ws.append(["Paper title", "Baseline age in years", "Intervention mean outcome"])
+            wb.save(template_path)
+
+            template_columns = read_template_columns(template_path)
+
+            self.assertEqual(template_columns.all_columns, ["Title", "Age", "Arm1_Mean"])
+            self.assertEqual(template_columns.llm_columns, ["Age", "Arm1_Mean"])
+            self.assertEqual(template_columns.descriptions["Age"], "Baseline age in years")
+            self.assertEqual(template_columns.descriptions["Arm1_Mean"], "Intervention mean outcome")
+
+    def test_csv_to_excel_does_not_copy_template_description_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            template_path = tmp_path / "template.xlsx"
+            csv_path = tmp_path / "output.csv"
+            xlsx_path = tmp_path / "output.xlsx"
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "baseline characteristics"
+            ws.append(["Age", "Arm1_Mean"])
+            ws.append(["Baseline age in years", "Intervention arm mean at endpoint"])
+            wb.save(template_path)
+
+            csv_path.write_text(
+                "ID,Title,RelativePath,Age,Arm1_Mean,Error\n"
+                "1,Test Paper,resources/test.pdf,42,11.5,\n",
+                encoding="utf-8-sig",
+            )
+
+            csv_to_excel(csv_path, xlsx_path, template_path)
+
+            result_wb = load_workbook(xlsx_path)
+            result_ws = result_wb.active
+            self.assertEqual(result_ws.max_row, 2)
+            self.assertEqual([cell.value for cell in result_ws[1]], ["ID", "Title", "RelativePath", "Age", "Arm1_Mean", "Error"])
+            self.assertEqual([cell.value for cell in result_ws[2]], ["1", "Test Paper", "resources/test.pdf", "42", "11.5", None])
+            result_wb.close()
+
     def test_select_targeted_pages_prefers_relevant_result_pages(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             pdf_path = Path(tmp_dir) / "targeted.pdf"

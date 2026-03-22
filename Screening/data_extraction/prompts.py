@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 DATA_EXTRACTION_SYSTEM_PROMPT_BASE = """You are an expert medical data extractor for systematic reviews.
@@ -113,10 +113,19 @@ def get_default_pico(project_type: str) -> Dict[str, str]:
     return dict(defaults.get((project_type or "").upper(), DEFAULT_PICOS))
 
 
-def generate_columns_section(llm_columns: List[str]) -> str:
+def generate_columns_section(llm_columns: List[str], column_descriptions: Optional[Dict[str, str]] = None) -> str:
     if not llm_columns:
         return "No specific columns defined. Extract all relevant data."
-    return "- " + ", ".join(llm_columns)
+
+    descriptions = column_descriptions or {}
+    lines: List[str] = []
+    for column in llm_columns:
+        description = str(descriptions.get(column, "") or "").strip()
+        if description:
+            lines.append(f"- {column}: {description}")
+        else:
+            lines.append(f"- {column}")
+    return "\n".join(lines)
 
 
 def generate_user_prompt(

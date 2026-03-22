@@ -168,7 +168,7 @@ class ValidationReport:
 
 @dataclass
 class PipelineState:
-    """Intermediate pipeline state for the multi-stage extraction flow."""
+    """Intermediate pipeline state for the phase2 multi-stage extraction flow."""
 
     paper_id: int
     title: str
@@ -181,4 +181,3 @@ class PipelineState:
     stage_errors: Dict[str, str] = field(default_factory=dict)
     final_value_rows: List[Dict[str, str]] = field(default_factory=list)
     final_evidence_rows: List[Dict[str, str]] = field(default_factory=list)
-    legacy_result: ExtractionResult | None = None

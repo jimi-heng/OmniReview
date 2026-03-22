@@ -36,8 +36,8 @@ async def csv_writer(queue: asyncio.Queue, output_csv: Path, columns: List[str])
 
 
 def csv_to_excel(csv_path: Path, xlsx_path: Path, template_path: Path) -> None:
-    template_columns, _ = read_template_columns(template_path)
-    preferred = ["ID", "Title", "RelativePath"] + [c for c in template_columns if c not in METADATA_FIELDS] + ["Error"]
+    template_columns = read_template_columns(template_path)
+    preferred = ["ID", "Title", "RelativePath"] + [c for c in template_columns.all_columns if c not in METADATA_FIELDS] + ["Error"]
 
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
