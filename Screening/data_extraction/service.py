@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 import logging
 import re
+import traceback
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Protocol, Tuple
 
 from .http_client import LLMClient
 from .models import (
@@ -25,11 +26,14 @@ from .output import state_to_final_rows
 from .parsing import BINARY_ONLY_FIELDS, CANONICAL_VALUE_FIELDS, CONTINUOUS_ONLY_FIELDS, RobustJSONParser
 from .pdf import build_targeted_pdf_bytes, load_pdf_bytes
 from .prompts import (
+    generate_columns_section,
+    generate_user_prompt,
     get_default_pico,
     get_stage1_prompt,
     get_stage2_prompt,
     get_stage3_prompt,
     get_stage4_prompt,
+    get_system_prompt,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,18 +45,78 @@ def _relative_path(path: Path, project_dir: Path) -> str:
     except Exception:
         return str(path)
 
+
+class ResponseParser(Protocol):
+    def parse(self, text: str, columns: List[str]) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]: ...
+
+
 @dataclass(frozen=True)
 class ExtractionRequest:
     llm_columns: List[str]
     pages_spec: Optional[List[int]]
     project_type: str
     pico_dict: Optional[Dict[str, str]]
-    llm_column_descriptions: Optional[Dict[str, str]] = None
-    pipeline_mode: str = "phase2"
+    pipeline_mode: str = "legacy"
+
+
+class EnhancedDataExtractor:
+    """Orchestrates PDF->prompt->LLM->parse for the legacy single-shot extraction flow."""
+
+    def __init__(
+        self,
+        *,
+        llm_client: LLMClient,
+        parser: ResponseParser = RobustJSONParser,
+        project_dir: Path,
+        debug_prompt: bool = False,
+    ) -> None:
+        self._llm = llm_client
+        self._parser = parser
+        self._project_dir = project_dir
+        self._debug_prompt = debug_prompt
+
+    async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+        base_error = ""
+        value_rows: List[Dict[str, str]] = []
+        evidence_rows: List[Dict[str, str]] = []
+
+        pico_dict = request.pico_dict or get_default_pico(request.project_type)
+
+        try:
+            pdf_bytes = load_pdf_bytes(paper.path, request.pages_spec)
+
+            columns_section = generate_columns_section(request.llm_columns)
+            system_prompt = get_system_prompt(request.project_type)
+            user_prompt = generate_user_prompt(
+                project_type=request.project_type,
+                pico_dict=pico_dict,
+                columns_section=columns_section,
+                paper_id=paper.paper_id,
+            )
+            full_prompt = system_prompt + "\n\n" + user_prompt
+
+            if self._debug_prompt:
+                logger.debug("Legacy prompt (first 500 chars) for paper_id=%s: %s", paper.paper_id, full_prompt[:500])
+
+            raw_text = await self._llm.extract_text(pdf_bytes=pdf_bytes, filename=paper.path.name, prompt=full_prompt)
+            value_rows, evidence_rows = self._parser.parse(raw_text, request.llm_columns)
+        except Exception as exc:
+            base_error = str(exc)
+            logger.exception("Legacy extraction failed for paper_id=%s", paper.paper_id)
+            traceback.print_exc()
+
+        return ExtractionResult(
+            paper_id=paper.paper_id,
+            title=paper.title,
+            relative_path=_relative_path(paper.path, self._project_dir),
+            value_rows=value_rows,
+            evidence_rows=evidence_rows,
+            error=base_error,
+        )
 
 
 class PipelineOrchestrator:
-    """Phase2-only data extraction pipeline."""
+    """Phase-aware data extraction pipeline with legacy/phase1/phase2 execution modes."""
 
     def __init__(
         self,
@@ -61,19 +125,32 @@ class PipelineOrchestrator:
         project_dir: Path,
         debug_prompt: bool = False,
         parser: type[RobustJSONParser] = RobustJSONParser,
+        fallback_extractor: EnhancedDataExtractor | None = None,
     ) -> None:
         self._llm = llm_client
         self._project_dir = project_dir
         self._debug_prompt = debug_prompt
         self._parser = parser
+        self._fallback = fallback_extractor or EnhancedDataExtractor(
+            llm_client=llm_client,
+            parser=parser,
+            project_dir=project_dir,
+            debug_prompt=debug_prompt,
+        )
 
     async def run(self, *, paper: Paper, request: ExtractionRequest) -> PipelineState:
-        self._normalize_mode(request.pipeline_mode)
+        mode = self._normalize_mode(request.pipeline_mode)
         state = PipelineState(
             paper_id=paper.paper_id,
             title=paper.title,
             relative_path=_relative_path(paper.path, self._project_dir),
         )
+
+        if mode == "legacy":
+            state.legacy_result = await self._fallback.extract(paper=paper, request=request)
+            if state.legacy_result.error:
+                state.stage_errors["legacy"] = state.legacy_result.error
+            return state
 
         pico_dict = request.pico_dict or get_default_pico(request.project_type)
         pdf_bytes: bytes | None = None
@@ -84,7 +161,6 @@ class PipelineOrchestrator:
             self._record_stage_error(state, "stage1", exc)
             state.stage_errors.setdefault("stage2", "Skipped because PDF bytes could not be loaded.")
             state.study_units = [self._default_study_unit()]
-            return state
 
         if pdf_bytes is not None:
             try:
@@ -111,6 +187,18 @@ class PipelineOrchestrator:
         if not state.study_units:
             state.study_units = [self._default_study_unit()]
 
+        if mode == "phase1":
+            state.legacy_result = await self._fallback.extract(paper=paper, request=request)
+            if state.legacy_result.error:
+                state.stage_errors.setdefault("legacy_fallback", state.legacy_result.error)
+            return state
+
+        if pdf_bytes is None:
+            state.legacy_result = await self._fallback.extract(paper=paper, request=request)
+            if state.legacy_result.error:
+                state.stage_errors.setdefault("legacy_fallback", state.legacy_result.error)
+            return state
+
         try:
             state.row_candidates = await self._run_stage3(
                 paper=paper,
@@ -129,6 +217,9 @@ class PipelineOrchestrator:
             )
         except Exception as exc:
             self._record_stage_error(state, "stage3", exc)
+            state.legacy_result = await self._fallback.extract(paper=paper, request=request)
+            if state.legacy_result.error:
+                state.stage_errors.setdefault("legacy_fallback", state.legacy_result.error)
             return state
 
         state.extraction_rows = await self._run_stage4(
@@ -155,10 +246,25 @@ class PipelineOrchestrator:
         self._consolidate_metadata(state)
         self._filter_invalid_rows(state)
         state.final_value_rows, state.final_evidence_rows = state_to_final_rows(state)
+        if not state.final_value_rows:
+            state.legacy_result = await self._fallback.extract(paper=paper, request=request)
+            if state.legacy_result.error:
+                state.stage_errors.setdefault("legacy_fallback", state.legacy_result.error)
         return state
 
     async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
         state = await self.run(paper=paper, request=request)
+        mode = self._normalize_mode(request.pipeline_mode)
+
+        if mode == "legacy" or mode == "phase1":
+            if state.legacy_result is not None:
+                return state.legacy_result
+            return ExtractionResult(
+                paper_id=paper.paper_id,
+                title=paper.title,
+                relative_path=state.relative_path,
+                error="Legacy extraction did not produce a result.",
+            )
 
         if state.final_value_rows:
             return ExtractionResult(
@@ -170,11 +276,14 @@ class PipelineOrchestrator:
                 error="",
             )
 
+        if state.legacy_result is not None:
+            return state.legacy_result
+
         return ExtractionResult(
             paper_id=paper.paper_id,
             title=paper.title,
             relative_path=state.relative_path,
-            error=self._summarize_phase2_failure(state),
+            error="Phase 2 extraction did not produce any rows.",
         )
 
     async def build_row_inventory(self, *, paper: Paper, request: ExtractionRequest) -> PipelineState:
@@ -1083,21 +1192,10 @@ class PipelineOrchestrator:
 
     @staticmethod
     def _normalize_mode(mode: str) -> str:
-        normalized = (mode or "phase2").strip().lower()
-        if normalized == "phase2":
+        normalized = (mode or "legacy").strip().lower()
+        if normalized in {"legacy", "phase1", "phase2"}:
             return normalized
-        raise ValueError(f"Unsupported data extraction pipeline mode: {mode}. Only 'phase2' is supported.")
-
-    @staticmethod
-    def _summarize_phase2_failure(state: PipelineState) -> str:
-        stage_errors = [f"{stage}: {message}" for stage, message in sorted(state.stage_errors.items()) if message]
-        if stage_errors:
-            return "Phase 2 extraction failed. " + "; ".join(stage_errors)
-        if not state.row_candidates:
-            return "Phase 2 extraction did not produce any row candidates."
-        if not state.extraction_rows:
-            return "Phase 2 extraction did not produce any extraction rows."
-        return "Phase 2 extraction did not produce any final rows."
+        return "legacy"
 
     @staticmethod
     def _string(value: object) -> str:

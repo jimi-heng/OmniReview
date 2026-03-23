@@ -8,6 +8,8 @@ template files under `Screening/evals/data_extraction/datasets/`.
 
 Examples:
     python data_extraction_eval.py
+    python data_extraction_eval.py --pipeline-mode legacy
+    python data_extraction_eval.py --pipeline-mode phase1
     python data_extraction_eval.py --pipeline-mode phase2
     python data_extraction_eval.py --pico-json '{"s":"RCT","p":"children","i":"iron","c":"placebo","o":"hemoglobin"}'
 """
@@ -133,8 +135,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--pipeline-mode",
         type=str,
         default="phase2",
-        choices=["phase2"],
-        help="Pipeline mode for evaluation. Data extraction now supports only the phase2 multi-stage logic.",
+        choices=["legacy", "phase1", "phase2"],
+        help="Pipeline mode for evaluation. Defaults to phase2 so eval runs the newest multi-stage logic.",
     )
     return parser
 

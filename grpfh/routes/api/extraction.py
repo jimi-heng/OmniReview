@@ -126,8 +126,6 @@ def run_data_extraction():
         project_type,
         "--pico-json",
         pico_json_str,
-        "--pipeline-mode",
-        "phase2",
     ]
 
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -195,3 +193,4 @@ def get_extraction_preview():
         return ok(data=df.to_dict(orient="records"), columns=df.columns.tolist())
     except Exception as e:
         return fail(str(e), status=500)
+
