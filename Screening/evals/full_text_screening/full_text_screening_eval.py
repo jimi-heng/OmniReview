@@ -25,6 +25,7 @@ import csv
 import json
 import os
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -495,4 +496,8 @@ def main(argv: Optional[list[str]] = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    start = time.perf_counter()
+    try:
+        main()
+    finally:
+        print(f"\nElapsed: {time.perf_counter() - start:.2f}s")
