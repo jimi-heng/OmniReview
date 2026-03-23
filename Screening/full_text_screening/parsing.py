@@ -9,7 +9,7 @@ STRUCTURED_EVIDENCE_KEYS = (
     "intervention",
     "comparison",
     "outcomes",
-    "extra_rules",
+    "additional_criteria",
 )
 
 
@@ -108,7 +108,7 @@ def _normalize_evidence_dict(payload: Mapping[str, Any]) -> dict[str, str]:
         "intervention": ("intervention", "exposure", "indicator"),
         "comparison": ("comparison", "comparators", "comparator", "reference"),
         "outcomes": ("outcomes", "outcome"),
-        "extra_rules": ("extra_rules", "extra", "rules"),
+        "additional_criteria": ("additional_criteria", "extra", "rules"),
     }
 
     normalized: dict[str, str] = {}

@@ -274,7 +274,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Project type to pass through to the screening runtime. Defaults to the dataset preset value.",
     )
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1", help="API base URL")
-    parser.add_argument("--model", type=str, default="gpt-5.2", help="Model name to use")
+    parser.add_argument("--model", type=str, default="gpt-4.1", help="Model name to use")
     parser.add_argument("--api-key-env", type=str, default="DMX_API_KEY_1", help="Environment variable name for API key")
     parser.add_argument(
         "--pdf-pages",

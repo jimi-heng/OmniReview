@@ -15,7 +15,7 @@ STRICT OUTPUT FORMAT (JSON ONLY):
   - `intervention`
   - `comparison`
   - `outcomes`
-  - `extra_rules`
+  - `additional_criteria`
 - Every `evidence` value must be a string. Use `""` if the evidence is absent or the component is not evaluated.
 - For PECO, put Exposure evidence in `intervention`.
 - For PIRO, put Indicator evidence in `intervention` and Reference evidence in `comparison`.
@@ -31,7 +31,7 @@ Return this shape exactly:
     "intervention": "",
     "comparison": "",
     "outcomes": "",
-    "extra_rules": ""
+    "additional_criteria": ""
   }
 }
 """
@@ -55,7 +55,7 @@ Evaluation Scope:
 - Outcome (O) should ONLY be evaluated if the user explicitly provides an Outcome requirement.
   If Outcome is not provided, completely ignore Outcome in both evaluation and counting.
 
-- Extra Requirements (if any) should also be evaluated.
+- Additional Criteria (if any) should also be evaluated.
 
 Component Evaluation Rules:
 
@@ -74,22 +74,29 @@ Matched ONLY if a comparator group is explicitly described.
 5. Outcome (O) - ONLY evaluate if provided
 Matched ONLY if the study explicitly reports outcomes corresponding to the user-specified outcome concept.
 
-6. Extra Requirements
-Matched ONLY if the text explicitly satisfies the extra requirement.
+6. Additional Criteria
+Matched ONLY if the text explicitly satisfies the additional criteria.
 
-Final Inclusion Rule:
+Final Inclusion Rule (OVERRIDES ALL OTHER LOGIC):
+
+IMPORTANT:
+The final decision MUST be based ONLY on the component count rule below.
+Do NOT exclude a study solely because one component is not matched.
+
 - Count matched components among:
   S, P, I, C
   Outcome (only if provided)
-  Extra requirements (if provided)
+  Additional Criteria (if provided)
 
-- If >=4 components are Matched -> decision = "Included"
-- If <4 components are Matched -> decision = "Excluded"
+- If >=5 components are Matched -> decision = "Included"
+- If <5 components are Matched -> decision = "Excluded"
+
+Even if one or more components are NOT matched, the study can STILL be INCLUDED if the total matched count is >=5.
 
 
 CRITICAL Evidence Extraction Rule (STRICT):
 
-For EVERY evaluated component (S, P, I, C, and optionally O, Extra), evidence MUST be extracted regardless of whether Matched is Yes or No.
+For EVERY evaluated component (S, P, I, C, and optionally O, Additional Criteria), evidence MUST be extracted regardless of whether Matched is Yes or No.
 
 Evidence rules:
 
@@ -340,11 +347,11 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
         - Exposure: {criteria.intervention}
         - Comparison: {criteria.comparison}
         - Outcome: {criteria.outcomes}
-        - Extra Rules: {criteria.extra_rules}
+        - Additional Criteria: {criteria.additional_criteria}
 
         Instructions for this task:
         Evaluate the paper below against the Target PECO Criteria using the strict rules and output template defined in your system instructions.
-        Use the Extra Rules only as separate eligibility constraints; do not merge them into the Population, Exposure, Comparison, or Outcome text.
+        Use the Additional Criteria only as separate eligibility constraints; do not merge them into the Population, Exposure, Comparison, or Outcome text.
         {retry_note}
 
         Input Data:
@@ -360,11 +367,11 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
         - Indicator: {criteria.intervention}
         - Reference: {criteria.comparison}
         - Outcome: {criteria.outcomes}
-        - Extra Rules: {criteria.extra_rules}
+        - Additional Criteria: {criteria.additional_criteria}
 
         Instructions for this task:
         Evaluate the paper below against the Target PIRO Criteria using the strict rules and output template defined in your system instructions.
-        Use the Extra Rules only as separate eligibility constraints; do not merge them into the Population, Indicator, Reference, or Outcome text.
+        Use the Additional Criteria only as separate eligibility constraints; do not merge them into the Population, Indicator, Reference, or Outcome text.
         {retry_note}
 
         Input Data:
@@ -380,11 +387,11 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
             - Intervention: {criteria.intervention}
             - Comparison: {criteria.comparison}
             - Outcome: {criteria.outcomes}
-            - Extra Rules: {criteria.extra_rules}
+            - Additional Criteria: {criteria.additional_criteria}
 
             Instructions for this task:
             Evaluate the paper below against the Target SPICO Criteria using the strict rules and output template defined in your system instructions.
-            Use the Extra Rules only as separate eligibility constraints; do not merge them into the Study Design, Population, Intervention, Comparison, or Outcome text.
+            Use the Additional Criteria only as separate eligibility constraints; do not merge them into the Study Design, Population, Intervention, Comparison, or Outcome text.
             {retry_note}
 
             Input Data:

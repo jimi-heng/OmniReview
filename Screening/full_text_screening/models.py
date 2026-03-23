@@ -29,7 +29,7 @@ class NormalizedPICO:
     intervention: str = ""
     comparison: str = ""
     outcomes: str = ""
-    extra_rules: str = ""
+    additional_criteria: str = ""
     raw_fields: dict[str, Any] = field(default_factory=dict)
     normalized_fields: dict[str, Any] = field(default_factory=dict)
 

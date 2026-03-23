@@ -36,7 +36,7 @@ _COMPONENT_ALIASES: dict[str, tuple[str, ...]] = {
         "r",
     ),
     "outcomes": ("o", "outcome", "outcomes", "endpoint", "endpoints"),
-    "extra_rules": (
+    "additional_criteria": (
         "es",
         "extra",
         "extras",
@@ -84,7 +84,7 @@ _DISPLAY_LABELS = {
     "intervention": "Intervention",
     "comparison": "Comparison",
     "outcomes": "Outcome",
-    "extra_rules": "Extra Rule",
+    "additional_criteria": "Additional Criteria",
 }
 
 
@@ -122,7 +122,7 @@ def normalize_pico_input(pico_input: Any) -> NormalizedPICO:
     comparison = _collect_component_text(normalized_fields, "comparison", extra_rule_parts)
     outcomes = _collect_component_text(normalized_fields, "outcomes", extra_rule_parts)
 
-    for alias in _COMPONENT_ALIASES["extra_rules"]:
+    for alias in _COMPONENT_ALIASES["additional_criteria"]:
         if alias in normalized_fields:
             _append_unique(extra_rule_parts, _format_rule_text(alias, normalized_fields[alias]))
 
@@ -132,7 +132,7 @@ def normalize_pico_input(pico_input: Any) -> NormalizedPICO:
         intervention=intervention,
         comparison=comparison,
         outcomes=outcomes,
-        extra_rules="\n".join(extra_rule_parts).strip(),
+        additional_criteria="\n".join(extra_rule_parts).strip(),
         raw_fields=raw_fields,
         normalized_fields=normalized_fields,
     )
@@ -169,7 +169,7 @@ def _flatten_component_value(value: Any, label: str) -> tuple[str, list[str]]:
             item_text = _flatten_value(raw_item)
             if not item_text:
                 continue
-            if normalized_key in _EXPLANATORY_SUBKEYS or normalized_key in _COMPONENT_ALIASES["extra_rules"]:
+            if normalized_key in _EXPLANATORY_SUBKEYS or normalized_key in _COMPONENT_ALIASES["additional_criteria"]:
                 _append_unique(side_rules, _format_prefixed_rule(label, key_text or "Rule", item_text))
                 continue
             if key_text:
@@ -217,7 +217,7 @@ def _format_rule_text(key: str, value: Any) -> str:
     text = _flatten_value(value)
     if not text:
         return ""
-    label = "Extra Rule" if key in _COMPONENT_ALIASES["extra_rules"] else _DISPLAY_LABELS.get(key, _humanize_key(key))
+    label = "Additional Criteria" if key in _COMPONENT_ALIASES["additional_criteria"] else _DISPLAY_LABELS.get(key, _humanize_key(key))
     return f"{label}: {text}"
 
 

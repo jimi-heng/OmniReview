@@ -92,7 +92,7 @@ async def process_single_paper(
 
         decision = str(parsed_output["decision"])
         evidences = dict(parsed_output["evidence"])
-        print(evidences)
+        #print(evidences)
         conclusion = str(parsed_output["reason"])
 
         hl_path_str = None

@@ -7,12 +7,12 @@ COLORS = {
     "study_design": (0.7, 0.6, 0.1),  # 深黄（方法学）
     "population": (0.9, 0.2, 0.2),  # 红（人群）
     "intervention": (0.2, 0.3, 0.9),  # 蓝（干预）
-    "Indicator": (0.9, 0.4, 0.1),  # 深橙（指标/测量）
+    "indicator": (0.9, 0.4, 0.1),  # 深橙（指标/测量）
     "comparison": (0.4, 0.8, 0.4),  # 绿（比较）
     "reference": (0.8, 0.3, 0.8),  # 紫（参考组）
     "exposure": (0.2, 0.7, 0.7),  # 青（暴露）
     "outcomes": (1.0, 0.6, 0.1),  # 橙（结局）
-    "extra_rules": (0.5, 0.5, 0.5)  # 灰（额外条件）
+    "additional_criteria": (0.5, 0.5, 0.5)  # 灰（额外条件）
 }
 
 def rgb255_to_1(rgb):
