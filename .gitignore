@@ -224,7 +224,7 @@ CLAUDE.md
 AGENTS.md
 .DS_Store
 .claude
-datasets/
+
 
 # database
 *.db
