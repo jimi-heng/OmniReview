@@ -40,7 +40,7 @@ Examples:
         "--resources-dir",
         type=Path,
         default=paths.project_dir / "resources" / "included_papers",
-        help="Directory containing PDF files to screen",
+        help="Directory containing PDF or TXT files to screen",
     )
     parser.add_argument(
         "--output-csv",
@@ -69,7 +69,7 @@ Examples:
         "--pdf-pages",
         type=str,
         default="all",
-        help="Pages to process: 'all' or '1-3,5' (requires pymupdf)",
+        help="Pages to process for PDF inputs: 'all' or '1-3,5' (requires pymupdf)",
     )
     parser.add_argument("--timeout", type=float, default=300.0, help="API timeout in seconds")
     parser.add_argument("--retries", type=int, default=3, help="Number of retry attempts on failure")
@@ -129,7 +129,7 @@ async def async_main(argv: Optional[List[str]] = None) -> None:
     pico_dict = _parse_pico_json(str(args.pico_json))
     papers = discover_pdfs(resources_dir)
     if not papers:
-        print(f"No PDF files found under: {resources_dir}")
+        print(f"No PDF or TXT files found under: {resources_dir}")
         return
 
     results = await run_fulltext(

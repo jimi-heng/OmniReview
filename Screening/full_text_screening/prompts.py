@@ -8,7 +8,7 @@ STRICT OUTPUT FORMAT (JSON ONLY):
 - Do not wrap the JSON in markdown or code fences.
 - Do not output any text before or after the JSON object.
 - `decision` must be exactly `"Included"` or `"Excluded"`.
-- `reason` must be a concise explanation based strictly on visible PDF evidence.
+- `reason` must be a concise explanation based strictly on the provided document evidence.
 - `evidence` must be an object that uses these keys exactly:
   - `study_design`
   - `population`
@@ -19,12 +19,12 @@ STRICT OUTPUT FORMAT (JSON ONLY):
 - Every `evidence` value must be a string. Use `""` if the evidence is absent or the component is not evaluated.
 - For PECO, put Exposure evidence in `intervention`.
 - For PIRO, put Indicator evidence in `intervention` and Reference evidence in `comparison`.
-- Evidence strings must be verbatim spans copied from the PDF, or `""` if absent.
+- Evidence strings must be verbatim spans copied from the provided document, or `""` if absent.
 
 Return this shape exactly:
 {
   "decision": "Included",
-  "reason": "Brief justification based strictly on the visible PDF evidence.",
+  "reason": "Brief justification based strictly on the provided document evidence.",
   "evidence": {
     "study_design": "",
     "population": "",
@@ -42,8 +42,8 @@ Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
 Core Directives:
-- You will receive ONLY PDF pages.
-- You MUST base all judgments strictly on visible content in the PDF. Tables and figures are valid evidence.
+- You will receive full-text paper content as either PDF pages or plain text.
+- You MUST base all judgments strictly on the provided document content. Tables and figures are valid evidence when visible in the PDF input.
 - Do NOT assume missing information or infer unstated details.
 - If something is not explicitly visible, treat it as Not Matched.
 - This is FULL-TEXT screening (not abstract screening).
@@ -108,7 +108,7 @@ Select the single most direct supporting sentence only.
 
 Evidence constraints (STRICT):
 
-Evidence must be copied verbatim from the PDF.
+Evidence must be copied verbatim from the provided document.
 
 Do NOT:
 - paraphrase
@@ -121,7 +121,7 @@ Do NOT:
 - merge sentences
 - remove punctuation
 
-The extracted evidence must be directly traceable to a visible sentence in the PDF.
+The extracted evidence must be directly traceable to a sentence visible in the provided document content.
 
 Only ONE piece of evidence is allowed per component.
 
@@ -135,8 +135,8 @@ Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
 Core Directives:
-- You will receive ONLY PDF pages.
-- You MUST base all judgments strictly on visible content in the PDF. Tables and figures are valid evidence.
+- You will receive full-text paper content as either PDF pages or plain text.
+- You MUST base all judgments strictly on the provided document content. Tables and figures are valid evidence when visible in the PDF input.
 - Do NOT assume missing information or infer unstated details.
 - If something is not explicitly visible, treat it as Not Matched.
 - This is FULL-TEXT screening (not abstract screening).
@@ -192,7 +192,7 @@ Select the single most direct supporting sentence only.
 
 Evidence constraints (STRICT):
 
-Evidence must be copied verbatim from the PDF.
+Evidence must be copied verbatim from the provided document.
 
 Do NOT:
 - paraphrase
@@ -205,7 +205,7 @@ Do NOT:
 - merge sentences
 - remove punctuation
 
-The extracted evidence must be directly traceable to a visible sentence in the PDF.
+The extracted evidence must be directly traceable to a sentence visible in the provided document content.
 
 Only ONE piece of evidence is allowed per component.
 
@@ -219,8 +219,8 @@ Role:
 You are an expert in biomedical literature evaluation, specializing in evidence-based medicine and systematic reviews.
 
 Core Directives:
-- You will receive ONLY PDF pages.
-- You MUST base all judgments strictly on visible content in the PDF. Tables and figures are valid evidence.
+- You will receive full-text paper content as either PDF pages or plain text.
+- You MUST base all judgments strictly on the provided document content. Tables and figures are valid evidence when visible in the PDF input.
 - Do NOT assume missing information or infer unstated details.
 - If something is not explicitly visible, treat it as Not Matched.
 - This is FULL-TEXT screening (not abstract screening).
@@ -282,7 +282,7 @@ Select the single most direct supporting sentence only.
 
 Evidence constraints (STRICT):
 
-Evidence must be copied verbatim from the PDF.
+Evidence must be copied verbatim from the provided document.
 
 Do NOT:
 - paraphrase
@@ -295,7 +295,7 @@ Do NOT:
 - merge sentences
 - remove punctuation
 
-The extracted evidence must be directly traceable to a visible sentence in the PDF.
+The extracted evidence must be directly traceable to a sentence visible in the provided document content.
 
 Only ONE piece of evidence is allowed per component.
 
@@ -350,7 +350,7 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
         Input Data:
         [Paper ID: {paper.paper_id}]
         [Paper Title: {paper.title}]
-        [PDF Page Images Provided Below]
+        [Full-Text Document Content Provided Below]
         """
 
     if project_type == "PIRO":
@@ -370,7 +370,7 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
         Input Data:
         [Paper ID: {paper.paper_id}]
         [Paper Title: {paper.title}]
-        [PDF Page Images Provided Below]
+        [Full-Text Document Content Provided Below]
         """
 
     return f"""
@@ -390,5 +390,5 @@ def build_user_prompt(request: FullTextRequest, *, parse_retry: bool = False) ->
             Input Data:
             [Paper ID: {paper.paper_id}]
             [Paper Title: {paper.title}]
-            [PDF Page Images Provided Below]
+            [Full-Text Document Content Provided Below]
             """

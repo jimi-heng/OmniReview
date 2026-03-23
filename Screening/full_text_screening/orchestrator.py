@@ -6,7 +6,7 @@ import httpx
 
 from .models import FullTextRequest, FullTextScreeningConfig, FullTextScreeningRuntime
 from .parsing import StructuredOutputError, extract_output_text, parse_structured_output
-from .pdf import load_pdf_bytes, parse_pages_spec
+from .pdf import load_pdf_bytes, load_text_content, parse_pages_spec
 from .pico_normalizer import coerce_pico_payload, normalize_pico_input
 from .prompts import build_user_prompt, get_system_prompt, normalize_project_type
 from .runtime import (
@@ -25,21 +25,32 @@ async def process_single_paper(
     request: FullTextRequest,
 ) -> dict[str, Any]:
     paper = request.paper
-    pdf_path = paper.pdf_path
-    if not pdf_path.exists():
-        return error_result(paper.paper_id, error_type="missing_pdf", message=f"PDF not found: {pdf_path}")
+    source_path = paper.source_path
+    if not source_path.exists():
+        return error_result(paper.paper_id, error_type="missing_file", message=f"Input file not found: {source_path}")
 
     try:
-        pdf_bytes = load_pdf_bytes(pdf_path, runtime.selected_pages)
+        pdf_bytes = None
+        document_text = None
+        if paper.is_text:
+            document_text = load_text_content(source_path)
+        else:
+            pdf_bytes = load_pdf_bytes(source_path, runtime.selected_pages)
     except Exception as exc:
-        return error_result(paper.paper_id, error_type="pdf_error", message=str(exc))
+        return error_result(paper.paper_id, error_type="input_read_error", message=str(exc))
 
     try:
         parsed_output: dict[str, Any] | None = None
         raw_text = ""
         for parse_retry in (False, True):
             prompt = get_system_prompt(request.project_type) + "\n\n" + build_user_prompt(request, parse_retry=parse_retry)
-            payload = build_payload(runtime.model, pdf_bytes, pdf_path.name, prompt)
+            payload = build_payload(
+                runtime.model,
+                prompt=prompt,
+                filename=source_path.name,
+                file_bytes=pdf_bytes,
+                document_text=document_text,
+            )
             response = await call_with_retry(
                 post_with_auth_fallback,
                 client,
@@ -85,17 +96,17 @@ async def process_single_paper(
         conclusion = str(parsed_output["reason"])
 
         hl_path_str = None
-        if runtime.enable_highlight:
+        if runtime.enable_highlight and paper.is_pdf:
             try:
                 try:
                     from Screening.TextHighlight import highlight_pdf
                 except ImportError:
                     from TextHighlight import highlight_pdf
 
-                hl_dir = pdf_path.parent / "highlighted"
+                hl_dir = source_path.parent / "highlighted"
                 hl_dir.mkdir(exist_ok=True)
-                out_pdf = hl_dir / f"HL_{pdf_path.name}"
-                highlight_pdf(pdf_path, out_pdf, evidences)
+                out_pdf = hl_dir / f"HL_{source_path.name}"
+                highlight_pdf(source_path, out_pdf, evidences)
                 hl_path_str = str(out_pdf)
             except Exception as exc:
                 print(f"Highlight error for ID {paper.paper_id}: {exc}")

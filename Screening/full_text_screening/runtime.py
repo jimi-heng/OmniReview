@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+import mimetypes
 import os
 from dataclasses import asdict
 from pathlib import Path
@@ -46,22 +47,46 @@ def coerce_paper(paper: Any) -> FullTextPaper:
         raise TypeError(f"Unsupported paper input: {type(paper)!r}")
 
     paper_id = int(paper["id"])
-    pdf_path = Path(str(paper["pdf_path"]))
+    source_value = paper.get("pdf_path") or paper.get("source_path") or paper.get("file_path") or paper.get("path")
+    if not source_value:
+        raise KeyError("Paper mapping must include `pdf_path`, `source_path`, `file_path`, or `path`.")
+    pdf_path = Path(str(source_value))
     title = str(paper.get("title") or pdf_path.stem)
     return FullTextPaper(paper_id=paper_id, title=title, pdf_path=pdf_path)
 
 
-def build_payload(model_name: str, pdf_bytes: bytes, filename: str, prompt: str) -> dict[str, Any]:
-    b64 = base64.b64encode(pdf_bytes).decode("ascii")
+def _build_file_block(file_bytes: bytes, filename: str) -> dict[str, str]:
+    mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    b64 = base64.b64encode(file_bytes).decode("ascii")
+    return {"type": "input_file", "filename": filename, "file_data": f"data:{mime_type};base64,{b64}"}
+
+
+def build_payload(
+    model_name: str,
+    *,
+    prompt: str,
+    filename: str | None = None,
+    file_bytes: bytes | None = None,
+    document_text: str | None = None,
+) -> dict[str, Any]:
+    content: list[dict[str, str]] = []
+    if file_bytes is not None:
+        if not filename:
+            raise ValueError("`filename` is required when `file_bytes` is provided.")
+        content.append(_build_file_block(file_bytes, filename))
+    elif document_text is not None:
+        label = filename or "document.txt"
+        content.append({"type": "input_text", "text": f"Full-text content from {label}:\n\n{document_text}"})
+    else:
+        raise ValueError("Either `file_bytes` or `document_text` must be provided.")
+
+    content.append({"type": "input_text", "text": prompt})
     return {
         "model": model_name,
         "input": [
             {
                 "role": "user",
-                "content": [
-                    {"type": "input_file", "filename": filename, "file_data": f"data:application/pdf;base64,{b64}"},
-                    {"type": "input_text", "text": prompt},
-                ],
+                "content": content,
             }
         ],
     }

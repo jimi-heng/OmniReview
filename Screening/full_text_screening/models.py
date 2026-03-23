@@ -9,6 +9,18 @@ class FullTextPaper:
     title: str
     pdf_path: Path
 
+    @property
+    def source_path(self) -> Path:
+        return self.pdf_path
+
+    @property
+    def is_pdf(self) -> bool:
+        return self.source_path.suffix.lower() == ".pdf"
+
+    @property
+    def is_text(self) -> bool:
+        return self.source_path.suffix.lower() == ".txt"
+
 
 @dataclass(frozen=True)
 class NormalizedPICO:

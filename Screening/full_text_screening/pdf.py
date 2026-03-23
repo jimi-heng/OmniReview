@@ -9,6 +9,9 @@ except Exception:
     fitz = None
 
 
+SUPPORTED_SOURCE_EXTENSIONS = (".pdf", ".txt")
+
+
 def parse_pages_spec(spec: str) -> Optional[list[int]]:
     normalized = (spec or "").strip().lower()
     if normalized in {"", "all", "*"}:
@@ -37,6 +40,9 @@ def parse_pages_spec(spec: str) -> Optional[list[int]]:
 
 
 def load_pdf_bytes(pdf_path: Path, pages: Optional[list[int]]) -> bytes:
+    if pdf_path.suffix.lower() == ".txt":
+        return pdf_path.read_bytes()
+
     data = pdf_path.read_bytes()
     if pages is None:
         return data
@@ -56,13 +62,21 @@ def load_pdf_bytes(pdf_path: Path, pages: Optional[list[int]]) -> bytes:
             return out.write()
 
 
+def load_text_content(txt_path: Path) -> str:
+    return txt_path.read_text(encoding="utf-8-sig", errors="replace")
+
+
 def discover_pdfs(resources_dir: Path) -> list[FullTextPaper]:
-    pdfs = sorted(
-        [path for path in resources_dir.rglob("*.pdf") if path.is_file()],
-        key=lambda path: str(path).lower(),
+    source_files = sorted(
+        [
+            path
+            for path in resources_dir.rglob("*")
+            if path.is_file() and path.suffix.lower() in SUPPORTED_SOURCE_EXTENSIONS
+        ],
+        key=lambda path: (str(path.parent).lower(), path.stem.lower(), path.suffix.lower()),
     )
     papers: list[FullTextPaper] = []
-    for index, path in enumerate(pdfs, start=1):
+    for index, path in enumerate(source_files, start=1):
         resolved = path.resolve()
         papers.append(
             FullTextPaper(

@@ -3,19 +3,19 @@
 Full text screening evaluation wrapper.
 
 This script mirrors the frontend call to `Screening.FullTextScreening.run_fulltext_ai_sync`
-while using the local eval datasets under `Screening/evals/full_text_screening/datasets/`.
+while using local datasets under `Screening/evals/full_text_screening/datasets/`.
 
 It:
-1) Loads the PICO-style input from `PICO15.json` (similar to user input).
-2) Screens the PDFs under `datasets/pdf/` via `run_fulltext_ai_sync`.
-3) Compares predicted decisions with the reference labels in
-   `PICO15_FullTextAssessment.csv`, and prints summary metrics.
+1) Loads the PICO-style input for a selected dataset preset.
+2) Screens the dataset's PDF or TXT full-text inputs via `run_fulltext_ai_sync`.
+3) Compares predicted decisions with the reference labels.
 4) Writes a timestamped per-paper results CSV under `outputs/`.
 
 Examples:
   python Screening/evals/full_text_screening/full_text_screening_eval.py
-  python Screening/evals/full_text_screening/full_text_screening_eval.py --model gpt-4.1 --max-concurrency 3
-  python Screening/evals/full_text_screening/full_text_screening_eval.py --pico-json '{"s":"RCT","p":"adults","i":"drug","c":"placebo","o":""}'
+  python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748
+  python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset pico15 --model gpt-4.1 --max-concurrency 3
+  python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748 --inputs-dir Screening/evals/full_text_screening/datasets/CD006748/text
 """
 
 from __future__ import annotations
@@ -28,15 +28,13 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Optional
 
 
 EVAL_DIR = Path(__file__).resolve().parent
 DATASETS_DIR = EVAL_DIR / "datasets"
-PDF_DIR = DATASETS_DIR / "pdf"
-PICO_JSON_PATH = DATASETS_DIR / "PICO15.json"
-REFERENCE_CSV_PATH = DATASETS_DIR / "PICO15_FullTextAssessment.csv"
 OUTPUTS_DIR = EVAL_DIR / "outputs"
+SUPPORTED_INPUT_SUFFIXES = {".pdf", ".txt"}
 
 
 ROOT_DIR = EVAL_DIR.parents[2]
@@ -45,6 +43,73 @@ if str(ROOT_DIR) not in sys.path:
 
 from Screening.FullTextScreening import run_fulltext_ai_sync  # noqa: E402
 from Screening.full_text_screening.pico_normalizer import coerce_pico_payload  # noqa: E402
+
+
+@dataclass(frozen=True)
+class EvalDatasetPreset:
+    key: str
+    label: str
+    inputs_dir: Path
+    pico_json_path: Path
+    reference_csv_path: Path
+    project_type: str = "PICOS"
+
+
+@dataclass(frozen=True)
+class EvalDatasetConfig:
+    key: str
+    label: str
+    inputs_dir: Path
+    pico_json_path: Path
+    reference_csv_path: Path
+    project_type: str
+
+
+@dataclass(frozen=True)
+class EvalPaper:
+    paper_id: int
+    paper_index: str
+    title: str
+    source_path: Path
+
+    def as_runtime_paper(self) -> dict[str, Any]:
+        return {
+            "id": self.paper_id,
+            "title": self.title,
+            "pdf_path": str(self.source_path),
+        }
+
+
+@dataclass(frozen=True)
+class EvalRow:
+    paper_index: str
+    reference: str
+    predicted: str
+    correct: bool
+    is_error: bool
+    evidence: str
+    highlight_path: str
+    source_path: str
+
+
+DATASET_PRESETS: dict[str, EvalDatasetPreset] = {
+    "pico15": EvalDatasetPreset(
+        key="pico15",
+        label="PICO15",
+        inputs_dir=DATASETS_DIR / "PICO15" / "pdf",
+        pico_json_path=DATASETS_DIR / "PICO15" / "PICO15.json",
+        reference_csv_path=DATASETS_DIR / "PICO15" / "PICO15_FullTextAssessment.csv",
+        project_type="PICOS",
+    ),
+    "cd006748": EvalDatasetPreset(
+        key="cd006748",
+        label="CD006748",
+        inputs_dir=DATASETS_DIR / "CD006748" / "text",
+        pico_json_path=DATASETS_DIR / "CD006748" / "PICO6748.json",
+        reference_csv_path=DATASETS_DIR / "CD006748" / "PICO6748_FullTextAssessment.csv",
+        project_type="PICOS",
+    ),
+}
 
 
 def _normalize_label(value: str) -> str:
@@ -71,9 +136,14 @@ def _safe_int(text: str) -> Optional[int]:
         return None
 
 
-def load_pico_payload(path: Path) -> dict[str, Any]:
-    """Load the eval PICO payload without flattening away its original structure."""
+def _sort_key(path: Path) -> tuple[int, Any, str]:
+    numeric_stem = _safe_int(path.stem)
+    if numeric_stem is not None:
+        return (0, numeric_stem, path.suffix.lower())
+    return (1, path.stem.lower(), path.suffix.lower())
 
+
+def load_pico_payload(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
 
@@ -99,7 +169,6 @@ def load_reference_labels(path: Path) -> dict[str, str]:
         if not reader.fieldnames:
             raise ValueError(f"Reference CSV has no header row: {path}")
 
-        # Be tolerant to BOM / slight header drift.
         index_field = next((name for name in reader.fieldnames if name and name.endswith("Paper_Index")), None)
         label_field = next(
             (name for name in reader.fieldnames if name and name.endswith("Full-text_Assessment")),
@@ -117,46 +186,72 @@ def load_reference_labels(path: Path) -> dict[str, str]:
         return labels
 
 
-def discover_eval_pdfs(pdf_dir: Path) -> list[Path]:
-    pdfs = [path for path in pdf_dir.glob("*.pdf") if path.is_file()]
+def discover_eval_inputs(inputs_dir: Path) -> list[Path]:
+    inputs = [
+        path
+        for path in inputs_dir.iterdir()
+        if path.is_file() and path.suffix.lower() in SUPPORTED_INPUT_SUFFIXES
+    ]
+    return sorted(inputs, key=_sort_key)
 
-    def sort_key(path: Path):
-        num = _safe_int(path.stem)
-        return (0, num) if num is not None else (1, path.stem.lower())
 
-    return sorted(pdfs, key=sort_key)
-
-
-def build_papers_for_frontend(pdfs: Iterable[Path]) -> list[dict[str, Any]]:
-    papers: list[dict[str, Any]] = []
-    for pdf_path in pdfs:
-        paper_id = _safe_int(pdf_path.stem)
-        if paper_id is None:
-            print(f"Skipping non-numeric PDF stem (cannot map to int paper id): {pdf_path.name}")
-            continue
-        papers.append({"id": paper_id, "title": pdf_path.stem, "pdf_path": str(pdf_path.resolve())})
+def build_eval_papers(paths: Iterable[Path]) -> list[EvalPaper]:
+    papers: list[EvalPaper] = []
+    for paper_id, source_path in enumerate(paths, start=1):
+        resolved = source_path.resolve()
+        papers.append(
+            EvalPaper(
+                paper_id=paper_id,
+                paper_index=resolved.stem,
+                title=resolved.stem,
+                source_path=resolved,
+            )
+        )
     return papers
 
 
-@dataclass(frozen=True)
-class EvalRow:
-    paper_index: str
-    reference: str
-    predicted: str
-    correct: bool
-    is_error: bool
-    evidence: str
-    highlight_path: str
-    pdf_path: str
+def resolve_dataset_config(args: argparse.Namespace) -> EvalDatasetConfig:
+    preset = DATASET_PRESETS[args.dataset]
+    inputs_dir = Path(args.inputs_dir).resolve() if args.inputs_dir else preset.inputs_dir.resolve()
+    pico_json_path = Path(args.pico_json_path).resolve() if args.pico_json_path else preset.pico_json_path.resolve()
+    reference_csv_path = Path(args.reference_csv).resolve() if args.reference_csv else preset.reference_csv_path.resolve()
+    project_type = str(args.project_type or preset.project_type)
+    return EvalDatasetConfig(
+        key=preset.key,
+        label=preset.label,
+        inputs_dir=inputs_dir,
+        pico_json_path=pico_json_path,
+        reference_csv_path=reference_csv_path,
+        project_type=project_type,
+    )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Evaluate full-text screening on the local PICO15 dataset (mirrors frontend logic).",
+        description="Evaluate full-text screening on local preset datasets (PDF or TXT).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--pdf-dir", type=Path, default=PDF_DIR, help="Directory containing evaluation PDFs.")
-    parser.add_argument("--pico-json-path", type=Path, default=PICO_JSON_PATH, help="Path to the eval PICO15 JSON.")
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="pico15",
+        choices=sorted(DATASET_PRESETS),
+        help="Dataset preset to evaluate.",
+    )
+    parser.add_argument(
+        "--inputs-dir",
+        "--pdf-dir",
+        dest="inputs_dir",
+        type=Path,
+        default=None,
+        help="Directory containing evaluation inputs (.pdf or .txt). Overrides the dataset preset path.",
+    )
+    parser.add_argument(
+        "--pico-json-path",
+        type=Path,
+        default=None,
+        help="Path to the dataset PICO JSON. Overrides the dataset preset path.",
+    )
     parser.add_argument(
         "--pico-json",
         type=str,
@@ -166,18 +261,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--reference-csv",
         type=Path,
-        default=REFERENCE_CSV_PATH,
-        help="Reference label CSV (Paper_Index -> Full-text_Assessment).",
+        default=None,
+        help="Reference label CSV. Overrides the dataset preset path.",
     )
     parser.add_argument("--outputs-dir", type=Path, default=OUTPUTS_DIR, help="Directory for timestamped outputs.")
     parser.add_argument(
         "--project-type",
         type=str,
-        default="PICOS",
+        default=None,
         choices=["PICOS", "PICO", "PECO", "PIRO"],
-        help="Project type to pass through to the screening runtime.",
+        help="Project type to pass through to the screening runtime. Defaults to the dataset preset value.",
     )
-
     parser.add_argument("--base-url", type=str, default="https://www.dmxapi.cn/v1", help="API base URL")
     parser.add_argument("--model", type=str, default="gpt-5.2", help="Model name to use")
     parser.add_argument("--api-key-env", type=str, default="DMX_API_KEY_1", help="Environment variable name for API key")
@@ -185,13 +279,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--pdf-pages",
         type=str,
         default="all",
-        help="Pages to process: 'all' or '1-3,5' (requires pymupdf for slicing).",
+        help="Pages to process for PDF inputs: 'all' or '1-3,5' (requires pymupdf for slicing).",
     )
     parser.add_argument("--timeout", type=float, default=300.0, help="API timeout in seconds")
     parser.add_argument("--retries", type=int, default=3, help="Number of retry attempts on failure")
     parser.add_argument("--retry-delay", type=float, default=3.0, help="Delay between retries in seconds")
     parser.add_argument("--max-concurrency", type=int, default=10, help="Maximum concurrent API requests")
-    parser.add_argument("--limit", type=int, default=0, help="Optional cap on number of PDFs to evaluate (0 = all).")
+    parser.add_argument("--limit", type=int, default=0, help="Optional cap on number of inputs to evaluate (0 = all).")
+    parser.add_argument(
+        "--list-datasets",
+        action="store_true",
+        help="Print available dataset presets and exit.",
+    )
     return parser
 
 
@@ -205,7 +304,7 @@ def write_eval_csv(path: Path, rows: list[EvalRow]) -> None:
         "IsError",
         "Evidence",
         "HighlightPath",
-        "PdfPath",
+        "SourcePath",
     ]
     with path.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -220,66 +319,82 @@ def write_eval_csv(path: Path, rows: list[EvalRow]) -> None:
                     "IsError": "1" if row.is_error else "0",
                     "Evidence": row.evidence,
                     "HighlightPath": row.highlight_path,
-                    "PdfPath": row.pdf_path,
+                    "SourcePath": row.source_path,
                 }
             )
 
 
+def _print_available_datasets() -> None:
+    print("Available datasets:")
+    for key in sorted(DATASET_PRESETS):
+        preset = DATASET_PRESETS[key]
+        print(f"- {preset.key}: {preset.label}")
+        print(f"  inputs:    {preset.inputs_dir}")
+        print(f"  pico json: {preset.pico_json_path}")
+        print(f"  labels:    {preset.reference_csv_path}")
+
+
 def main(argv: Optional[list[str]] = None) -> None:
-    args = build_arg_parser().parse_args(argv)
+    parser = build_arg_parser()
+    args = parser.parse_args(argv)
 
-    if not args.pdf_dir.exists():
-        print(f"Error: pdf directory not found: {args.pdf_dir}")
+    if args.list_datasets:
+        _print_available_datasets()
+        return
+
+    dataset = resolve_dataset_config(args)
+
+    if not dataset.inputs_dir.exists():
+        print(f"Error: input directory not found: {dataset.inputs_dir}")
         sys.exit(1)
-    if not args.reference_csv.exists():
-        print(f"Error: reference CSV not found: {args.reference_csv}")
+    if not dataset.reference_csv_path.exists():
+        print(f"Error: reference CSV not found: {dataset.reference_csv_path}")
         sys.exit(1)
-    if not args.pico_json and not args.pico_json_path.exists():
-        print(f"Error: eval PICO JSON not found: {args.pico_json_path}")
+    if not args.pico_json and not dataset.pico_json_path.exists():
+        print(f"Error: eval PICO JSON not found: {dataset.pico_json_path}")
         sys.exit(1)
 
-    pdf_paths = discover_eval_pdfs(args.pdf_dir)
+    input_paths = discover_eval_inputs(dataset.inputs_dir)
     if args.limit and args.limit > 0:
-        pdf_paths = pdf_paths[: int(args.limit)]
-    if not pdf_paths:
-        print(f"Error: no PDF files found in: {args.pdf_dir}")
+        input_paths = input_paths[: int(args.limit)]
+    if not input_paths:
+        print(f"Error: no .pdf or .txt files found in: {dataset.inputs_dir}")
         sys.exit(1)
 
-    reference = load_reference_labels(args.reference_csv)
+    reference = load_reference_labels(dataset.reference_csv_path)
 
     if args.pico_json:
         pico_payload = _parse_pico_json(args.pico_json)
     else:
-        pico_payload = load_pico_payload(args.pico_json_path)
+        pico_payload = load_pico_payload(dataset.pico_json_path)
 
-    papers = build_papers_for_frontend(pdf_paths)
-    if not papers:
-        print("Error: no valid papers to evaluate (all PDF stems were non-numeric).")
-        sys.exit(1)
-
-    paper_indices = [str(p["id"]) for p in papers]
-    missing_ref = [idx for idx in paper_indices if idx not in reference]
+    papers = build_eval_papers(input_paths)
+    paper_indices = [paper.paper_index for paper in papers]
+    missing_ref = [paper_index for paper_index in paper_indices if paper_index not in reference]
     if missing_ref:
-        print(f"Warning: {len(missing_ref)} PDFs have no reference labels and will be skipped: {missing_ref[:10]}")
+        print(f"Warning: {len(missing_ref)} inputs have no reference labels and will be skipped: {missing_ref[:10]}")
 
-    papers = [paper for paper in papers if str(paper["id"]) in reference]
+    papers = [paper for paper in papers if paper.paper_index in reference]
     if not papers:
-        print("Error: none of the PDFs have reference labels.")
+        print("Error: none of the discovered inputs have reference labels.")
         sys.exit(1)
 
+    runtime_papers = [paper.as_runtime_paper() for paper in papers]
+
     print("=" * 60)
-    print("Full Text Screening Evaluation (PICO15)")
+    print(f"Full Text Screening Evaluation ({dataset.label})")
     print("=" * 60)
-    print(f"PDF dir:          {args.pdf_dir}")
-    print(f"PDF count:        {len(papers)}")
-    print(f"Reference CSV:    {args.reference_csv}")
-    print(f"Project type:     {args.project_type}")
-    print(f"PICO payload:     {json.dumps(pico_payload, ensure_ascii=False)}")
-    print(f"Model:            {args.model}")
-    print(f"Base URL:         {args.base_url}")
-    print(f"API key env var:  {args.api_key_env}")
-    print(f"PDF pages:        {args.pdf_pages}")
-    print(f"Max concurrency:  {args.max_concurrency}")
+    print(f"Dataset preset:    {dataset.key}")
+    print(f"Inputs dir:        {dataset.inputs_dir}")
+    print(f"Input count:       {len(runtime_papers)}")
+    print(f"Reference CSV:     {dataset.reference_csv_path}")
+    print(f"Project type:      {dataset.project_type}")
+    print(f"PICO payload:      {json.dumps(pico_payload, ensure_ascii=False)}")
+    print(f"Model:             {args.model}")
+    print(f"Base URL:          {args.base_url}")
+    print(f"API key env var:   {args.api_key_env}")
+    print(f"PDF pages:         {args.pdf_pages}")
+    print(f"Max concurrency:   {args.max_concurrency}")
     print("=" * 60)
     print()
 
@@ -287,9 +402,9 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     try:
         results = run_fulltext_ai_sync(
-            papers,
+            runtime_papers,
             pico_payload,
-            str(args.project_type),
+            dataset.project_type,
             config={
                 "base_url": str(args.base_url),
                 "model": str(args.model),
@@ -315,22 +430,21 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     rows: list[EvalRow] = []
     for paper in papers:
-        pid = str(paper["id"])
-        ref = _normalize_label(reference.get(pid, ""))
-        result = predicted_by_id.get(pid) or {}
+        ref = _normalize_label(reference.get(paper.paper_index, ""))
+        result = predicted_by_id.get(str(paper.paper_id)) or {}
         pred = _normalize_label(str(result.get("decision") or ""))
         is_error = pred == "Error" or not pred
         correct = (pred == ref) and (not is_error) and (ref in {"Included", "Excluded"})
         rows.append(
             EvalRow(
-                paper_index=pid,
+                paper_index=paper.paper_index,
                 reference=ref,
                 predicted=pred,
                 correct=correct,
                 is_error=is_error,
                 evidence=str(result.get("evidence") or ""),
                 highlight_path=str(result.get("hl_path") or ""),
-                pdf_path=str(paper.get("pdf_path") or ""),
+                source_path=str(paper.source_path),
             )
         )
 
@@ -355,14 +469,14 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     args.outputs_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_csv = args.outputs_dir / f"eval_full_text_{timestamp}.csv"
+    output_csv = args.outputs_dir / f"eval_full_text_{dataset.key}_{timestamp}.csv"
     write_eval_csv(output_csv, rows)
 
     wrong = [row for row in rows if (not row.correct) and (not row.is_error)]
     print("\n" + "=" * 60)
     print("Summary")
     print("=" * 60)
-    print(f"Total papers:                 {total}")
+    print(f"Total inputs:                 {total}")
     print(f"Errors:                       {errors} ({_format_ratio(errors, total)})")
     print(f"Correct (incl. errors):       {correct} ({accuracy})")
     print(f"Correct (excluding errors):   {non_error_correct}/{non_error_total} ({accuracy_no_error})")
