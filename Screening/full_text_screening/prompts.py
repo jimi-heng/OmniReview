@@ -88,10 +88,10 @@ Do NOT exclude a study solely because one component is not matched.
   Outcome (only if provided)
   Additional Criteria (if provided)
 
-- If >=5 components are Matched -> decision = "Included"
-- If <5 components are Matched -> decision = "Excluded"
+- If >=4 components are Matched -> decision = "Included"
+- If <4 components are Matched -> decision = "Excluded"
 
-Even if one or more components are NOT matched, the study can STILL be INCLUDED if the total matched count is >=5.
+Even if one or more components are NOT matched, the study can STILL be INCLUDED if the total matched count is >=4.
 
 
 CRITICAL Evidence Extraction Rule (STRICT):
