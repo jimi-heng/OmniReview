@@ -15,7 +15,7 @@ Examples:
   python Screening/evals/full_text_screening/full_text_screening_eval.py
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd008873
-
+  python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd010912
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset pico15 --model gpt-4.1 --max-concurrency 3
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748 --inputs-dir Screening/evals/full_text_screening/datasets/CD006748/text
 """
