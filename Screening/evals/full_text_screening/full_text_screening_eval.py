@@ -14,6 +14,8 @@ It:
 Examples:
   python Screening/evals/full_text_screening/full_text_screening_eval.py
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748
+  python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd008873
+
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset pico15 --model gpt-4.1 --max-concurrency 3
   python Screening/evals/full_text_screening/full_text_screening_eval.py --dataset cd006748 --inputs-dir Screening/evals/full_text_screening/datasets/CD006748/text
 """
@@ -108,6 +110,22 @@ DATASET_PRESETS: dict[str, EvalDatasetPreset] = {
         inputs_dir=DATASETS_DIR / "CD006748" / "text",
         pico_json_path=DATASETS_DIR / "CD006748" / "PICO6748.json",
         reference_csv_path=DATASETS_DIR / "CD006748" / "PICO6748_FullTextAssessment.csv",
+        project_type="PICOS",
+    ),
+    "cd008873": EvalDatasetPreset(
+        key="cd008873",
+        label="CD008873",
+        inputs_dir=DATASETS_DIR / "CD008873" / "text",
+        pico_json_path=DATASETS_DIR / "CD008873" / "PICO8873.json",
+        reference_csv_path=DATASETS_DIR / "CD008873" / "CD008873_FullTextAssessment.csv",
+        project_type="PICOS",
+    ),
+    "cd010912": EvalDatasetPreset(
+        key="cd010912",
+        label="CD010912",
+        inputs_dir=DATASETS_DIR / "CD010912" / "text",
+        pico_json_path=DATASETS_DIR / "CD010912" / "PICO010912.json",
+        reference_csv_path=DATASETS_DIR / "CD010912" / "CD010912_FullTextAssessment.csv",
         project_type="PICOS",
     ),
 }
