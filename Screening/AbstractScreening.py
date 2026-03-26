@@ -11,9 +11,9 @@ load_dotenv(SCRIPT_DIR / ".env", override=True)
 key1 = os.getenv("DMX_API_KEY_1")
 key2 = os.getenv("DMX_API_KEY_2")
 
-model1_name = "gpt-4.1"
-model2_name = "gpt-4.1-mini"
-model3_name = "gpt-4.1"
+model1_name = "claude-haiku-4-5-20251001"
+model2_name = "claude-haiku-4-5-20251001"
+model3_name = "glm-4.6"
 
 whole_paper_list = []
 topic_keywords = ""
