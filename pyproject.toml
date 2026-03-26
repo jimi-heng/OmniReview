@@ -37,3 +37,14 @@ dependencies = [
     "httpx>=0.28.1",
     "defusedxml>=0.7.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-playwright>=0.6.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["grpfh/tests"]
+addopts = "-v --tb=short"
