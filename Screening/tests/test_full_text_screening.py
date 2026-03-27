@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import sys
 import tempfile
@@ -28,8 +29,8 @@ from Screening.FullTextScreening import (
 from Screening.full_text_screening.models import FullTextPaper, FullTextRequest
 from Screening.full_text_screening.orchestrator import process_single_paper
 from Screening.full_text_screening.parsing import StructuredOutputError, extract_conclusion, extract_evidence, parse_structured_output
-from Screening.full_text_screening.prompts import build_user_prompt
-from Screening.full_text_screening.runtime import build_payload
+from Screening.full_text_screening.prompts import build_user_prompt, get_system_prompt
+from Screening.full_text_screening.runtime import build_payload, coerce_paper, error_result
 
 
 class FullTextScreeningTests(unittest.TestCase):
@@ -148,8 +149,8 @@ class FullTextScreeningTests(unittest.TestCase):
         self.assertIn("Drug A", normalized.intervention)
         self.assertIn("dose: 5 mg daily", normalized.intervention)
         self.assertIn("primary: Remission\nAdverse events", normalized.outcomes)
-        self.assertIn("Population criteria: Age >= 18\nConfirmed diagnosis", normalized.extra_rules)
-        self.assertIn("Extra Rule: language: English only", normalized.extra_rules)
+        self.assertIn("Population criteria: Age >= 18\nConfirmed diagnosis", normalized.additional_criteria)
+        self.assertIn("Additional Criteria: language: English only", normalized.additional_criteria)
         self.assertIn("S", normalized.raw_fields)
         self.assertIn("p", normalized.normalized_fields)
 
@@ -173,7 +174,7 @@ class FullTextScreeningTests(unittest.TestCase):
         self.assertIn("- Comparison: reference: Non-smokers", prompt)
         self.assertIn("- Outcome: primary: Mortality", prompt)
         self.assertIn("Population notes: Exclude pediatrics", prompt)
-        self.assertIn("Extra Rule: English only", prompt)
+        self.assertIn("Additional Criteria: English only", prompt)
         self.assertNotIn("{'target': 'Adults'", prompt)
 
     def test_build_payload_embeds_txt_documents_as_input_text(self) -> None:
@@ -296,6 +297,142 @@ class FullTextScreeningTests(unittest.TestCase):
                 self.assertIn("parse_error", result["evidence"])
 
             asyncio.run(run_test())
+
+
+class ParseEdgeCaseTests(unittest.TestCase):
+    def test_extracts_json_from_markdown_fences(self) -> None:
+        text = """```json
+        {
+          "decision": "Included",
+          "reason": "OK",
+          "evidence": {"design": "RCT", "population": "Adults", "intervention": "", "comparators": "placebo", "outcome": ""}
+        }
+        ```"""
+        parsed = parse_structured_output(text)
+        self.assertEqual(parsed["decision"], "Included")
+        self.assertEqual(parsed["evidence"]["study_design"], "RCT")
+        self.assertEqual(parsed["evidence"]["comparison"], "placebo")
+
+    def test_rejects_unknown_decision(self) -> None:
+        with self.assertRaises(StructuredOutputError):
+            parse_structured_output('{"decision":"Maybe","reason":"?","evidence":{}}')
+
+    def test_fills_missing_reason(self) -> None:
+        parsed = parse_structured_output('{"decision":"Excluded","evidence":{}}')
+        self.assertEqual(parsed["reason"], "No reason provided.")
+
+    def test_normalizes_evidence_aliases(self) -> None:
+        parsed = parse_structured_output(
+            '{"decision":"Included","reason":"ok","evidence":{"design":"cohort","comparators":"control","extra":"rule"}}'
+        )
+        self.assertEqual(parsed["evidence"]["study_design"], "cohort")
+        self.assertEqual(parsed["evidence"]["comparison"], "control")
+        self.assertEqual(parsed["evidence"]["additional_criteria"], "rule")
+
+    def test_handles_empty_string(self) -> None:
+        with self.assertRaises(StructuredOutputError):
+            parse_structured_output("")
+
+    def test_handles_no_json(self) -> None:
+        with self.assertRaises(StructuredOutputError):
+            parse_structured_output("Plain text without JSON")
+
+
+class PICONormalizerEdgeCaseTests(unittest.TestCase):
+    def test_empty_dict(self) -> None:
+        pico = normalize_pico_input({})
+        self.assertEqual(pico.study_design, "")
+        self.assertEqual(pico.population, "")
+        self.assertEqual(pico.intervention, "")
+        self.assertEqual(pico.comparison, "")
+        self.assertEqual(pico.outcomes, "")
+        self.assertEqual(pico.additional_criteria, "")
+
+    def test_alternative_aliases(self) -> None:
+        pico = normalize_pico_input(
+            {
+                "patients": "Adults",
+                "exposure": "Smoking",
+                "comparators": "Never smokers",
+                "endpoint": "Mortality",
+            }
+        )
+        self.assertEqual(pico.population, "Adults")
+        self.assertEqual(pico.intervention, "Smoking")
+        self.assertEqual(pico.comparison, "Never smokers")
+        self.assertEqual(pico.outcomes, "Mortality")
+
+    def test_deeply_nested_flatten(self) -> None:
+        pico = normalize_pico_input({"population": {"Age": ["18-65", {"Mean": "50"}], "Setting": {"Site": "Clinic"}}})
+        self.assertIn("Age:", pico.population)
+        self.assertIn("18-65", pico.population)
+        self.assertIn("Mean:", pico.population)
+        self.assertIn("Setting:", pico.population)
+
+
+class PromptGenerationTests(unittest.TestCase):
+    def test_get_system_prompt_picos(self) -> None:
+        prompt = get_system_prompt("PICOS")
+        self.assertIn("SPIC components", prompt)
+        self.assertIn('decision = "Included"', prompt)
+        self.assertIn("STRICT OUTPUT FORMAT", prompt)
+
+    def test_get_system_prompt_peco(self) -> None:
+        prompt = get_system_prompt("PECO")
+        self.assertIn("Exposure (E)", prompt)
+        self.assertIn('decision = "Included"', prompt)
+        self.assertIn("STRICT OUTPUT FORMAT", prompt)
+
+    def test_get_system_prompt_piro(self) -> None:
+        prompt = get_system_prompt("PIRO")
+        self.assertIn("Indicator (I)", prompt)
+        self.assertIn("Reference (R)", prompt)
+        self.assertIn('decision = "Included"', prompt)
+        self.assertIn("STRICT OUTPUT FORMAT", prompt)
+
+    def test_build_user_prompt_piro_fields(self) -> None:
+        request = FullTextRequest(
+            paper=FullTextPaper(paper_id=1, title="Demo", pdf_path=Path("demo.pdf")),
+            pico_dict={"population": "Adults", "indicator": "BP", "reference": "placebo"},
+            project_type="PIRO",
+            normalized_pico=normalize_pico_input({"population": "Adults", "indicator": "BP", "reference": "placebo"}),
+        )
+        prompt = build_user_prompt(request)
+        self.assertIn("Indicator:", prompt)
+        self.assertIn("Reference:", prompt)
+
+
+class RuntimeEdgeCaseTests(unittest.TestCase):
+    def test_resolve_config_with_none(self) -> None:
+        with patch.dict(os.environ, {"DMX_API_KEY_1": "k"}, clear=False):
+            runtime = resolve_runtime_config(None, parse_pages_spec=parse_pages_spec)
+        self.assertEqual(runtime.api_key, "k")
+        self.assertTrue(runtime.endpoint.endswith("/responses"))
+
+    def test_resolve_config_missing_api_key(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(RuntimeError):
+                resolve_runtime_config(None, parse_pages_spec=parse_pages_spec)
+
+    def test_build_payload_raises_without_content(self) -> None:
+        with self.assertRaises(ValueError):
+            build_payload("gpt-4.1", prompt="hi")
+
+    def test_coerce_paper_from_dict(self) -> None:
+        paper = coerce_paper({"id": 7, "pdf_path": "a.pdf", "title": "T"})
+        self.assertEqual(paper.paper_id, 7)
+        self.assertEqual(paper.title, "T")
+        self.assertEqual(paper.pdf_path, Path("a.pdf"))
+
+    def test_coerce_paper_missing_path(self) -> None:
+        with self.assertRaises(KeyError):
+            coerce_paper({"id": 1, "title": "T"})
+
+    def test_error_result_includes_raw_output(self) -> None:
+        result = error_result(1, error_type="parse_error", message="bad", raw_output="RAW")
+        evidence = json.loads(result["evidence"])
+        self.assertEqual(evidence["error_type"], "parse_error")
+        self.assertEqual(evidence["raw_output"], "RAW")
 
 
 if __name__ == "__main__":

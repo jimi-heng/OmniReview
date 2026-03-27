@@ -1,17 +1,33 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+ROOT_DIR = Path(__file__).resolve().parents[2]
+SCREENING_DIR = ROOT_DIR / "Screening"
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+if str(SCREENING_DIR) not in sys.path:
+    sys.path.insert(0, str(SCREENING_DIR))
+
 import fitz
 from openpyxl import Workbook, load_workbook
 
-from Screening.data_extraction.models import ExtractedCell, ExtractionRow, Paper, PipelineState, RowCandidate, StudyUnit
-from Screening.data_extraction.output import csv_to_excel
+from Screening.data_extraction.models import (
+    ExtractedCell,
+    ExtractionRow,
+    Paper,
+    PaperProfile,
+    PipelineState,
+    RowCandidate,
+    StudyUnit,
+)
+from Screening.data_extraction.output import _infer_rayyan_id, csv_to_excel, state_to_final_rows
 from Screening.data_extraction.parsing import RobustJSONParser
-from Screening.data_extraction.pdf import select_targeted_pages
+from Screening.data_extraction.pdf import discover_pdfs, extract_pdf_title, parse_pages_spec, select_targeted_pages
 from Screening.data_extraction.service import ExtractionRequest, PipelineOrchestrator
 from Screening.data_extraction.template import read_template_columns
 
@@ -196,12 +212,10 @@ class TestDataExtractionPipeline(unittest.IsolatedAsyncioTestCase):
             ws.append(["Paper title", "Baseline age in years", "Intervention mean outcome"])
             wb.save(template_path)
 
-            template_columns = read_template_columns(template_path)
+            all_columns, llm_columns = read_template_columns(template_path)
 
-            self.assertEqual(template_columns.all_columns, ["Title", "Age", "Arm1_Mean"])
-            self.assertEqual(template_columns.llm_columns, ["Age", "Arm1_Mean"])
-            self.assertEqual(template_columns.descriptions["Age"], "Baseline age in years")
-            self.assertEqual(template_columns.descriptions["Arm1_Mean"], "Intervention mean outcome")
+            self.assertEqual(all_columns, ["Title", "Age", "Arm1_Mean"])
+            self.assertEqual(llm_columns, ["Age", "Arm1_Mean"])
 
     def test_csv_to_excel_does_not_copy_template_description_row(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -920,6 +934,184 @@ class TestDataExtractionPipeline(unittest.IsolatedAsyncioTestCase):
         self.assertIn("error_type_counts", summary)
         self.assertEqual(summary["error_type_counts"]["arm_swap"], 1)
         self.assertIsInstance(summary["issues"], list)
+
+
+class RobustJSONParserHelperTests(unittest.TestCase):
+    def test_parse_json_payload_direct(self) -> None:
+        parsed = RobustJSONParser.parse_json_payload('{"a": 1, "b": "x"}')
+        self.assertEqual(parsed["a"], 1)
+        self.assertEqual(parsed["b"], "x")
+
+    def test_parse_json_payload_markdown_wrapped(self) -> None:
+        text = "```json\n{\"a\": 1}\n```"
+        parsed = RobustJSONParser.parse_json_payload(text)
+        self.assertEqual(parsed["a"], 1)
+
+    def test_parse_json_payload_brace_extraction(self) -> None:
+        text = "prefix ... {\"a\": 1, \"b\": [2]} ... suffix"
+        parsed = RobustJSONParser.parse_json_payload(text)
+        self.assertEqual(parsed["a"], 1)
+        self.assertEqual(parsed["b"], [2])
+
+    def test_parse_json_payload_empty_raises(self) -> None:
+        with self.assertRaises(ValueError):
+            RobustJSONParser.parse_json_payload("")
+
+    def test_parse_json_payload_no_json_raises(self) -> None:
+        with self.assertRaises(ValueError):
+            RobustJSONParser.parse_json_payload("no json here")
+
+    def test_normalize_timepoint_variants(self) -> None:
+        self.assertEqual(RobustJSONParser._normalize_timepoint("14 weeks"), "14 weeks")
+        self.assertEqual(RobustJSONParser._normalize_timepoint("Week 14"), "14 weeks")
+        self.assertEqual(RobustJSONParser._normalize_timepoint("at 14 wks"), "14 weeks")
+
+    def test_normalize_outcome_type_infers(self) -> None:
+        self.assertEqual(RobustJSONParser._normalize_outcome_type("", statistic_description="mean, SD"), "continuous")
+        self.assertEqual(RobustJSONParser._normalize_outcome_type("", statistic_description="events, total"), "binary")
+
+    def test_normalize_value_type_aliases(self) -> None:
+        self.assertEqual(RobustJSONParser._normalize_value_type("endpoint_value"), "endpoint")
+        self.assertEqual(RobustJSONParser._normalize_value_type("delta"), "change_from_baseline")
+
+    def test_extract_mean_sd_from_plus_minus(self) -> None:
+        self.assertEqual(RobustJSONParser._extract_mean_sd_pair("11.5 ± 0.80", ""), ("11.5", "0.80"))
+
+    def test_extract_events_total_from_fraction(self) -> None:
+        self.assertEqual(RobustJSONParser._extract_events_total_pair("12/60", ""), ("12", "60"))
+
+    def test_is_effect_only_filters_effect_measures(self) -> None:
+        self.assertTrue(
+            RobustJSONParser._is_effect_only_row_candidate(
+                RowCandidate(
+                    row_id="R-1",
+                    study_unit_id="SU-1",
+                    outcome_name="relative risk",
+                    outcome_type="other",
+                    timepoint="",
+                    value_type="other",
+                    statistic_description="",
+                    note="",
+                )
+            )
+        )
+        self.assertFalse(
+            RobustJSONParser._is_effect_only_row_candidate(
+                RowCandidate(
+                    row_id="R-2",
+                    study_unit_id="SU-1",
+                    outcome_name="Hemoglobin",
+                    outcome_type="continuous",
+                    timepoint="14 weeks",
+                    value_type="endpoint",
+                    statistic_description="mean, SD",
+                    note="",
+                )
+            )
+        )
+
+
+class DataExtractionPDFTests(unittest.TestCase):
+    def test_extract_pdf_title_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / "meta.pdf"
+            with fitz.open() as doc:
+                doc.new_page().insert_text((72, 72), "Body")
+                doc.set_metadata({"title": "My Paper Title"})
+                doc.save(pdf_path)
+            self.assertEqual(extract_pdf_title(pdf_path), "My Paper Title")
+
+    def test_extract_pdf_title_fallback_to_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / "fallback.pdf"
+            with fitz.open() as doc:
+                doc.new_page().insert_text((72, 72), "A long title for fallback\nSecond line")
+                doc.set_metadata({"title": "abc"})
+                doc.save(pdf_path)
+            self.assertEqual(extract_pdf_title(pdf_path), "A long title for fallback")
+
+    def test_discover_pdfs_nested_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "a").mkdir()
+            (root / "b" / "c").mkdir(parents=True)
+            for path in (root / "a" / "one.pdf", root / "b" / "c" / "two.pdf"):
+                with fitz.open() as doc:
+                    doc.new_page().insert_text((72, 72), "Doc")
+                    doc.save(path)
+            papers = discover_pdfs(root)
+            self.assertEqual(len(papers), 2)
+            self.assertEqual([p.paper_id for p in papers], [1, 2])
+            self.assertTrue(all(isinstance(p, Paper) for p in papers))
+
+    def test_parse_pages_spec_variants(self) -> None:
+        self.assertIsNone(parse_pages_spec("all"))
+        self.assertEqual(parse_pages_spec("1-3,5"), [1, 2, 3, 5])
+
+
+class OutputEdgeCaseTests(unittest.TestCase):
+    def test_state_to_final_rows_maps_metadata(self) -> None:
+        state = PipelineState(
+            paper_id=1,
+            title="Fallback Title",
+            relative_path="resources/rayyan-1 demo.pdf",
+            profile=PaperProfile(title="Study Title", year="2020", country="UK", study_design="RCT"),
+            study_units=[StudyUnit(unit_id="SU-1", label="Main", arms=["A", "B"])],
+            extraction_rows=[
+                ExtractionRow(
+                    row_id="R-1",
+                    study_unit_id="SU-1",
+                    outcome_name="Hemoglobin",
+                    outcome_type="continuous",
+                    timepoint="14 weeks",
+                    value_type="endpoint",
+                    outcome_unit="g/dl",
+                    statistic_description="mean, SD",
+                    values={
+                        "Arm1_Mean": ExtractedCell(value="11.5", evidence=""),
+                        "Arm1_SD": ExtractedCell(value="0.8", evidence=""),
+                        "Arm1_Total": ExtractedCell(value="60", evidence=""),
+                        "Arm2_Mean": ExtractedCell(value="11.2", evidence=""),
+                        "Arm2_SD": ExtractedCell(value="0.7", evidence=""),
+                        "Arm2_Total": ExtractedCell(value="60", evidence=""),
+                    },
+                )
+            ],
+        )
+
+        value_rows, _ = state_to_final_rows(state)
+        self.assertEqual(value_rows[0]["Year"], "2020")
+        self.assertEqual(value_rows[0]["Study_ID"], "Study Title")
+        self.assertEqual(value_rows[0]["Country"], "UK")
+
+    def test_state_to_final_rows_chinese_aliases(self) -> None:
+        state = PipelineState(
+            paper_id=1,
+            title="T",
+            relative_path="resources/x.pdf",
+            profile=PaperProfile(title="Study", year="2020", country="CN"),
+            study_units=[StudyUnit(unit_id="SU-1", arms=["A", "B"])],
+            extraction_rows=[
+                ExtractionRow(
+                    row_id="R-1",
+                    study_unit_id="SU-1",
+                    outcome_name="Hb",
+                    outcome_type="continuous",
+                    timepoint="",
+                    value_type="endpoint",
+                    values={},
+                )
+            ],
+        )
+        value_rows, _ = state_to_final_rows(state)
+        self.assertEqual(value_rows[0]["结局指标"], "Hb")
+        self.assertEqual(value_rows[0]["结局定义（终点值或变化值）"], "终点值")
+
+    def test_infer_rayyan_id_extracts_from_path(self) -> None:
+        self.assertEqual(_infer_rayyan_id("rayyan-356507246 Arcanjo.pdf", "fallback"), "rayyan-356507246")
+
+    def test_infer_rayyan_id_fallback_to_stem(self) -> None:
+        self.assertEqual(_infer_rayyan_id("MyPaper.pdf", "fallback"), "MyPaper")
 
 
 if __name__ == "__main__":
