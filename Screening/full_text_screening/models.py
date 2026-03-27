@@ -45,7 +45,7 @@ class FullTextRequest:
 @dataclass(frozen=True)
 class FullTextScreeningConfig:
     base_url: str = "https://www.dmxapi.cn/v1"
-    model: str = "gpt-5.2"
+    model: str = "gpt-4.1"
     api_key_env: str = "DMX_API_KEY_1"
     timeout: float = 300.0
     retries: int = 3
