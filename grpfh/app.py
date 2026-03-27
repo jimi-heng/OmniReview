@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
 from flask import Flask
 from flask_cors import CORS
+
+if __package__ in {None, ""}:
+    # Keep `python grpfh/app.py` working while preserving package-qualified imports.
+    repo_root = Path(__file__).resolve().parents[1]
+    repo_root_str = str(repo_root)
+    if repo_root_str not in sys.path:
+        sys.path.insert(0, repo_root_str)
 
 from grpfh.database import upgrade_database
 from grpfh.errors import register_error_handlers
