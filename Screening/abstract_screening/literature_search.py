@@ -338,15 +338,27 @@ def literature_search_all(query, N, databases=None):
 
     # 根据前端传来的 databases 数组动态决定调用哪个库
     if 'pubmed' in databases:
-        pubmed_papers = search_pubmed(query, 2*N)
+        try:
+            pubmed_papers = search_pubmed(query, 2 * N)
+        except Exception as e:
+            print(f"PubMed search error: {e}")
+            pubmed_papers = []
         print(f"PubMed returned {len(pubmed_papers)} papers")
 
     if 'openalex' in databases:
-        openalex_papers = search_openalex(query, 2*N)
+        try:
+            openalex_papers = search_openalex(query, 2 * N)
+        except Exception as e:
+            print(f"OpenAlex search error: {e}")
+            openalex_papers = []
         print(f"OpenAlex returned {len(openalex_papers)} papers")
 
     if 'wos' in databases:
-        wos_papers = search_wos(query, 2*N)
+        try:
+            wos_papers = search_wos(query, 2 * N)
+        except Exception as e:
+            print(f"WOS search error: {e}")
+            wos_papers = []
         print(f"WOS returned {len(wos_papers)} papers")
 
     all_papers = pubmed_papers + openalex_papers + wos_papers

@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SCREENING_DIR = ROOT_DIR / "Screening"
@@ -18,6 +19,7 @@ from openpyxl import Workbook, load_workbook
 
 from Screening.data_extraction.models import (
     ExtractedCell,
+    ExtractionResult,
     ExtractionRow,
     Paper,
     PaperProfile,
@@ -343,6 +345,172 @@ class TestDataExtractionPipeline(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result.value_rows[1]["Arm1_Events"], "12")
             self.assertEqual(result.value_rows[1]["干预组数据结果(mean/median/events）"], "12")
             self.assertEqual(result.value_rows[1]["对照组数据结果(mean/median）"], "27")
+
+    async def test_phase2_run_produces_final_rows_and_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "rayyan-356507246 Arcanjo 2012.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir))
+            state = await orchestrator.run(
+                paper=Paper(paper_id=1, path=pdf_path, title="Arcanjo 2012"),
+                request=ExtractionRequest(
+                    llm_columns=["Year", "Study_ID", "Country", "Arm1_Mean", "Arm2_Mean"],
+                    pages_spec=None,
+                    project_type="PICOS",
+                    pico_dict={"s": "RCT", "p": "preschoolers", "i": "iron", "c": "control", "o": "hemoglobin", "es": ""},
+                    pipeline_mode="phase2",
+                ),
+            )
+
+            self.assertTrue(state.final_value_rows)
+            for row in state.final_value_rows:
+                self.assertEqual(row["Year"], "2012")
+                self.assertEqual(row["Country"], "Brazil")
+                self.assertTrue(row["Study_ID"])
+
+    async def test_legacy_mode_returns_extraction_result(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "paper.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            class _Fallback:
+                def __init__(self) -> None:
+                    self.calls = 0
+
+                async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+                    self.calls += 1
+                    return ExtractionResult(
+                        paper_id=paper.paper_id,
+                        title=paper.title,
+                        relative_path=str(paper.path.relative_to(Path(tmp_dir))),
+                        value_rows=[{"Year": "2020", "Study_ID": "X"}],
+                        evidence_rows=[],
+                        error="",
+                    )
+
+            fallback = _Fallback()
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir), fallback_extractor=fallback)
+            result = await orchestrator.extract(
+                paper=Paper(paper_id=5, path=pdf_path, title="T"),
+                request=ExtractionRequest(llm_columns=[], pages_spec=None, project_type="PICOS", pico_dict=None, pipeline_mode="legacy"),
+            )
+
+            self.assertEqual(fallback.calls, 1)
+            self.assertEqual(result.paper_id, 5)
+            self.assertEqual(result.value_rows[0]["Year"], "2020")
+
+    async def test_stage1_failure_still_runs_stage2_and_records_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "paper.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            class _Fallback:
+                async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+                    return ExtractionResult(paper_id=paper.paper_id, title=paper.title, relative_path=str(paper.path), error="")
+
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir), fallback_extractor=_Fallback())
+            stage2_units = [StudyUnit(unit_id="SU-1", arms=["A", "B"])]
+            with (
+                patch.object(orchestrator, "_run_stage1", new=AsyncMock(side_effect=RuntimeError("stage1 down"))),
+                patch.object(orchestrator, "_run_stage2", new=AsyncMock(return_value=stage2_units)),
+            ):
+                state = await orchestrator.run(
+                    paper=Paper(paper_id=1, path=pdf_path, title="T"),
+                    request=ExtractionRequest(
+                        llm_columns=[],
+                        pages_spec=None,
+                        project_type="PICOS",
+                        pico_dict={"s": "RCT"},
+                        pipeline_mode="phase1",
+                    ),
+                )
+
+            self.assertIn("stage1", state.stage_errors)
+            self.assertEqual(state.study_units[0].unit_id, "SU-1")
+
+    async def test_stage3_failure_falls_back_to_legacy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "paper.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            class _Fallback:
+                async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+                    return ExtractionResult(paper_id=paper.paper_id, title=paper.title, relative_path=str(paper.path), error="legacy")
+
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir), fallback_extractor=_Fallback())
+            with patch.object(orchestrator, "_run_stage3", new=AsyncMock(side_effect=RuntimeError("stage3 down"))):
+                state = await orchestrator.run(
+                    paper=Paper(paper_id=1, path=pdf_path, title="T"),
+                    request=ExtractionRequest(
+                        llm_columns=[],
+                        pages_spec=None,
+                        project_type="PICOS",
+                        pico_dict={"s": "RCT"},
+                        pipeline_mode="phase2",
+                    ),
+                )
+
+            self.assertIn("stage3", state.stage_errors)
+            self.assertIsNotNone(state.legacy_result)
+            self.assertEqual(state.legacy_result.error, "legacy")
+
+    async def test_pdf_load_failure_falls_back_to_legacy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "paper.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            class _Fallback:
+                async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+                    return ExtractionResult(paper_id=paper.paper_id, title=paper.title, relative_path=str(paper.path), error="legacy")
+
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir), fallback_extractor=_Fallback())
+            with patch("Screening.data_extraction.service.load_pdf_bytes", side_effect=RuntimeError("read fail")):
+                state = await orchestrator.run(
+                    paper=Paper(paper_id=1, path=pdf_path, title="T"),
+                    request=ExtractionRequest(
+                        llm_columns=[],
+                        pages_spec=None,
+                        project_type="PICOS",
+                        pico_dict={"s": "RCT"},
+                        pipeline_mode="phase2",
+                    ),
+                )
+
+            self.assertIn("stage1", state.stage_errors)
+            self.assertIn("stage2", state.stage_errors)
+            self.assertIsNotNone(state.legacy_result)
+
+    async def test_empty_final_rows_triggers_legacy_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "paper.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            class _Fallback:
+                def __init__(self) -> None:
+                    self.calls = 0
+
+                async def extract(self, *, paper: Paper, request: ExtractionRequest) -> ExtractionResult:
+                    self.calls += 1
+                    return ExtractionResult(paper_id=paper.paper_id, title=paper.title, relative_path=str(paper.path), error="legacy")
+
+            fallback = _Fallback()
+            orchestrator = PipelineOrchestrator(llm_client=_FakeLLM(), project_dir=Path(tmp_dir), fallback_extractor=fallback)
+            with patch("Screening.data_extraction.service.state_to_final_rows", return_value=([], [])):
+                state = await orchestrator.run(
+                    paper=Paper(paper_id=1, path=pdf_path, title="T"),
+                    request=ExtractionRequest(
+                        llm_columns=[],
+                        pages_spec=None,
+                        project_type="PICOS",
+                        pico_dict={"s": "RCT"},
+                        pipeline_mode="phase2",
+                    ),
+                )
+
+            self.assertEqual(state.final_value_rows, [])
+            self.assertEqual(fallback.calls, 1)
+            self.assertIsNotNone(state.legacy_result)
 
     def test_parse_extraction_rows_preserves_non_applicable_blanks(self) -> None:
         rows = RobustJSONParser.parse_extraction_rows(
@@ -1106,6 +1274,42 @@ class OutputEdgeCaseTests(unittest.TestCase):
         value_rows, _ = state_to_final_rows(state)
         self.assertEqual(value_rows[0]["结局指标"], "Hb")
         self.assertEqual(value_rows[0]["结局定义（终点值或变化值）"], "终点值")
+
+    def test_state_to_final_rows_output_count_matches_input(self) -> None:
+        state = PipelineState(
+            paper_id=1,
+            title="T",
+            relative_path="resources/rayyan-1 demo.pdf",
+            profile=PaperProfile(title="Study", year="2020", country="UK"),
+            study_units=[StudyUnit(unit_id="SU-1", arms=["A", "B"])],
+            extraction_rows=[
+                ExtractionRow(row_id="R-1", study_unit_id="SU-1", outcome_name="Hb", outcome_type="continuous", value_type="endpoint", values={}),
+                ExtractionRow(row_id="R-2", study_unit_id="SU-1", outcome_name="Anaemia", outcome_type="binary", value_type="endpoint", values={}),
+            ],
+        )
+
+        value_rows, evidence_rows = state_to_final_rows(state)
+        self.assertEqual(len(value_rows), 2)
+        self.assertEqual(len(evidence_rows), 2)
+
+    def test_state_to_final_rows_metadata_propagation(self) -> None:
+        state = PipelineState(
+            paper_id=1,
+            title="T",
+            relative_path="resources/rayyan-1 demo.pdf",
+            profile=PaperProfile(title="Study", year="2020", country="UK"),
+            study_units=[StudyUnit(unit_id="SU-1", arms=["A", "B"])],
+            extraction_rows=[
+                ExtractionRow(row_id="R-1", study_unit_id="SU-1", outcome_name="Hb", outcome_type="continuous", value_type="endpoint", values={}),
+                ExtractionRow(row_id="R-2", study_unit_id="SU-1", outcome_name="Anaemia", outcome_type="binary", value_type="endpoint", values={}),
+            ],
+        )
+
+        value_rows, _ = state_to_final_rows(state)
+        for row in value_rows:
+            self.assertEqual(row["Year"], "2020")
+            self.assertEqual(row["Country"], "UK")
+            self.assertTrue(row["Study_ID"])
 
     def test_infer_rayyan_id_extracts_from_path(self) -> None:
         self.assertEqual(_infer_rayyan_id("rayyan-356507246 Arcanjo.pdf", "fallback"), "rayyan-356507246")

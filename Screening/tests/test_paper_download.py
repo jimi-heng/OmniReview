@@ -19,6 +19,7 @@ if str(SCREENING_DIR) not in sys.path:
     sys.path.insert(0, str(SCREENING_DIR))
 
 from Screening.paper_download.cli import _dedupe_preserve_order, _read_dois_from_file
+from Screening.paper_download import cli as paper_cli
 from Screening.paper_download.downloader import DomainBackoff, ImprovedPaperDownloader, _extract_pii
 
 
@@ -31,6 +32,7 @@ class _FakeResponse:
         text: str = "",
         headers: dict[str, str] | None = None,
         json_data: object | None = None,
+        content: bytes | None = None,
         chunks: list[bytes] | None = None,
     ) -> None:
         self.status_code = status_code
@@ -39,6 +41,7 @@ class _FakeResponse:
         self.headers = headers or {}
         self._json_data = json_data
         self._chunks = chunks or []
+        self.content = content if content is not None else b"".join(self._chunks)
 
     def json(self):
         return self._json_data
@@ -177,6 +180,155 @@ class DOIAndPublisherTests(unittest.TestCase):
     def test_download_paper_rejects_invalid_doi(self) -> None:
         with patch.object(self.downloader, "_request", side_effect=AssertionError("HTTP should not be called")):
             self.assertFalse(self.downloader.download_paper("not-a-doi", output_dir=str(ROOT_DIR / "tmp")))
+
+
+class DownloadPaperWorkflowTests(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def _tmp(self, tmp_path: Path):
+        self.tmp_path = tmp_path
+
+    def setUp(self) -> None:
+        self.downloader = ImprovedPaperDownloader()
+
+    def test_download_paper_full_flow_success(self) -> None:
+        output_dir = self.tmp_path / "out"
+        doi = "10.1000/xyz"
+        calls: list[tuple[str, str]] = []
+
+        def fake_request(method: str, url: str, **kwargs):
+            calls.append((method, url))
+            if method == "HEAD" and url == f"https://doi.org/{doi}":
+                return SimpleNamespace(status_code=200, url="https://example.test/paper", text="")
+            if method == "GET" and url == "https://example.test/paper":
+                return SimpleNamespace(status_code=200, url=url, text='<a href="https://example.test/file.pdf">PDF</a>')
+            if method == "GET" and url == "https://example.test/file.pdf":
+                return _FakeResponse(
+                    status_code=200,
+                    headers={"Content-Type": "application/pdf"},
+                    chunks=[b"%PDF-1.4\nok\n%%EOF"],
+                )
+            raise AssertionError(f"Unexpected request: {method} {url}")
+
+        with (
+            patch.object(self.downloader, "_request", side_effect=fake_request),
+            patch("Screening.paper_download.downloader.time.sleep"),
+            patch("Screening.paper_download.downloader.random.uniform", return_value=0.0),
+        ):
+            self.assertTrue(self.downloader.download_paper(doi, output_dir=str(output_dir)))
+
+        pdf_path = output_dir / "pdf" / "10.1000_xyz.pdf"
+        self.assertTrue(pdf_path.is_file())
+        self.assertTrue(self.downloader._is_pdf_file_valid(str(pdf_path)))
+        self.assertIn(("HEAD", f"https://doi.org/{doi}"), calls)
+        self.assertIn(("GET", "https://example.test/paper"), calls)
+        self.assertIn(("GET", "https://example.test/file.pdf"), calls)
+
+    def test_download_paper_unpaywall_fallback(self) -> None:
+        output_dir = self.tmp_path / "out"
+        doi = "10.1000/xyz"
+
+        def fake_request(method: str, url: str, **kwargs):
+            if method == "HEAD" and url == f"https://doi.org/{doi}":
+                return SimpleNamespace(status_code=200, url="https://example.test/paper", text="")
+            if method == "GET" and url == "https://example.test/paper":
+                return SimpleNamespace(status_code=200, url=url, text="<html>No PDF here</html>")
+            if method == "GET" and url.startswith("https://api.unpaywall.org/v2/"):
+                return _FakeResponse(
+                    status_code=200,
+                    json_data={"best_oa_location": {"url_for_pdf": "https://oa.test/file.pdf"}},
+                )
+            if method == "GET" and url == "https://oa.test/file.pdf":
+                return _FakeResponse(
+                    status_code=200,
+                    headers={"Content-Type": "application/pdf"},
+                    chunks=[b"%PDF-1.4\nok\n%%EOF"],
+                )
+            raise AssertionError(f"Unexpected request: {method} {url}")
+
+        with (
+            patch.dict(os.environ, {"UNPAYWALL_EMAIL": "a@b.c"}, clear=False),
+            patch.object(self.downloader, "_request", side_effect=fake_request),
+            patch("Screening.paper_download.downloader.time.sleep"),
+            patch("Screening.paper_download.downloader.random.uniform", return_value=0.0),
+        ):
+            self.assertTrue(self.downloader.download_paper(doi, output_dir=str(output_dir)))
+
+        pdf_path = output_dir / "pdf" / "10.1000_xyz.pdf"
+        self.assertTrue(pdf_path.is_file())
+
+    def test_download_paper_elsevier_api_fallback_writes_xml(self) -> None:
+        output_dir = self.tmp_path / "out"
+        doi = "10.1000/xyz"
+
+        def fake_request(method: str, url: str, **kwargs):
+            if method == "HEAD" and url == f"https://doi.org/{doi}":
+                return SimpleNamespace(
+                    status_code=200,
+                    url="https://www.sciencedirect.com/science/article/pii/S1234567890",
+                    text="",
+                )
+            if method == "GET" and url.startswith("https://api.elsevier.com/content/article/doi/"):
+                return _FakeResponse(status_code=200, content=b"<xml>ok</xml>", headers={})
+            raise AssertionError(f"Unexpected request: {method} {url}")
+
+        convert_mock = Mock(return_value=True)
+        with (
+            patch.dict(os.environ, {"ELSEVIER_API_KEY": "k"}, clear=False),
+            patch.object(self.downloader, "_request", side_effect=fake_request),
+            patch.object(self.downloader, "_get_elsevier_pdf", return_value=None),
+            patch.object(self.downloader, "_convert_xml_to_pdf", new=convert_mock),
+        ):
+            self.assertTrue(self.downloader.download_paper(doi, output_dir=str(output_dir)))
+
+        xml_path = output_dir / "xml" / "10.1000_xyz.xml"
+        self.assertTrue(xml_path.is_file())
+        convert_mock.assert_called_once()
+
+
+class ElsevierAPITests(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def _tmp(self, tmp_path: Path):
+        self.tmp_path = tmp_path
+
+    def setUp(self) -> None:
+        self.downloader = ImprovedPaperDownloader()
+
+    def test_elsevier_api_missing_key_returns_false_without_http(self) -> None:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(self.downloader, "_request", side_effect=AssertionError("HTTP should not be called")),
+        ):
+            self.assertFalse(
+                self.downloader._download_elsevier_api(
+                    "10.1000/xyz",
+                    xml_dir=str(self.tmp_path / "xml"),
+                    md_dir=str(self.tmp_path / "md"),
+                    pdf_dir=str(self.tmp_path / "pdf"),
+                )
+            )
+
+    def test_elsevier_api_403_returns_false_and_writes_no_file(self) -> None:
+        xml_dir = self.tmp_path / "xml"
+        md_dir = self.tmp_path / "md"
+        pdf_dir = self.tmp_path / "pdf"
+        xml_dir.mkdir()
+        md_dir.mkdir()
+        pdf_dir.mkdir()
+
+        resp = _FakeResponse(status_code=403, content=b"nope", headers={})
+        with (
+            patch.dict(os.environ, {"ELSEVIER_API_KEY": "k"}, clear=False),
+            patch.object(self.downloader, "_request", return_value=resp),
+        ):
+            self.assertFalse(
+                self.downloader._download_elsevier_api(
+                    "10.1000/xyz",
+                    xml_dir=str(xml_dir),
+                    md_dir=str(md_dir),
+                    pdf_dir=str(pdf_dir),
+                )
+            )
+        self.assertEqual(list(xml_dir.glob("*.xml")), [])
 
 
 class PDFValidationTests(unittest.TestCase):
@@ -395,6 +547,34 @@ class DownloadPDFTests(unittest.TestCase):
                 self.downloader._download_pdf("https://example.test/file.pdf", "10.1000/xyz", str(self.tmp_path))
             )
 
+    def test_non_pdf_response_200_is_skipped_and_writes_no_file(self) -> None:
+        resp = _FakeResponse(
+            status_code=200,
+            headers={"Content-Type": "text/html"},
+            chunks=[b"<html>not a pdf</html>"],
+        )
+        with (
+            patch.object(self.downloader, "_request", return_value=resp),
+            patch("Screening.paper_download.downloader.time.sleep"),
+            patch("Screening.paper_download.downloader.random.uniform", return_value=0.0),
+        ):
+            self.assertFalse(self.downloader._download_pdf("https://example.test/file.pdf", "10.1000/xyz", str(self.tmp_path)))
+        self.assertFalse((self.tmp_path / "10.1000_xyz.pdf").exists())
+
+    def test_corrupted_download_is_cleaned_up(self) -> None:
+        resp = _FakeResponse(
+            status_code=200,
+            headers={"Content-Type": "application/pdf"},
+            chunks=[b"%PDF-1.4\nincomplete\n"],
+        )
+        with (
+            patch.object(self.downloader, "_request", return_value=resp),
+            patch("Screening.paper_download.downloader.time.sleep"),
+            patch("Screening.paper_download.downloader.random.uniform", return_value=0.0),
+        ):
+            self.assertFalse(self.downloader._download_pdf("https://example.test/file.pdf", "10.1000/xyz", str(self.tmp_path)))
+        self.assertFalse((self.tmp_path / "10.1000_xyz.pdf").exists())
+
     def test_skips_existing_valid_pdf(self) -> None:
         output_dir = self.tmp_path / "out"
         pdf_dir = output_dir / "pdf"
@@ -461,7 +641,54 @@ class CLITests(unittest.TestCase):
     def test_dedupe_empty_list(self) -> None:
         self.assertEqual(_dedupe_preserve_order([]), [])
 
+    def test_cli_parallel_downloads_calls_all_dois_and_reuses_backoff(self) -> None:
+        doi_file = self.tmp_path / "dois.txt"
+        doi_file.write_text("10.1/a\n10.2/b\n10.3/c\n", encoding="utf-8")
+
+        calls: list[str] = []
+        created_backoffs: list[object] = []
+
+        class _FakeDownloader:
+            def __init__(self, *args, **kwargs) -> None:
+                created_backoffs.append(kwargs.get("backoff"))
+
+            def download_paper(self, doi: str, *, output_dir: str = "downloads", **kwargs) -> bool:
+                calls.append(doi)
+                return True
+
+        shared_backoff = object()
+        with (
+            patch.object(paper_cli, "DomainBackoff", return_value=shared_backoff),
+            patch.object(paper_cli, "ImprovedPaperDownloader", _FakeDownloader),
+        ):
+            rc = paper_cli.main(["--doi-file", str(doi_file), "--output-dir", str(self.tmp_path / "out"), "--workers", "3"])
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(sorted(calls), ["10.1/a", "10.2/b", "10.3/c"])
+        self.assertTrue(created_backoffs)
+        self.assertEqual({id(x) for x in created_backoffs}, {id(shared_backoff)})
+
+    def test_cli_one_doi_fails_others_continue(self) -> None:
+        doi_file = self.tmp_path / "dois.txt"
+        doi_file.write_text("10.1/a\n10.2/b\n10.3/c\n", encoding="utf-8")
+
+        calls: list[str] = []
+        outcomes = {"10.1/a": False, "10.2/b": True, "10.3/c": True}
+
+        class _FakeDownloader:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            def download_paper(self, doi: str, *, output_dir: str = "downloads", **kwargs) -> bool:
+                calls.append(doi)
+                return outcomes[doi]
+
+        with patch.object(paper_cli, "ImprovedPaperDownloader", _FakeDownloader):
+            rc = paper_cli.main(["--doi-file", str(doi_file), "--output-dir", str(self.tmp_path / "out"), "--workers", "3"])
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(sorted(calls), ["10.1/a", "10.2/b", "10.3/c"])
+
 
 if __name__ == "__main__":
     unittest.main()
-

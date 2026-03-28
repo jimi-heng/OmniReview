@@ -27,10 +27,10 @@ from Screening.FullTextScreening import (
     resolve_runtime_config,
 )
 from Screening.full_text_screening.models import FullTextPaper, FullTextRequest
-from Screening.full_text_screening.orchestrator import process_single_paper
+from Screening.full_text_screening.orchestrator import process_single_paper, run_fulltext
 from Screening.full_text_screening.parsing import StructuredOutputError, extract_conclusion, extract_evidence, parse_structured_output
 from Screening.full_text_screening.prompts import build_user_prompt, get_system_prompt
-from Screening.full_text_screening.runtime import build_payload, coerce_paper, error_result
+from Screening.full_text_screening.runtime import build_payload, coerce_paper, error_result, post_with_auth_fallback
 
 
 class FullTextScreeningTests(unittest.TestCase):
@@ -229,6 +229,47 @@ class FullTextScreeningTests(unittest.TestCase):
 
             asyncio.run(run_test())
 
+    def test_process_single_paper_success_returns_complete_result(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / "sample.pdf"
+            with fitz.open() as doc:
+                page = doc.new_page()
+                page.insert_text((72, 72), "Hello")
+                doc.save(pdf_path)
+
+            request = FullTextRequest(
+                paper=FullTextPaper(paper_id=9, title="Demo", pdf_path=pdf_path),
+                pico_dict={"P": "Adults"},
+                project_type="PICOS",
+                normalized_pico=normalize_pico_input({"P": "Adults"}),
+            )
+
+            async def run_test() -> None:
+                async with httpx.AsyncClient() as client:
+                    with (
+                        patch(
+                            "Screening.full_text_screening.orchestrator.call_with_retry",
+                            new=AsyncMock(
+                                return_value=SimpleNamespace(
+                                    status_code=200,
+                                    json=lambda: {
+                                        "output_text": '{"decision":"Included","reason":"Explicit match.","evidence":{"study_design":"","population":"Adults","intervention":"","comparison":"","outcomes":"","extra_rules":""}}'
+                                    },
+                                )
+                            ),
+                        ),
+                        patch("Screening.full_text_screening.orchestrator.post_with_auth_fallback", new=AsyncMock()),
+                    ):
+                        result = await process_single_paper(client, self.runtime, request)
+                self.assertEqual(result["id"], 9)
+                self.assertEqual(result["decision"], "Included")
+                self.assertIsNone(result["hl_path"])
+                evidence_payload = json.loads(result["evidence"])
+                self.assertIn("evidences", evidence_payload)
+                self.assertIn("conclusion", evidence_payload)
+
+            asyncio.run(run_test())
+
     def test_process_single_paper_accepts_txt_input(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             txt_path = Path(temp_dir) / "sample.txt"
@@ -263,6 +304,75 @@ class FullTextScreeningTests(unittest.TestCase):
 
             asyncio.run(run_test())
 
+    def test_process_single_paper_missing_file(self) -> None:
+        request = FullTextRequest(
+            paper=FullTextPaper(paper_id=100, title="Missing", pdf_path=Path("does-not-exist.pdf")),
+            pico_dict={"P": "Adults"},
+            project_type="PICOS",
+            normalized_pico=normalize_pico_input({"P": "Adults"}),
+        )
+
+        async def run_test() -> None:
+            async with httpx.AsyncClient() as client:
+                result = await process_single_paper(client, self.runtime, request)
+            evidence = json.loads(result["evidence"])
+            self.assertEqual(result["decision"], "Error")
+            self.assertEqual(evidence["error_type"], "missing_file")
+
+        asyncio.run(run_test())
+
+    def test_process_single_paper_http_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / "sample.pdf"
+            with fitz.open() as doc:
+                doc.new_page()
+                doc.save(pdf_path)
+
+            request = FullTextRequest(
+                paper=FullTextPaper(paper_id=101, title="HTTP", pdf_path=pdf_path),
+                pico_dict={"P": "Adults"},
+                project_type="PICOS",
+                normalized_pico=normalize_pico_input({"P": "Adults"}),
+            )
+
+            async def run_test() -> None:
+                async with httpx.AsyncClient() as client:
+                    with (
+                        patch(
+                            "Screening.full_text_screening.orchestrator.call_with_retry",
+                            new=AsyncMock(return_value=SimpleNamespace(status_code=500, json=lambda: {"output_text": "x"})),
+                        ),
+                        patch("Screening.full_text_screening.orchestrator.post_with_auth_fallback", new=AsyncMock()),
+                    ):
+                        result = await process_single_paper(client, self.runtime, request)
+                evidence = json.loads(result["evidence"])
+                self.assertEqual(result["decision"], "Error")
+                self.assertEqual(evidence["error_type"], "http_error")
+
+            asyncio.run(run_test())
+
+    def test_process_single_paper_runtime_exception_in_input_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pdf_path = Path(temp_dir) / "sample.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n")
+
+            request = FullTextRequest(
+                paper=FullTextPaper(paper_id=102, title="Boom", pdf_path=pdf_path),
+                pico_dict={"P": "Adults"},
+                project_type="PICOS",
+                normalized_pico=normalize_pico_input({"P": "Adults"}),
+            )
+
+            async def run_test() -> None:
+                async with httpx.AsyncClient() as client:
+                    with patch("Screening.full_text_screening.orchestrator.load_pdf_bytes", side_effect=RuntimeError("bad read")):
+                        result = await process_single_paper(client, self.runtime, request)
+                evidence = json.loads(result["evidence"])
+                self.assertEqual(result["decision"], "Error")
+                self.assertEqual(evidence["error_type"], "input_read_error")
+
+            asyncio.run(run_test())
+
     def test_process_single_paper_returns_error_after_second_parse_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             pdf_path = Path(temp_dir) / "sample.pdf"
@@ -294,9 +404,51 @@ class FullTextScreeningTests(unittest.TestCase):
                     ):
                         result = await process_single_paper(client, self.runtime, request)
                 self.assertEqual(result["decision"], "Error")
-                self.assertIn("parse_error", result["evidence"])
+                evidence = json.loads(result["evidence"])
+                self.assertEqual(evidence["error_type"], "parse_error")
+                self.assertEqual(evidence["raw_output"], "still bad")
 
             asyncio.run(run_test())
+
+    def test_run_fulltext_multiple_papers_all_return_results(self) -> None:
+        papers = [
+            {"id": 1, "title": "A", "pdf_path": "a.pdf"},
+            {"id": 2, "title": "B", "pdf_path": "b.pdf"},
+            {"id": 3, "title": "C", "pdf_path": "c.pdf"},
+        ]
+
+        async def fake_process(_client, _runtime, request: FullTextRequest):
+            return {"id": request.paper.paper_id, "decision": "Included", "evidence": "{}", "hl_path": None}
+
+        async def run_test() -> None:
+            with (
+                patch.dict(os.environ, {"DMX_API_KEY_1": "k"}, clear=False),
+                patch("Screening.full_text_screening.orchestrator.process_single_paper", new=AsyncMock(side_effect=fake_process)),
+            ):
+                results = await run_fulltext(papers, {"P": "Adults"}, "PICOS", config={"max_concurrency": 3, "enable_highlight": False})
+            self.assertEqual([r["id"] for r in results], [1, 2, 3])
+
+        asyncio.run(run_test())
+
+
+class AuthFallbackTests(unittest.IsolatedAsyncioTestCase):
+    async def test_auth_fallback_retries_with_bearer(self) -> None:
+        api_key = "test-key"
+        client = SimpleNamespace(
+            post=AsyncMock(
+                side_effect=[
+                    SimpleNamespace(status_code=401),
+                    SimpleNamespace(status_code=200),
+                ]
+            )
+        )
+        payload = {"model": "x", "input": []}
+        resp = await post_with_auth_fallback(client, "https://example.test/responses", api_key, payload, 10.0)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(client.post.call_count, 2)
+        self.assertEqual(client.post.call_args_list[0].kwargs["headers"]["Authorization"], api_key)
+        self.assertEqual(client.post.call_args_list[1].kwargs["headers"]["Authorization"], f"Bearer {api_key}")
 
 
 class ParseEdgeCaseTests(unittest.TestCase):
