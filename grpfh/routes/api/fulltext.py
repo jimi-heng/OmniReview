@@ -152,18 +152,38 @@ def upload_pdf():
         filepath = save_dir / filename
         file.save(str(filepath))
 
+        import fitz
+
+        original_filename = file.filename if file.filename else f"Manual Upload {paper_id}"
+        new_title = original_filename.rsplit('.', 1)[0] if '.' in original_filename else original_filename
+
+        try:
+            with fitz.open(str(filepath)) as doc:
+                meta_title = str(doc.metadata.get("title") or "").strip()
+                
+                if len(meta_title) >= 6 and "untitled" not in meta_title.lower():
+                    new_title = meta_title
+                elif doc.page_count > 0:
+                    first_page_text = doc[0].get_text("text").strip()
+                    for line in first_page_text.split("\n"):
+                        line = line.strip()
+                        if len(line) >= 10:
+                            new_title = line[:300]
+                            break
+        except Exception as e:
+            print(f"PDF Title extraction failed for {filepath}: {e}")
+
         cursor.execute(
             """
             UPDATE literatures
-            SET pdf_status = 'Downloaded', pdf_path = ?
+            SET pdf_status = 'Downloaded', pdf_path = ?, title = ?
             WHERE id = ?
             """,
-            (str(filepath), paper_id),
+            (str(filepath), new_title, paper_id),
         )
         conn.commit()
 
-    return ok(message="PDF uploaded successfully")
-
+    return ok(message="PDF uploaded successfully and real title extracted")
 
 @bp.post("/run-fulltext-ai")
 def run_fulltext_ai_api():
