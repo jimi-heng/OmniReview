@@ -11,19 +11,25 @@ body {
     color: #222;
 }
 
-/* 鈹€鈹€ Headings 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Headings
+   Defines font size, spacing, and hierarchy for headings (h1–h6).
+*/
 h1 { font-size: 20pt; margin-top: 0.8em; margin-bottom: 0.4em; }
 h2 { font-size: 16pt; margin-top: 0.7em; margin-bottom: 0.35em; border-bottom: 1px solid #ccc; padding-bottom: 0.15em; }
 h3 { font-size: 13pt; margin-top: 0.6em; margin-bottom: 0.3em; }
 h4 { font-size: 11.5pt; margin-top: 0.5em; margin-bottom: 0.25em; }
 h5, h6 { font-size: 11pt; margin-top: 0.4em; margin-bottom: 0.2em; }
 
-/* 鈹€鈹€ Paragraphs & lists 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Paragraphs & Lists
+   Controls spacing and indentation for paragraphs and list elements.
+*/
 p { margin: 0.4em 0; }
 ul, ol { margin: 0.3em 0; padding-left: 1.8em; }
 li { margin-bottom: 0.15em; }
 
-/* 鈹€鈹€ Tables 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Tables
+   Defines layout, borders, alternating row colors, and hover effects.
+*/
 table {
     width: 100%;
     border-collapse: collapse;
@@ -51,7 +57,9 @@ tbody tr:hover {
     background-color: #eef1f5;
 }
 
-/* 鈹€鈹€ Code blocks 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Code Blocks
+   Styles multi-line code blocks with background, padding, and wrapping.
+*/
 pre {
     background-color: #f4f4f4;
     border: 1px solid #ddd;
@@ -72,7 +80,9 @@ pre code {
     font-size: inherit;
 }
 
-/* 鈹€鈹€ Inline code 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Inline Code
+   Styles inline code elements within text.
+*/
 code {
     background-color: #eef0f3;
     border: 1px solid #ddd;
@@ -82,14 +92,18 @@ code {
     font-size: 0.9em;
 }
 
-/* 鈹€鈹€ Horizontal rules 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Horizontal Rules
+   Defines separator line style between sections.
+*/
 hr {
     border: none;
     border-top: 1px solid #ccc;
     margin: 1em 0;
 }
 
-/* 鈹€鈹€ Block quotes 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Block Quotes
+   Styles quoted text with left border and background.
+*/
 blockquote {
     border-left: 4px solid #ccc;
     margin: 0.6em 0;
@@ -98,7 +112,9 @@ blockquote {
     background: #fafafa;
 }
 
-/* 鈹€鈹€ Images 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€ */
+/* Images
+   Ensures responsive image scaling within layout.
+*/
 img {
     max-width: 100%;
     height: auto;
@@ -121,4 +137,3 @@ MD_EXTENSION_CONFIGS = {
         "noclasses": True,
     },
 }
-

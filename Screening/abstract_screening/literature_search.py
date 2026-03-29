@@ -13,7 +13,15 @@ WOS_API_KEY = os.getenv("WOS_API_KEY")
 
 
 def reconstruct_abstract(inv_index):
-    """将 OpenAlex 的 abstract_inverted_index 还原为正常 abstract"""
+    """
+    Reconstruct plain-text abstract from OpenAlex inverted index.
+
+    Args:
+        inv_index (dict): Mapping of word → list of positions.
+
+    Returns:
+        str: Reconstructed abstract text.
+    """
     if not inv_index:
         return ""
 
@@ -27,6 +35,16 @@ def reconstruct_abstract(inv_index):
 
 
 def search_openalex(query, max_number):
+    """
+    Search OpenAlex for papers with abstracts.
+
+    Args:
+        query (str): Search query.
+        max_number (int): Maximum number of results.
+
+    Returns:
+        list[dict]: List of paper metadata.
+    """
     try:
         url = "https://api.openalex.org/works"
 
@@ -37,69 +55,55 @@ def search_openalex(query, max_number):
         }
 
         r = safe_get(url, params=params)
-        if not r:
-            return []
-
-        if r.status_code != 200:
-            print("OpenAlex request failed:", r.status_code)
+        if not r or r.status_code != 200:
             return []
 
         data = r.json()
-
         results = []
 
         for p in data.get("results", []):
 
-            abstract = reconstruct_abstract(
-                p.get("abstract_inverted_index")
-            )
+            abstract = reconstruct_abstract(p.get("abstract_inverted_index"))
             if not abstract:
                 continue
 
-            # authors
-            authors = []
-            for a in p.get("authorships", []):
-                author_info = a.get("author") or {}
-                name = author_info.get("display_name")
-                if name:
-                    authors.append(name)
+            authors = [
+                a.get("author", {}).get("display_name")
+                for a in p.get("authorships", [])
+                if a.get("author", {}).get("display_name")
+            ]
 
-            author_str = "; ".join(authors)
-
-            # journal（防止 None）
             primary_location = p.get("primary_location") or {}
             source = primary_location.get("source") or {}
-            journal = source.get("display_name", "")
-
-            # year
-            year = p.get("publication_year") or ""
-
-            # doi
-            doi = p.get("doi") or ""
-            doi = doi.replace("https://doi.org/", "")
 
             row = {
                 "title": p.get("title") or "",
-                "abstract": abstract or "",
-                "author": author_str,
-                "journal": journal,
-                "year": year,
-                "doi": doi
+                "abstract": abstract,
+                "author": "; ".join(authors),
+                "journal": source.get("display_name", ""),
+                "year": p.get("publication_year") or "",
+                "doi": (p.get("doi") or "").replace("https://doi.org/", "")
             }
 
-            if not has_valid_abstract(row):
-                continue
+            if has_valid_abstract(row):
+                results.append(row)
 
-            results.append(row)
         return results
 
-    except Exception as e:
-        print(f"OpenAlex search error: {e}")
+    except Exception:
         return []
 
 
 def extract_doi(record):
-    """从 PubMed record 中提取 DOI"""
+    """
+    Extract DOI from PubMed record.
+
+    Args:
+        record (dict): PubMed record.
+
+    Returns:
+        str: DOI string if found, otherwise empty string.
+    """
     for a in record.get("AID", []):
         if "[doi]" in a:
             return a.replace(" [doi]", "")
@@ -107,11 +111,17 @@ def extract_doi(record):
 
 
 def create_session():
+    """
+    Create a requests session with retry strategy.
+
+    Returns:
+        requests.Session: Configured session object.
+    """
     session = requests.Session()
 
     retries = Retry(
         total=3,
-        backoff_factor=1,  # 1s, 2s, 4s
+        backoff_factor=1,
         status_forcelist=[500, 502, 503, 504]
     )
 
@@ -121,20 +131,42 @@ def create_session():
 
     return session
 
+
 session = create_session()
 
+
 def safe_get(url, params=None, headers=None):
+    """
+    Perform HTTP GET with error handling.
+
+    Args:
+        url (str): Request URL.
+        params (dict, optional): Query parameters.
+        headers (dict, optional): HTTP headers.
+
+    Returns:
+        requests.Response | None: Response object or None if failed.
+    """
     try:
         r = session.get(url, params=params, headers=headers, timeout=10)
         r.raise_for_status()
         return r
-    except Exception as e:
-        print(f"[HTTP ERROR] {url} -> {e}")
+    except Exception:
         return None
 
+
 def search_pubmed(query, max_number):
+    """
+    Search PubMed and return structured paper data.
+
+    Args:
+        query (str): Search query.
+        max_number (int): Maximum number of results.
+
+    Returns:
+        list[dict]: List of paper metadata.
+    """
     try:
-        # 1. 搜索 PMID
         url_search = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 
         params = {
@@ -148,248 +180,161 @@ def search_pubmed(query, max_number):
         if not r:
             return []
 
-        data = r.json()
-        pmids = data.get("esearchresult", {}).get("idlist", [])
-
+        pmids = r.json().get("esearchresult", {}).get("idlist", [])
         if not pmids:
             return []
 
-        # 2. 获取详细信息（XML）
         url_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
-        params = {
+        r = safe_get(url_fetch, params={
             "db": "pubmed",
             "id": ",".join(pmids),
             "retmode": "xml"
-        }
-
-        r = safe_get(url_fetch, params=params)
+        })
         if not r:
             return []
 
         root = ET.fromstring(r.text)
-
         results = []
 
         for article in root.findall(".//PubmedArticle"):
-
             try:
-                title = article.findtext(".//ArticleTitle") or ""
-                abstract = " ".join(
-                    [a.text or "" for a in article.findall(".//AbstractText")]
-                )
-
-                journal = article.findtext(".//Title") or ""
-
-                year = article.findtext(".//PubDate/Year") or ""
-
-                # DOI
-                doi = ""
-                for id_node in article.findall(".//ArticleId"):
-                    if id_node.attrib.get("IdType") == "doi":
-                        doi = id_node.text or ""
-
-                # authors
                 authors = []
                 for a in article.findall(".//Author"):
-                    last = a.findtext("LastName") or ""
-                    fore = a.findtext("ForeName") or ""
-                    name = f"{fore} {last}".strip()
+                    name = f"{a.findtext('ForeName') or ''} {a.findtext('LastName') or ''}".strip()
                     if name:
                         authors.append(name)
 
                 row = {
-                    "title": title,
-                    "abstract": abstract,
+                    "title": article.findtext(".//ArticleTitle") or "",
+                    "abstract": " ".join([a.text or "" for a in article.findall(".//AbstractText")]),
                     "author": "; ".join(authors),
-                    "journal": journal,
-                    "year": year,
-                    "doi": doi
+                    "journal": article.findtext(".//Title") or "",
+                    "year": article.findtext(".//PubDate/Year") or "",
+                    "doi": next(
+                        (i.text for i in article.findall(".//ArticleId")
+                         if i.attrib.get("IdType") == "doi"),
+                        ""
+                    )
                 }
 
-                if not has_valid_abstract(row):
-                    continue
+                if has_valid_abstract(row):
+                    results.append(row)
 
-                results.append(row)
-
-            except Exception as e:
-                print("Parse error:", e)
+            except Exception:
                 continue
 
         return results
 
-    except Exception as e:
-        print(f"PubMed search error: {e}")
+    except Exception:
         return []
 
-def search_wos(query, max_number):
-    try:
 
+def search_wos(query, max_number):
+    """
+    Search Web of Science (WOS) API.
+
+    Args:
+        query (str): Search query.
+        max_number (int): Maximum number of results.
+
+    Returns:
+        list[dict]: List of paper metadata.
+    """
+    try:
         url = "https://wos-api.clarivate.com/api/wos"
 
-        params = {
+        r = safe_get(url, params={
             "databaseId": "WOS",
             "usrQuery": f"TS={query}",
             "count": max_number,
             "firstRecord": 1
-        }
+        }, headers={"X-ApiKey": WOS_API_KEY})
 
-        headers = {
-            "X-ApiKey": "WOS_API_KEY"
-        }
-
-        r = safe_get(url, params=params, headers=headers)
-        if not r:
+        if not r or r.status_code != 200:
             return []
 
-        if r.status_code != 200:
-            print("WOS request failed:", r.status_code)
-            return []
-
-        data = r.json()
-
+        records = r.json().get("Data", {}).get("Records", {}).get("records", {}).get("REC", [])
         results = []
 
-        records = data.get("Data", {}).get("Records", {}).get("records", {}).get("REC", [])
-
         for p in records:
+            authors = [
+                n["full_name"]
+                for n in p.get("static_data", {}).get("summary", {}).get("names", {}).get("name", [])
+                if "full_name" in n
+            ]
 
-            title = ""
-            abstract = ""
-            journal = ""
-            year = ""
-            doi = ""
-            authors = []
-
-            # title
-            titles = p.get("static_data", {}).get("summary", {}).get("titles", {}).get("title", [])
-            if titles:
-                title = titles[0].get("content", "")
-
-            # abstract
-            abstract_block = p.get("static_data", {}).get("fullrecord_metadata", {}).get("abstracts", {})
-            if "abstract" in abstract_block:
-                abstract = abstract_block["abstract"].get("abstract_text", "")
-
-            # authors
-            names = p.get("static_data", {}).get("summary", {}).get("names", {}).get("name", [])
-            for n in names:
-                if "full_name" in n:
-                    authors.append(n["full_name"])
-
-            # journal
-            source = p.get("static_data", {}).get("summary", {}).get("publishers", {})
-            journal = str(source)
-
-            # year
-            pub_info = p.get("static_data", {}).get("summary", {}).get("pub_info", {})
-            year = pub_info.get("pubyear", "")
-
-            # DOI
             ids = p.get("dynamic_data", {}).get("cluster_related", {}).get("identifiers", {}).get("identifier", [])
-            for i in ids:
-                if i.get("type") == "doi":
-                    doi = i.get("value")
+            doi = next((i.get("value") for i in ids if i.get("type") == "doi"), "")
 
             row = {
-                "title": title,
-                "abstract": abstract,
+                "title": (p.get("static_data", {}).get("summary", {}).get("titles", {}).get("title", [{}])[0].get("content", "")),
+                "abstract": p.get("static_data", {}).get("fullrecord_metadata", {}).get("abstracts", {}).get("abstract", {}).get("abstract_text", ""),
                 "author": "; ".join(authors),
-                "journal": journal,
-                "year": year,
+                "journal": str(p.get("static_data", {}).get("summary", {}).get("publishers", {})),
+                "year": p.get("static_data", {}).get("summary", {}).get("pub_info", {}).get("pubyear", ""),
                 "doi": doi
             }
 
-            if not has_valid_abstract(row):
-                continue
-
-            results.append(row)
+            if has_valid_abstract(row):
+                results.append(row)
 
         return results
 
-    except Exception as e:
-        print(f"WOS search error: {e}")
+    except Exception:
         return []
 
+
 def has_valid_abstract(paper):
-    abstract = paper.get("abstract")
+    """
+    Check whether a paper has a valid abstract.
 
-    if abstract is None:
-        return False
+    Args:
+        paper (dict): Paper metadata.
 
-    abstract = abstract.strip()
+    Returns:
+        bool: True if abstract is valid.
+    """
+    abstract = (paper.get("abstract") or "").strip().lower()
+    return abstract not in ["", "no abstract available", "n/a"]
 
-    if abstract == "":
-        return False
-
-    if abstract.lower() in ["no abstract available", "n/a"]:
-        return False
-
-    return True
 
 def literature_search_all(query, N, databases=None):
-    # 如果没传，默认全选防报错
+    """
+    Aggregate search results from multiple literature databases.
+
+    Args:
+        query (str): Search query.
+        N (int): Number of final results to return.
+        databases (list[str], optional): Selected databases.
+
+    Returns:
+        list[dict]: Deduplicated and shuffled paper list.
+    """
     if databases is None:
         databases = ['pubmed', 'openalex', 'wos']
 
-    pubmed_papers = []
-    openalex_papers = []
-    wos_papers = []
+    results = []
 
-    # 根据前端传来的 databases 数组动态决定调用哪个库
     if 'pubmed' in databases:
-        try:
-            pubmed_papers = search_pubmed(query, 2 * N)
-        except Exception as e:
-            print(f"PubMed search error: {e}")
-            pubmed_papers = []
-        print(f"PubMed returned {len(pubmed_papers)} papers")
+        results += search_pubmed(query, 2 * N)
 
     if 'openalex' in databases:
-        try:
-            openalex_papers = search_openalex(query, 2 * N)
-        except Exception as e:
-            print(f"OpenAlex search error: {e}")
-            openalex_papers = []
-        print(f"OpenAlex returned {len(openalex_papers)} papers")
+        results += search_openalex(query, 2 * N)
 
     if 'wos' in databases:
-        try:
-            wos_papers = search_wos(query, 2 * N)
-        except Exception as e:
-            print(f"WOS search error: {e}")
-            wos_papers = []
-        print(f"WOS returned {len(wos_papers)} papers")
-
-    all_papers = pubmed_papers + openalex_papers + wos_papers
+        results += search_wos(query, 2 * N)
 
     unique = {}
-    results = []
-    duplicate_count = 0
+    deduped = []
 
-    for p in all_papers:
-
-        doi = (p.get("doi") or "").lower().strip()
-
-        # DOI 统一格式
-        doi = doi.replace("https://doi.org/", "")
-
-        if doi:
-            key = doi
-        else:
-            key = p.get("title", "").lower()
+    for p in results:
+        doi = (p.get("doi") or "").lower().replace("https://doi.org/", "")
+        key = doi if doi else p.get("title", "").lower()
 
         if key not in unique:
             unique[key] = True
-            results.append(p)
-        else:
-            duplicate_count += 1
+            deduped.append(p)
 
-    # 打乱
-    random.shuffle(results)
-
-    # 取前 N
-    results = results[:N]
-    print(f"Final paper count: {len(results)}")
-    print(f"Duplicate papers: {duplicate_count}")
-    return results
+    random.shuffle(deduped)
+    return deduped[:N]

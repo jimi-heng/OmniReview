@@ -4,21 +4,48 @@ from rapidfuzz import fuzz
 from pathlib import Path
 
 COLORS = {
-    "study_design": (0.7, 0.6, 0.1),  # 深黄（方法学）
-    "population": (0.9, 0.2, 0.2),  # 红（人群）
-    "intervention": (0.2, 0.3, 0.9),  # 蓝（干预）
-    "indicator": (0.9, 0.4, 0.1),  # 深橙（指标/测量）
-    "comparison": (0.4, 0.8, 0.4),  # 绿（比较）
-    "reference": (0.8, 0.3, 0.8),  # 紫（参考组）
-    "exposure": (0.2, 0.7, 0.7),  # 青（暴露）
-    "outcomes": (1.0, 0.6, 0.1),  # 橙（结局）
-    "additional_criteria": (0.5, 0.5, 0.5)  # 灰（额外条件）
+    "study_design": (0.7, 0.6, 0.1),  # Dark yellow (methodology)
+    "population": (0.9, 0.2, 0.2),  # Red (population)
+    "intervention": (0.2, 0.3, 0.9),  # Blue (intervention)
+    "indicator": (0.9, 0.4, 0.1),  # Dark orange (indicator / measurement)
+    "comparison": (0.4, 0.8, 0.4),  # Green (comparison)
+    "reference": (0.8, 0.3, 0.8),  # Purple (reference group)
+    "exposure": (0.2, 0.7, 0.7),  # Cyan (exposure)
+    "outcomes": (1.0, 0.6, 0.1),  # Orange (outcomes)
+    "additional_criteria": (0.5, 0.5, 0.5)  # Gray (additional criteria)
 }
 
+
 def rgb255_to_1(rgb):
+    """
+    Convert RGB values from 0–255 range to 0–1 range.
+
+    Args:
+        rgb (tuple[int, int, int]): RGB color tuple in 0–255 scale.
+
+    Returns:
+        tuple[float, float, float]: Normalized RGB values in 0–1 scale.
+    """
     return tuple(c / 255 for c in rgb)
 
+
 def normalize(text: str) -> str:
+    """
+    Normalize text for consistent matching.
+
+    This function:
+    - Applies Unicode normalization (NFKC)
+    - Removes zero-width spaces
+    - Replaces non-breaking spaces
+    - Fixes hyphenated line breaks
+    - Converts line breaks into spaces
+
+    Args:
+        text (str): Input text.
+
+    Returns:
+        str: Normalized text.
+    """
     text = unicodedata.normalize("NFKC", text)
     text = text.replace("\u200b", "")
     text = text.replace("\xa0", " ")
@@ -30,15 +57,30 @@ def normalize(text: str) -> str:
 def _find_best_match(
     full_text: str, norm_evidence: str, threshold: int
 ) -> tuple[int, tuple[int, int] | None]:
-    """Find best fuzzy match position using fast methods first, fuzzy as fallback.
+    """
+    Find the best fuzzy match of a substring within a larger text.
 
-    Returns (score, (start, end)) or (score, None) if no match above threshold.
+    The function performs matching in three phases:
+    1. Exact substring match (fast O(N))
+    2. Coarse fuzzy scan (step-based)
+    3. Fine-grained local search
+
+    Args:
+        full_text (str): The full normalized text extracted from PDF.
+        norm_evidence (str): The normalized evidence string to match.
+        threshold (int): Minimum similarity score (0–100) to accept match.
+
+    Returns:
+        tuple:
+            - score (int): Best match score
+            - (start, end) (tuple[int, int] | None): Match position if found,
+              otherwise None
     """
     ev_len = len(norm_evidence)
     if ev_len == 0:
         return 0, None
 
-    # Phase 1: exact substring match — O(N), instant
+    # Phase 1: exact match
     idx = full_text.find(norm_evidence)
     if idx >= 0:
         return 100, (idx, idx + ev_len)
@@ -47,14 +89,14 @@ def _find_best_match(
     if ev_len > text_len:
         return 0, None
 
-    # Phase 2: coarse scan — check every step positions to find approximate location
+    # Phase 2: coarse scan
     step = max(1, ev_len // 4)
     best_score = 0
     best_pos = 0
     search_range = text_len - ev_len + 1
 
     for i in range(0, search_range, step):
-        window = full_text[i : i + ev_len]
+        window = full_text[i: i + ev_len]
         score = fuzz.ratio(window, norm_evidence)
         if score > best_score:
             best_score = score
@@ -65,11 +107,12 @@ def _find_best_match(
     if best_score < threshold:
         return best_score, None
 
-    # Phase 3: fine-grained search around best coarse position
+    # Phase 3: fine search
     fine_start = max(0, best_pos - step)
     fine_end = min(search_range, best_pos + step + 1)
+
     for i in range(fine_start, fine_end):
-        window = full_text[i : i + ev_len]
+        window = full_text[i: i + ev_len]
         score = fuzz.ratio(window, norm_evidence)
         if score > best_score:
             best_score = score
@@ -79,6 +122,7 @@ def _find_best_match(
 
     if best_score >= threshold:
         return best_score, (best_pos, best_pos + ev_len)
+
     return best_score, None
 
 
@@ -89,15 +133,32 @@ def highlight_pdf(
     threshold: int = 85
 ) -> None:
     """
-    input_pdf: 原始PDF路径
-    output_pdf: 输出高亮PDF路径
-    evidences: {
-        "Population": "...",
-        "Intervention": "...",
-        ...
-    }
-    """
+    Highlight matched evidence text in a PDF file.
 
+    This function:
+    - Extracts character-level text and bounding boxes from each page
+    - Performs fuzzy matching for each evidence string
+    - Maps matched text back to bounding boxes
+    - Adds highlight annotations with category-specific colors
+
+    Args:
+        input_pdf (Path): Path to the original PDF file.
+        output_pdf (Path): Path where the highlighted PDF will be saved.
+        evidences (dict[str, str]):
+            Mapping of component names to evidence text.
+            Example:
+                {
+                    "population": "...",
+                    "intervention": "...",
+                    "outcomes": "..."
+                }
+        threshold (int, optional):
+            Minimum fuzzy matching score (0–100).
+            Defaults to 85.
+
+    Returns:
+        None
+    """
     doc = fitz.open(input_pdf)
 
     for page in doc:
@@ -107,7 +168,7 @@ def highlight_pdf(
         full_text = ""
         char_boxes = []
 
-        # 构建字符级映射
+        # Build character-level mapping
         for block in raw["blocks"]:
             if "lines" not in block:
                 continue
@@ -119,40 +180,34 @@ def highlight_pdf(
                         full_text += norm_c
                         char_boxes.append(char["bbox"])
 
-        # 遍历证据
+        # Process each evidence
         for component, evidence in evidences.items():
 
             if not evidence.strip():
                 continue
 
             norm_evidence = normalize(evidence)
-
-            best_score, best_range = _find_best_match(full_text, norm_evidence, threshold)
+            best_score, best_range = _find_best_match(
+                full_text, norm_evidence, threshold
+            )
 
             if best_score >= threshold and best_range:
                 start, end = best_range
 
-                # 先收集字符 rect
                 line_rects = []
-
                 for i in range(start, end):
                     r = fitz.Rect(char_boxes[i])
                     if r.is_valid and not r.is_empty:
                         line_rects.append(r)
 
                 if line_rects:
-
-                    # 按 y 坐标排序
                     line_rects.sort(key=lambda r: (round(r.y0, 1), r.x0))
 
                     merged = []
                     current = line_rects[0]
 
                     for r in line_rects[1:]:
-
-                        # 判断是否在同一行
                         if abs(r.y0 - current.y0) < 1.5:
-                            # 只横向扩展，不改变高度
                             current.x1 = r.x1
                         else:
                             merged.append(current)
@@ -162,7 +217,11 @@ def highlight_pdf(
 
                     annot = page.add_highlight_annot(merged)
 
-                    color = next((v for k, v in COLORS.items() if component.startswith(k)), (1, 0, 0))
+                    color = next(
+                        (v for k, v in COLORS.items() if component.startswith(k)),
+                        (1, 0, 0)
+                    )
+
                     annot.set_colors(stroke=color)
                     annot.set_opacity(0.3)
                     annot.update()
