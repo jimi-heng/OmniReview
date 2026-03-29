@@ -7,6 +7,9 @@ from requests.adapters import HTTPAdapter
 import requests
 import defusedxml.ElementTree as ET
 
+__all__ = ["literature_search_all"]
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
 WOS_API_KEY = os.getenv("WOS_API_KEY")

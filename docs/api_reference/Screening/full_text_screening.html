@@ -1203,12 +1203,29 @@
 
     </div>
     <a class="headerlink" href="#extract_conclusion"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_conclusion-67"><a href="#extract_conclusion-67"><span class="linenos">67</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_conclusion</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="extract_conclusion-68"><a href="#extract_conclusion-68"><span class="linenos">68</span></a>    <span class="k">return</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;reason&quot;</span><span class="p">]</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_conclusion-165"><a href="#extract_conclusion-165"><span class="linenos">165</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_conclusion</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="extract_conclusion-166"><a href="#extract_conclusion-166"><span class="linenos">166</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="extract_conclusion-167"><a href="#extract_conclusion-167"><span class="linenos">167</span></a><span class="sd">    Extract conclusion/reason from LLM output.</span>
+</span><span id="extract_conclusion-168"><a href="#extract_conclusion-168"><span class="linenos">168</span></a>
+</span><span id="extract_conclusion-169"><a href="#extract_conclusion-169"><span class="linenos">169</span></a><span class="sd">    Args:</span>
+</span><span id="extract_conclusion-170"><a href="#extract_conclusion-170"><span class="linenos">170</span></a><span class="sd">        text (str): Raw model output.</span>
+</span><span id="extract_conclusion-171"><a href="#extract_conclusion-171"><span class="linenos">171</span></a>
+</span><span id="extract_conclusion-172"><a href="#extract_conclusion-172"><span class="linenos">172</span></a><span class="sd">    Returns:</span>
+</span><span id="extract_conclusion-173"><a href="#extract_conclusion-173"><span class="linenos">173</span></a><span class="sd">        str: Reason text.</span>
+</span><span id="extract_conclusion-174"><a href="#extract_conclusion-174"><span class="linenos">174</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="extract_conclusion-175"><a href="#extract_conclusion-175"><span class="linenos">175</span></a>    <span class="k">return</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;reason&quot;</span><span class="p">]</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Extract conclusion/reason from LLM output.</p>
+
+<p>Args:
+    text (str): Raw model output.</p>
+
+<p>Returns:
+    str: Reason text.</p>
+</div>
+
 
                 </section>
                 <section id="extract_evidence">
@@ -1222,12 +1239,29 @@
 
     </div>
     <a class="headerlink" href="#extract_evidence"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_evidence-63"><a href="#extract_evidence-63"><span class="linenos">63</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_evidence</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-</span><span id="extract_evidence-64"><a href="#extract_evidence-64"><span class="linenos">64</span></a>    <span class="k">return</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;evidence&quot;</span><span class="p">]</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_evidence-152"><a href="#extract_evidence-152"><span class="linenos">152</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_evidence</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span id="extract_evidence-153"><a href="#extract_evidence-153"><span class="linenos">153</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="extract_evidence-154"><a href="#extract_evidence-154"><span class="linenos">154</span></a><span class="sd">    Extract only evidence dictionary from LLM output.</span>
+</span><span id="extract_evidence-155"><a href="#extract_evidence-155"><span class="linenos">155</span></a>
+</span><span id="extract_evidence-156"><a href="#extract_evidence-156"><span class="linenos">156</span></a><span class="sd">    Args:</span>
+</span><span id="extract_evidence-157"><a href="#extract_evidence-157"><span class="linenos">157</span></a><span class="sd">        text (str): Raw model output.</span>
+</span><span id="extract_evidence-158"><a href="#extract_evidence-158"><span class="linenos">158</span></a>
+</span><span id="extract_evidence-159"><a href="#extract_evidence-159"><span class="linenos">159</span></a><span class="sd">    Returns:</span>
+</span><span id="extract_evidence-160"><a href="#extract_evidence-160"><span class="linenos">160</span></a><span class="sd">        dict[str, str]: Normalized evidence fields.</span>
+</span><span id="extract_evidence-161"><a href="#extract_evidence-161"><span class="linenos">161</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="extract_evidence-162"><a href="#extract_evidence-162"><span class="linenos">162</span></a>    <span class="k">return</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;evidence&quot;</span><span class="p">]</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Extract only evidence dictionary from LLM output.</p>
+
+<p>Args:
+    text (str): Raw model output.</p>
+
+<p>Returns:
+    dict[str, str]: Normalized evidence fields.</p>
+</div>
+
 
                 </section>
                 <section id="load_pdf_bytes">
@@ -1406,106 +1440,194 @@
 
     </div>
     <a class="headerlink" href="#process_single_paper"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="process_single_paper-23"><a href="#process_single_paper-23"><span class="linenos"> 23</span></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_single_paper</span><span class="p">(</span>
-</span><span id="process_single_paper-24"><a href="#process_single_paper-24"><span class="linenos"> 24</span></a>    <span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span>
-</span><span id="process_single_paper-25"><a href="#process_single_paper-25"><span class="linenos"> 25</span></a>    <span class="n">runtime</span><span class="p">:</span> <span class="n">FullTextScreeningRuntime</span><span class="p">,</span>
-</span><span id="process_single_paper-26"><a href="#process_single_paper-26"><span class="linenos"> 26</span></a>    <span class="n">request</span><span class="p">:</span> <span class="n">FullTextRequest</span><span class="p">,</span>
-</span><span id="process_single_paper-27"><a href="#process_single_paper-27"><span class="linenos"> 27</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="process_single_paper-28"><a href="#process_single_paper-28"><span class="linenos"> 28</span></a>    <span class="n">paper</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">paper</span>
-</span><span id="process_single_paper-29"><a href="#process_single_paper-29"><span class="linenos"> 29</span></a>    <span class="n">source_path</span> <span class="o">=</span> <span class="n">paper</span><span class="o">.</span><span class="n">source_path</span>
-</span><span id="process_single_paper-30"><a href="#process_single_paper-30"><span class="linenos"> 30</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="process_single_paper-31"><a href="#process_single_paper-31"><span class="linenos"> 31</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span><span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span> <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;missing_file&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Input file not found: </span><span class="si">{</span><span class="n">source_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="process_single_paper-32"><a href="#process_single_paper-32"><span class="linenos"> 32</span></a>
-</span><span id="process_single_paper-33"><a href="#process_single_paper-33"><span class="linenos"> 33</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="process_single_paper-34"><a href="#process_single_paper-34"><span class="linenos"> 34</span></a>        <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="process_single_paper-35"><a href="#process_single_paper-35"><span class="linenos"> 35</span></a>        <span class="n">document_text</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="process_single_paper-36"><a href="#process_single_paper-36"><span class="linenos"> 36</span></a>        <span class="k">if</span> <span class="n">paper</span><span class="o">.</span><span class="n">is_text</span><span class="p">:</span>
-</span><span id="process_single_paper-37"><a href="#process_single_paper-37"><span class="linenos"> 37</span></a>            <span class="n">document_text</span> <span class="o">=</span> <span class="n">load_text_content</span><span class="p">(</span><span class="n">source_path</span><span class="p">)</span>
-</span><span id="process_single_paper-38"><a href="#process_single_paper-38"><span class="linenos"> 38</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="process_single_paper-39"><a href="#process_single_paper-39"><span class="linenos"> 39</span></a>            <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">load_pdf_bytes</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">runtime</span><span class="o">.</span><span class="n">selected_pages</span><span class="p">)</span>
-</span><span id="process_single_paper-40"><a href="#process_single_paper-40"><span class="linenos"> 40</span></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="process_single_paper-41"><a href="#process_single_paper-41"><span class="linenos"> 41</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span><span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span> <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;input_read_error&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
-</span><span id="process_single_paper-42"><a href="#process_single_paper-42"><span class="linenos"> 42</span></a>
-</span><span id="process_single_paper-43"><a href="#process_single_paper-43"><span class="linenos"> 43</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="process_single_paper-44"><a href="#process_single_paper-44"><span class="linenos"> 44</span></a>        <span class="n">parsed_output</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="process_single_paper-45"><a href="#process_single_paper-45"><span class="linenos"> 45</span></a>        <span class="n">raw_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="process_single_paper-46"><a href="#process_single_paper-46"><span class="linenos"> 46</span></a>        <span class="k">for</span> <span class="n">parse_retry</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-</span><span id="process_single_paper-47"><a href="#process_single_paper-47"><span class="linenos"> 47</span></a>            <span class="n">prompt</span> <span class="o">=</span> <span class="n">get_system_prompt</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">project_type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">build_user_prompt</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">parse_retry</span><span class="o">=</span><span class="n">parse_retry</span><span class="p">)</span>
-</span><span id="process_single_paper-48"><a href="#process_single_paper-48"><span class="linenos"> 48</span></a>            <span class="n">payload</span> <span class="o">=</span> <span class="n">build_payload</span><span class="p">(</span>
-</span><span id="process_single_paper-49"><a href="#process_single_paper-49"><span class="linenos"> 49</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-</span><span id="process_single_paper-50"><a href="#process_single_paper-50"><span class="linenos"> 50</span></a>                <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
-</span><span id="process_single_paper-51"><a href="#process_single_paper-51"><span class="linenos"> 51</span></a>                <span class="n">filename</span><span class="o">=</span><span class="n">source_path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-</span><span id="process_single_paper-52"><a href="#process_single_paper-52"><span class="linenos"> 52</span></a>                <span class="n">file_bytes</span><span class="o">=</span><span class="n">pdf_bytes</span><span class="p">,</span>
-</span><span id="process_single_paper-53"><a href="#process_single_paper-53"><span class="linenos"> 53</span></a>                <span class="n">document_text</span><span class="o">=</span><span class="n">document_text</span><span class="p">,</span>
-</span><span id="process_single_paper-54"><a href="#process_single_paper-54"><span class="linenos"> 54</span></a>            <span class="p">)</span>
-</span><span id="process_single_paper-55"><a href="#process_single_paper-55"><span class="linenos"> 55</span></a>            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">call_with_retry</span><span class="p">(</span>
-</span><span id="process_single_paper-56"><a href="#process_single_paper-56"><span class="linenos"> 56</span></a>                <span class="n">post_with_auth_fallback</span><span class="p">,</span>
-</span><span id="process_single_paper-57"><a href="#process_single_paper-57"><span class="linenos"> 57</span></a>                <span class="n">client</span><span class="p">,</span>
-</span><span id="process_single_paper-58"><a href="#process_single_paper-58"><span class="linenos"> 58</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
-</span><span id="process_single_paper-59"><a href="#process_single_paper-59"><span class="linenos"> 59</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
-</span><span id="process_single_paper-60"><a href="#process_single_paper-60"><span class="linenos"> 60</span></a>                <span class="n">payload</span><span class="p">,</span>
-</span><span id="process_single_paper-61"><a href="#process_single_paper-61"><span class="linenos"> 61</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
-</span><span id="process_single_paper-62"><a href="#process_single_paper-62"><span class="linenos"> 62</span></a>                <span class="n">retries</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">retries</span><span class="p">,</span>
-</span><span id="process_single_paper-63"><a href="#process_single_paper-63"><span class="linenos"> 63</span></a>                <span class="n">delay_s</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">retry_delay</span><span class="p">,</span>
-</span><span id="process_single_paper-64"><a href="#process_single_paper-64"><span class="linenos"> 64</span></a>            <span class="p">)</span>
-</span><span id="process_single_paper-65"><a href="#process_single_paper-65"><span class="linenos"> 65</span></a>            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-</span><span id="process_single_paper-66"><a href="#process_single_paper-66"><span class="linenos"> 66</span></a>                <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
-</span><span id="process_single_paper-67"><a href="#process_single_paper-67"><span class="linenos"> 67</span></a>                    <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
-</span><span id="process_single_paper-68"><a href="#process_single_paper-68"><span class="linenos"> 68</span></a>                    <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;http_error&quot;</span><span class="p">,</span>
-</span><span id="process_single_paper-69"><a href="#process_single_paper-69"><span class="linenos"> 69</span></a>                    <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Upstream returned status </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-</span><span id="process_single_paper-70"><a href="#process_single_paper-70"><span class="linenos"> 70</span></a>                <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="process_single_paper-40"><a href="#process_single_paper-40"><span class="linenos"> 40</span></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_single_paper</span><span class="p">(</span>
+</span><span id="process_single_paper-41"><a href="#process_single_paper-41"><span class="linenos"> 41</span></a>    <span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span>
+</span><span id="process_single_paper-42"><a href="#process_single_paper-42"><span class="linenos"> 42</span></a>    <span class="n">runtime</span><span class="p">:</span> <span class="n">FullTextScreeningRuntime</span><span class="p">,</span>
+</span><span id="process_single_paper-43"><a href="#process_single_paper-43"><span class="linenos"> 43</span></a>    <span class="n">request</span><span class="p">:</span> <span class="n">FullTextRequest</span><span class="p">,</span>
+</span><span id="process_single_paper-44"><a href="#process_single_paper-44"><span class="linenos"> 44</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="process_single_paper-45"><a href="#process_single_paper-45"><span class="linenos"> 45</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="process_single_paper-46"><a href="#process_single_paper-46"><span class="linenos"> 46</span></a><span class="sd">    Process a single paper through the full-text screening pipeline.</span>
+</span><span id="process_single_paper-47"><a href="#process_single_paper-47"><span class="linenos"> 47</span></a>
+</span><span id="process_single_paper-48"><a href="#process_single_paper-48"><span class="linenos"> 48</span></a><span class="sd">    Workflow:</span>
+</span><span id="process_single_paper-49"><a href="#process_single_paper-49"><span class="linenos"> 49</span></a><span class="sd">        1. Load PDF or text input</span>
+</span><span id="process_single_paper-50"><a href="#process_single_paper-50"><span class="linenos"> 50</span></a><span class="sd">        2. Construct LLM prompt</span>
+</span><span id="process_single_paper-51"><a href="#process_single_paper-51"><span class="linenos"> 51</span></a><span class="sd">        3. Call model with retry</span>
+</span><span id="process_single_paper-52"><a href="#process_single_paper-52"><span class="linenos"> 52</span></a><span class="sd">        4. Parse structured output (with fallback retry)</span>
+</span><span id="process_single_paper-53"><a href="#process_single_paper-53"><span class="linenos"> 53</span></a><span class="sd">        5. Optionally highlight evidence in PDF</span>
+</span><span id="process_single_paper-54"><a href="#process_single_paper-54"><span class="linenos"> 54</span></a>
+</span><span id="process_single_paper-55"><a href="#process_single_paper-55"><span class="linenos"> 55</span></a><span class="sd">    Args:</span>
+</span><span id="process_single_paper-56"><a href="#process_single_paper-56"><span class="linenos"> 56</span></a><span class="sd">        client (httpx.AsyncClient): Shared HTTP client.</span>
+</span><span id="process_single_paper-57"><a href="#process_single_paper-57"><span class="linenos"> 57</span></a><span class="sd">        runtime (FullTextScreeningRuntime): Runtime configuration.</span>
+</span><span id="process_single_paper-58"><a href="#process_single_paper-58"><span class="linenos"> 58</span></a><span class="sd">        request (FullTextRequest): Paper + PICO + metadata.</span>
+</span><span id="process_single_paper-59"><a href="#process_single_paper-59"><span class="linenos"> 59</span></a>
+</span><span id="process_single_paper-60"><a href="#process_single_paper-60"><span class="linenos"> 60</span></a><span class="sd">    Returns:</span>
+</span><span id="process_single_paper-61"><a href="#process_single_paper-61"><span class="linenos"> 61</span></a><span class="sd">        dict[str, Any]:</span>
+</span><span id="process_single_paper-62"><a href="#process_single_paper-62"><span class="linenos"> 62</span></a><span class="sd">            {</span>
+</span><span id="process_single_paper-63"><a href="#process_single_paper-63"><span class="linenos"> 63</span></a><span class="sd">                &quot;id&quot;: paper_id,</span>
+</span><span id="process_single_paper-64"><a href="#process_single_paper-64"><span class="linenos"> 64</span></a><span class="sd">                &quot;decision&quot;: str,</span>
+</span><span id="process_single_paper-65"><a href="#process_single_paper-65"><span class="linenos"> 65</span></a><span class="sd">                &quot;evidence&quot;: JSON string,</span>
+</span><span id="process_single_paper-66"><a href="#process_single_paper-66"><span class="linenos"> 66</span></a><span class="sd">                &quot;hl_path&quot;: str | None</span>
+</span><span id="process_single_paper-67"><a href="#process_single_paper-67"><span class="linenos"> 67</span></a><span class="sd">            }</span>
+</span><span id="process_single_paper-68"><a href="#process_single_paper-68"><span class="linenos"> 68</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="process_single_paper-69"><a href="#process_single_paper-69"><span class="linenos"> 69</span></a>    <span class="n">paper</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">paper</span>
+</span><span id="process_single_paper-70"><a href="#process_single_paper-70"><span class="linenos"> 70</span></a>    <span class="n">source_path</span> <span class="o">=</span> <span class="n">paper</span><span class="o">.</span><span class="n">source_path</span>
 </span><span id="process_single_paper-71"><a href="#process_single_paper-71"><span class="linenos"> 71</span></a>
-</span><span id="process_single_paper-72"><a href="#process_single_paper-72"><span class="linenos"> 72</span></a>            <span class="n">raw_text</span> <span class="o">=</span> <span class="n">extract_output_text</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</span><span id="process_single_paper-73"><a href="#process_single_paper-73"><span class="linenos"> 73</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="process_single_paper-74"><a href="#process_single_paper-74"><span class="linenos"> 74</span></a>                <span class="n">parsed_output</span> <span class="o">=</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">raw_text</span><span class="p">)</span>
-</span><span id="process_single_paper-75"><a href="#process_single_paper-75"><span class="linenos"> 75</span></a>                <span class="k">break</span>
-</span><span id="process_single_paper-76"><a href="#process_single_paper-76"><span class="linenos"> 76</span></a>            <span class="k">except</span> <span class="n">StructuredOutputError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="process_single_paper-77"><a href="#process_single_paper-77"><span class="linenos"> 77</span></a>                <span class="n">raw_text</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">raw_output</span> <span class="ow">or</span> <span class="n">raw_text</span>
-</span><span id="process_single_paper-78"><a href="#process_single_paper-78"><span class="linenos"> 78</span></a>                <span class="k">if</span> <span class="n">parse_retry</span><span class="p">:</span>
-</span><span id="process_single_paper-79"><a href="#process_single_paper-79"><span class="linenos"> 79</span></a>                    <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
-</span><span id="process_single_paper-80"><a href="#process_single_paper-80"><span class="linenos"> 80</span></a>                        <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
-</span><span id="process_single_paper-81"><a href="#process_single_paper-81"><span class="linenos"> 81</span></a>                        <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;parse_error&quot;</span><span class="p">,</span>
-</span><span id="process_single_paper-82"><a href="#process_single_paper-82"><span class="linenos"> 82</span></a>                        <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
-</span><span id="process_single_paper-83"><a href="#process_single_paper-83"><span class="linenos"> 83</span></a>                        <span class="n">raw_output</span><span class="o">=</span><span class="n">raw_text</span><span class="p">,</span>
-</span><span id="process_single_paper-84"><a href="#process_single_paper-84"><span class="linenos"> 84</span></a>                    <span class="p">)</span>
-</span><span id="process_single_paper-85"><a href="#process_single_paper-85"><span class="linenos"> 85</span></a>
-</span><span id="process_single_paper-86"><a href="#process_single_paper-86"><span class="linenos"> 86</span></a>        <span class="k">if</span> <span class="n">parsed_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="process_single_paper-87"><a href="#process_single_paper-87"><span class="linenos"> 87</span></a>            <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
-</span><span id="process_single_paper-88"><a href="#process_single_paper-88"><span class="linenos"> 88</span></a>                <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
-</span><span id="process_single_paper-89"><a href="#process_single_paper-89"><span class="linenos"> 89</span></a>                <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;parse_error&quot;</span><span class="p">,</span>
-</span><span id="process_single_paper-90"><a href="#process_single_paper-90"><span class="linenos"> 90</span></a>                <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Failed to parse structured output&quot;</span><span class="p">,</span>
-</span><span id="process_single_paper-91"><a href="#process_single_paper-91"><span class="linenos"> 91</span></a>                <span class="n">raw_output</span><span class="o">=</span><span class="n">raw_text</span><span class="p">,</span>
-</span><span id="process_single_paper-92"><a href="#process_single_paper-92"><span class="linenos"> 92</span></a>            <span class="p">)</span>
-</span><span id="process_single_paper-93"><a href="#process_single_paper-93"><span class="linenos"> 93</span></a>
-</span><span id="process_single_paper-94"><a href="#process_single_paper-94"><span class="linenos"> 94</span></a>        <span class="n">decision</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;decision&quot;</span><span class="p">])</span>
-</span><span id="process_single_paper-95"><a href="#process_single_paper-95"><span class="linenos"> 95</span></a>        <span class="n">evidences</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;evidence&quot;</span><span class="p">])</span>
-</span><span id="process_single_paper-96"><a href="#process_single_paper-96"><span class="linenos"> 96</span></a>        <span class="c1">#print(evidences)</span>
-</span><span id="process_single_paper-97"><a href="#process_single_paper-97"><span class="linenos"> 97</span></a>        <span class="n">conclusion</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;reason&quot;</span><span class="p">])</span>
-</span><span id="process_single_paper-98"><a href="#process_single_paper-98"><span class="linenos"> 98</span></a>
-</span><span id="process_single_paper-99"><a href="#process_single_paper-99"><span class="linenos"> 99</span></a>        <span class="n">hl_path_str</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="process_single_paper-100"><a href="#process_single_paper-100"><span class="linenos">100</span></a>        <span class="k">if</span> <span class="n">runtime</span><span class="o">.</span><span class="n">enable_highlight</span> <span class="ow">and</span> <span class="n">paper</span><span class="o">.</span><span class="n">is_pdf</span><span class="p">:</span>
-</span><span id="process_single_paper-101"><a href="#process_single_paper-101"><span class="linenos">101</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="process_single_paper-102"><a href="#process_single_paper-102"><span class="linenos">102</span></a>                <span class="k">try</span><span class="p">:</span>
-</span><span id="process_single_paper-103"><a href="#process_single_paper-103"><span class="linenos">103</span></a>                    <span class="kn">from</span><span class="w"> </span><span class="nn">Screening.TextHighlight</span><span class="w"> </span><span class="kn">import</span> <span class="n">highlight_pdf</span>
-</span><span id="process_single_paper-104"><a href="#process_single_paper-104"><span class="linenos">104</span></a>                <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-</span><span id="process_single_paper-105"><a href="#process_single_paper-105"><span class="linenos">105</span></a>                    <span class="kn">from</span><span class="w"> </span><span class="nn">TextHighlight</span><span class="w"> </span><span class="kn">import</span> <span class="n">highlight_pdf</span>
-</span><span id="process_single_paper-106"><a href="#process_single_paper-106"><span class="linenos">106</span></a>
-</span><span id="process_single_paper-107"><a href="#process_single_paper-107"><span class="linenos">107</span></a>                <span class="n">hl_dir</span> <span class="o">=</span> <span class="n">source_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;highlighted&quot;</span>
-</span><span id="process_single_paper-108"><a href="#process_single_paper-108"><span class="linenos">108</span></a>                <span class="n">hl_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="process_single_paper-109"><a href="#process_single_paper-109"><span class="linenos">109</span></a>                <span class="n">out_pdf</span> <span class="o">=</span> <span class="n">hl_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;HL_</span><span class="si">{</span><span class="n">source_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="process_single_paper-110"><a href="#process_single_paper-110"><span class="linenos">110</span></a>                <span class="n">highlight_pdf</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">out_pdf</span><span class="p">,</span> <span class="n">evidences</span><span class="p">)</span>
-</span><span id="process_single_paper-111"><a href="#process_single_paper-111"><span class="linenos">111</span></a>                <span class="n">hl_path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_pdf</span><span class="p">)</span>
-</span><span id="process_single_paper-112"><a href="#process_single_paper-112"><span class="linenos">112</span></a>            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="process_single_paper-113"><a href="#process_single_paper-113"><span class="linenos">113</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Highlight error for ID </span><span class="si">{</span><span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="process_single_paper-114"><a href="#process_single_paper-114"><span class="linenos">114</span></a>
-</span><span id="process_single_paper-115"><a href="#process_single_paper-115"><span class="linenos">115</span></a>        <span class="n">evidence_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;evidences&quot;</span><span class="p">:</span> <span class="n">evidences</span><span class="p">,</span> <span class="s2">&quot;conclusion&quot;</span><span class="p">:</span> <span class="n">conclusion</span><span class="p">},</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="process_single_paper-116"><a href="#process_single_paper-116"><span class="linenos">116</span></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span> <span class="s2">&quot;decision&quot;</span><span class="p">:</span> <span class="n">decision</span><span class="p">,</span> <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="n">evidence_json</span><span class="p">,</span> <span class="s2">&quot;hl_path&quot;</span><span class="p">:</span> <span class="n">hl_path_str</span><span class="p">}</span>
-</span><span id="process_single_paper-117"><a href="#process_single_paper-117"><span class="linenos">117</span></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="process_single_paper-118"><a href="#process_single_paper-118"><span class="linenos">118</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span><span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span> <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;runtime_error&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+</span><span id="process_single_paper-72"><a href="#process_single_paper-72"><span class="linenos"> 72</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span id="process_single_paper-73"><a href="#process_single_paper-73"><span class="linenos"> 73</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-74"><a href="#process_single_paper-74"><span class="linenos"> 74</span></a>            <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-75"><a href="#process_single_paper-75"><span class="linenos"> 75</span></a>            <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;missing_file&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-76"><a href="#process_single_paper-76"><span class="linenos"> 76</span></a>            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Input file not found: </span><span class="si">{</span><span class="n">source_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-77"><a href="#process_single_paper-77"><span class="linenos"> 77</span></a>        <span class="p">)</span>
+</span><span id="process_single_paper-78"><a href="#process_single_paper-78"><span class="linenos"> 78</span></a>
+</span><span id="process_single_paper-79"><a href="#process_single_paper-79"><span class="linenos"> 79</span></a>    <span class="c1"># === Load input ===</span>
+</span><span id="process_single_paper-80"><a href="#process_single_paper-80"><span class="linenos"> 80</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="process_single_paper-81"><a href="#process_single_paper-81"><span class="linenos"> 81</span></a>        <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="process_single_paper-82"><a href="#process_single_paper-82"><span class="linenos"> 82</span></a>        <span class="n">document_text</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="process_single_paper-83"><a href="#process_single_paper-83"><span class="linenos"> 83</span></a>
+</span><span id="process_single_paper-84"><a href="#process_single_paper-84"><span class="linenos"> 84</span></a>        <span class="k">if</span> <span class="n">paper</span><span class="o">.</span><span class="n">is_text</span><span class="p">:</span>
+</span><span id="process_single_paper-85"><a href="#process_single_paper-85"><span class="linenos"> 85</span></a>            <span class="n">document_text</span> <span class="o">=</span> <span class="n">load_text_content</span><span class="p">(</span><span class="n">source_path</span><span class="p">)</span>
+</span><span id="process_single_paper-86"><a href="#process_single_paper-86"><span class="linenos"> 86</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="process_single_paper-87"><a href="#process_single_paper-87"><span class="linenos"> 87</span></a>            <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">load_pdf_bytes</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">runtime</span><span class="o">.</span><span class="n">selected_pages</span><span class="p">)</span>
+</span><span id="process_single_paper-88"><a href="#process_single_paper-88"><span class="linenos"> 88</span></a>
+</span><span id="process_single_paper-89"><a href="#process_single_paper-89"><span class="linenos"> 89</span></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="process_single_paper-90"><a href="#process_single_paper-90"><span class="linenos"> 90</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-91"><a href="#process_single_paper-91"><span class="linenos"> 91</span></a>            <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-92"><a href="#process_single_paper-92"><span class="linenos"> 92</span></a>            <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;input_read_error&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-93"><a href="#process_single_paper-93"><span class="linenos"> 93</span></a>            <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+</span><span id="process_single_paper-94"><a href="#process_single_paper-94"><span class="linenos"> 94</span></a>        <span class="p">)</span>
+</span><span id="process_single_paper-95"><a href="#process_single_paper-95"><span class="linenos"> 95</span></a>
+</span><span id="process_single_paper-96"><a href="#process_single_paper-96"><span class="linenos"> 96</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="process_single_paper-97"><a href="#process_single_paper-97"><span class="linenos"> 97</span></a>        <span class="n">parsed_output</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="process_single_paper-98"><a href="#process_single_paper-98"><span class="linenos"> 98</span></a>        <span class="n">raw_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="process_single_paper-99"><a href="#process_single_paper-99"><span class="linenos"> 99</span></a>
+</span><span id="process_single_paper-100"><a href="#process_single_paper-100"><span class="linenos">100</span></a>        <span class="c1"># === LLM call + parse retry loop ===</span>
+</span><span id="process_single_paper-101"><a href="#process_single_paper-101"><span class="linenos">101</span></a>        <span class="k">for</span> <span class="n">parse_retry</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+</span><span id="process_single_paper-102"><a href="#process_single_paper-102"><span class="linenos">102</span></a>            <span class="n">prompt</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="process_single_paper-103"><a href="#process_single_paper-103"><span class="linenos">103</span></a>                <span class="n">get_system_prompt</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">project_type</span><span class="p">)</span>
+</span><span id="process_single_paper-104"><a href="#process_single_paper-104"><span class="linenos">104</span></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+</span><span id="process_single_paper-105"><a href="#process_single_paper-105"><span class="linenos">105</span></a>                <span class="o">+</span> <span class="n">build_user_prompt</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">parse_retry</span><span class="o">=</span><span class="n">parse_retry</span><span class="p">)</span>
+</span><span id="process_single_paper-106"><a href="#process_single_paper-106"><span class="linenos">106</span></a>            <span class="p">)</span>
+</span><span id="process_single_paper-107"><a href="#process_single_paper-107"><span class="linenos">107</span></a>
+</span><span id="process_single_paper-108"><a href="#process_single_paper-108"><span class="linenos">108</span></a>            <span class="n">payload</span> <span class="o">=</span> <span class="n">build_payload</span><span class="p">(</span>
+</span><span id="process_single_paper-109"><a href="#process_single_paper-109"><span class="linenos">109</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+</span><span id="process_single_paper-110"><a href="#process_single_paper-110"><span class="linenos">110</span></a>                <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span><span id="process_single_paper-111"><a href="#process_single_paper-111"><span class="linenos">111</span></a>                <span class="n">filename</span><span class="o">=</span><span class="n">source_path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span id="process_single_paper-112"><a href="#process_single_paper-112"><span class="linenos">112</span></a>                <span class="n">file_bytes</span><span class="o">=</span><span class="n">pdf_bytes</span><span class="p">,</span>
+</span><span id="process_single_paper-113"><a href="#process_single_paper-113"><span class="linenos">113</span></a>                <span class="n">document_text</span><span class="o">=</span><span class="n">document_text</span><span class="p">,</span>
+</span><span id="process_single_paper-114"><a href="#process_single_paper-114"><span class="linenos">114</span></a>            <span class="p">)</span>
+</span><span id="process_single_paper-115"><a href="#process_single_paper-115"><span class="linenos">115</span></a>
+</span><span id="process_single_paper-116"><a href="#process_single_paper-116"><span class="linenos">116</span></a>            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">call_with_retry</span><span class="p">(</span>
+</span><span id="process_single_paper-117"><a href="#process_single_paper-117"><span class="linenos">117</span></a>                <span class="n">post_with_auth_fallback</span><span class="p">,</span>
+</span><span id="process_single_paper-118"><a href="#process_single_paper-118"><span class="linenos">118</span></a>                <span class="n">client</span><span class="p">,</span>
+</span><span id="process_single_paper-119"><a href="#process_single_paper-119"><span class="linenos">119</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="process_single_paper-120"><a href="#process_single_paper-120"><span class="linenos">120</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+</span><span id="process_single_paper-121"><a href="#process_single_paper-121"><span class="linenos">121</span></a>                <span class="n">payload</span><span class="p">,</span>
+</span><span id="process_single_paper-122"><a href="#process_single_paper-122"><span class="linenos">122</span></a>                <span class="n">runtime</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
+</span><span id="process_single_paper-123"><a href="#process_single_paper-123"><span class="linenos">123</span></a>                <span class="n">retries</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">retries</span><span class="p">,</span>
+</span><span id="process_single_paper-124"><a href="#process_single_paper-124"><span class="linenos">124</span></a>                <span class="n">delay_s</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">retry_delay</span><span class="p">,</span>
+</span><span id="process_single_paper-125"><a href="#process_single_paper-125"><span class="linenos">125</span></a>            <span class="p">)</span>
+</span><span id="process_single_paper-126"><a href="#process_single_paper-126"><span class="linenos">126</span></a>
+</span><span id="process_single_paper-127"><a href="#process_single_paper-127"><span class="linenos">127</span></a>            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+</span><span id="process_single_paper-128"><a href="#process_single_paper-128"><span class="linenos">128</span></a>                <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-129"><a href="#process_single_paper-129"><span class="linenos">129</span></a>                    <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-130"><a href="#process_single_paper-130"><span class="linenos">130</span></a>                    <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;http_error&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-131"><a href="#process_single_paper-131"><span class="linenos">131</span></a>                    <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Upstream returned status </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-132"><a href="#process_single_paper-132"><span class="linenos">132</span></a>                <span class="p">)</span>
+</span><span id="process_single_paper-133"><a href="#process_single_paper-133"><span class="linenos">133</span></a>
+</span><span id="process_single_paper-134"><a href="#process_single_paper-134"><span class="linenos">134</span></a>            <span class="n">raw_text</span> <span class="o">=</span> <span class="n">extract_output_text</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+</span><span id="process_single_paper-135"><a href="#process_single_paper-135"><span class="linenos">135</span></a>
+</span><span id="process_single_paper-136"><a href="#process_single_paper-136"><span class="linenos">136</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="process_single_paper-137"><a href="#process_single_paper-137"><span class="linenos">137</span></a>                <span class="n">parsed_output</span> <span class="o">=</span> <span class="n">parse_structured_output</span><span class="p">(</span><span class="n">raw_text</span><span class="p">)</span>
+</span><span id="process_single_paper-138"><a href="#process_single_paper-138"><span class="linenos">138</span></a>                <span class="k">break</span>
+</span><span id="process_single_paper-139"><a href="#process_single_paper-139"><span class="linenos">139</span></a>            <span class="k">except</span> <span class="n">StructuredOutputError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="process_single_paper-140"><a href="#process_single_paper-140"><span class="linenos">140</span></a>                <span class="n">raw_text</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">raw_output</span> <span class="ow">or</span> <span class="n">raw_text</span>
+</span><span id="process_single_paper-141"><a href="#process_single_paper-141"><span class="linenos">141</span></a>
+</span><span id="process_single_paper-142"><a href="#process_single_paper-142"><span class="linenos">142</span></a>                <span class="k">if</span> <span class="n">parse_retry</span><span class="p">:</span>
+</span><span id="process_single_paper-143"><a href="#process_single_paper-143"><span class="linenos">143</span></a>                    <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-144"><a href="#process_single_paper-144"><span class="linenos">144</span></a>                        <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-145"><a href="#process_single_paper-145"><span class="linenos">145</span></a>                        <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;parse_error&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-146"><a href="#process_single_paper-146"><span class="linenos">146</span></a>                        <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+</span><span id="process_single_paper-147"><a href="#process_single_paper-147"><span class="linenos">147</span></a>                        <span class="n">raw_output</span><span class="o">=</span><span class="n">raw_text</span><span class="p">,</span>
+</span><span id="process_single_paper-148"><a href="#process_single_paper-148"><span class="linenos">148</span></a>                    <span class="p">)</span>
+</span><span id="process_single_paper-149"><a href="#process_single_paper-149"><span class="linenos">149</span></a>
+</span><span id="process_single_paper-150"><a href="#process_single_paper-150"><span class="linenos">150</span></a>        <span class="k">if</span> <span class="n">parsed_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="process_single_paper-151"><a href="#process_single_paper-151"><span class="linenos">151</span></a>            <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-152"><a href="#process_single_paper-152"><span class="linenos">152</span></a>                <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-153"><a href="#process_single_paper-153"><span class="linenos">153</span></a>                <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;parse_error&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-154"><a href="#process_single_paper-154"><span class="linenos">154</span></a>                <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Failed to parse structured output&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-155"><a href="#process_single_paper-155"><span class="linenos">155</span></a>                <span class="n">raw_output</span><span class="o">=</span><span class="n">raw_text</span><span class="p">,</span>
+</span><span id="process_single_paper-156"><a href="#process_single_paper-156"><span class="linenos">156</span></a>            <span class="p">)</span>
+</span><span id="process_single_paper-157"><a href="#process_single_paper-157"><span class="linenos">157</span></a>
+</span><span id="process_single_paper-158"><a href="#process_single_paper-158"><span class="linenos">158</span></a>        <span class="c1"># === Extract result ===</span>
+</span><span id="process_single_paper-159"><a href="#process_single_paper-159"><span class="linenos">159</span></a>        <span class="n">decision</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;decision&quot;</span><span class="p">])</span>
+</span><span id="process_single_paper-160"><a href="#process_single_paper-160"><span class="linenos">160</span></a>        <span class="n">evidences</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;evidence&quot;</span><span class="p">])</span>
+</span><span id="process_single_paper-161"><a href="#process_single_paper-161"><span class="linenos">161</span></a>        <span class="n">conclusion</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parsed_output</span><span class="p">[</span><span class="s2">&quot;reason&quot;</span><span class="p">])</span>
+</span><span id="process_single_paper-162"><a href="#process_single_paper-162"><span class="linenos">162</span></a>
+</span><span id="process_single_paper-163"><a href="#process_single_paper-163"><span class="linenos">163</span></a>        <span class="c1"># === Optional PDF highlight ===</span>
+</span><span id="process_single_paper-164"><a href="#process_single_paper-164"><span class="linenos">164</span></a>        <span class="n">hl_path_str</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="process_single_paper-165"><a href="#process_single_paper-165"><span class="linenos">165</span></a>        <span class="k">if</span> <span class="n">runtime</span><span class="o">.</span><span class="n">enable_highlight</span> <span class="ow">and</span> <span class="n">paper</span><span class="o">.</span><span class="n">is_pdf</span><span class="p">:</span>
+</span><span id="process_single_paper-166"><a href="#process_single_paper-166"><span class="linenos">166</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="process_single_paper-167"><a href="#process_single_paper-167"><span class="linenos">167</span></a>                <span class="k">try</span><span class="p">:</span>
+</span><span id="process_single_paper-168"><a href="#process_single_paper-168"><span class="linenos">168</span></a>                    <span class="kn">from</span><span class="w"> </span><span class="nn">Screening.TextHighlight</span><span class="w"> </span><span class="kn">import</span> <span class="n">highlight_pdf</span>
+</span><span id="process_single_paper-169"><a href="#process_single_paper-169"><span class="linenos">169</span></a>                <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+</span><span id="process_single_paper-170"><a href="#process_single_paper-170"><span class="linenos">170</span></a>                    <span class="kn">from</span><span class="w"> </span><span class="nn">TextHighlight</span><span class="w"> </span><span class="kn">import</span> <span class="n">highlight_pdf</span>
+</span><span id="process_single_paper-171"><a href="#process_single_paper-171"><span class="linenos">171</span></a>
+</span><span id="process_single_paper-172"><a href="#process_single_paper-172"><span class="linenos">172</span></a>                <span class="n">hl_dir</span> <span class="o">=</span> <span class="n">source_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;highlighted&quot;</span>
+</span><span id="process_single_paper-173"><a href="#process_single_paper-173"><span class="linenos">173</span></a>                <span class="n">hl_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="process_single_paper-174"><a href="#process_single_paper-174"><span class="linenos">174</span></a>
+</span><span id="process_single_paper-175"><a href="#process_single_paper-175"><span class="linenos">175</span></a>                <span class="n">out_pdf</span> <span class="o">=</span> <span class="n">hl_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;HL_</span><span class="si">{</span><span class="n">source_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="process_single_paper-176"><a href="#process_single_paper-176"><span class="linenos">176</span></a>                <span class="n">highlight_pdf</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span> <span class="n">out_pdf</span><span class="p">,</span> <span class="n">evidences</span><span class="p">)</span>
+</span><span id="process_single_paper-177"><a href="#process_single_paper-177"><span class="linenos">177</span></a>
+</span><span id="process_single_paper-178"><a href="#process_single_paper-178"><span class="linenos">178</span></a>                <span class="n">hl_path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_pdf</span><span class="p">)</span>
+</span><span id="process_single_paper-179"><a href="#process_single_paper-179"><span class="linenos">179</span></a>
+</span><span id="process_single_paper-180"><a href="#process_single_paper-180"><span class="linenos">180</span></a>            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="process_single_paper-181"><a href="#process_single_paper-181"><span class="linenos">181</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Highlight error for ID </span><span class="si">{</span><span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="process_single_paper-182"><a href="#process_single_paper-182"><span class="linenos">182</span></a>
+</span><span id="process_single_paper-183"><a href="#process_single_paper-183"><span class="linenos">183</span></a>        <span class="n">evidence_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span id="process_single_paper-184"><a href="#process_single_paper-184"><span class="linenos">184</span></a>            <span class="p">{</span><span class="s2">&quot;evidences&quot;</span><span class="p">:</span> <span class="n">evidences</span><span class="p">,</span> <span class="s2">&quot;conclusion&quot;</span><span class="p">:</span> <span class="n">conclusion</span><span class="p">},</span>
+</span><span id="process_single_paper-185"><a href="#process_single_paper-185"><span class="linenos">185</span></a>            <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="process_single_paper-186"><a href="#process_single_paper-186"><span class="linenos">186</span></a>        <span class="p">)</span>
+</span><span id="process_single_paper-187"><a href="#process_single_paper-187"><span class="linenos">187</span></a>
+</span><span id="process_single_paper-188"><a href="#process_single_paper-188"><span class="linenos">188</span></a>        <span class="k">return</span> <span class="p">{</span>
+</span><span id="process_single_paper-189"><a href="#process_single_paper-189"><span class="linenos">189</span></a>            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-190"><a href="#process_single_paper-190"><span class="linenos">190</span></a>            <span class="s2">&quot;decision&quot;</span><span class="p">:</span> <span class="n">decision</span><span class="p">,</span>
+</span><span id="process_single_paper-191"><a href="#process_single_paper-191"><span class="linenos">191</span></a>            <span class="s2">&quot;evidence&quot;</span><span class="p">:</span> <span class="n">evidence_json</span><span class="p">,</span>
+</span><span id="process_single_paper-192"><a href="#process_single_paper-192"><span class="linenos">192</span></a>            <span class="s2">&quot;hl_path&quot;</span><span class="p">:</span> <span class="n">hl_path_str</span><span class="p">,</span>
+</span><span id="process_single_paper-193"><a href="#process_single_paper-193"><span class="linenos">193</span></a>        <span class="p">}</span>
+</span><span id="process_single_paper-194"><a href="#process_single_paper-194"><span class="linenos">194</span></a>
+</span><span id="process_single_paper-195"><a href="#process_single_paper-195"><span class="linenos">195</span></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="process_single_paper-196"><a href="#process_single_paper-196"><span class="linenos">196</span></a>        <span class="k">return</span> <span class="n">error_result</span><span class="p">(</span>
+</span><span id="process_single_paper-197"><a href="#process_single_paper-197"><span class="linenos">197</span></a>            <span class="n">paper</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+</span><span id="process_single_paper-198"><a href="#process_single_paper-198"><span class="linenos">198</span></a>            <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;runtime_error&quot;</span><span class="p">,</span>
+</span><span id="process_single_paper-199"><a href="#process_single_paper-199"><span class="linenos">199</span></a>            <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+</span><span id="process_single_paper-200"><a href="#process_single_paper-200"><span class="linenos">200</span></a>        <span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Process a single paper through the full-text screening pipeline.</p>
+
+<p>Workflow:
+    1. Load PDF or text input
+    2. Construct LLM prompt
+    3. Call model with retry
+    4. Parse structured output (with fallback retry)
+    5. Optionally highlight evidence in PDF</p>
+
+<p>Args:
+    client (httpx.AsyncClient): Shared HTTP client.
+    runtime (FullTextScreeningRuntime): Runtime configuration.
+    request (FullTextRequest): Paper + PICO + metadata.</p>
+
+<p>Returns:
+    dict[str, Any]:
+        {
+            "id": paper_id,
+            "decision": str,
+            "evidence": JSON string,
+            "hl_path": str | None
+        }</p>
+</div>
+
 
                 </section>
                 <section id="resolve_runtime_config">
@@ -1519,49 +1641,67 @@
 
     </div>
     <a class="headerlink" href="#resolve_runtime_config"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="resolve_runtime_config-126"><a href="#resolve_runtime_config-126"><span class="linenos">126</span></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_runtime_config</span><span class="p">(</span>
-</span><span id="resolve_runtime_config-127"><a href="#resolve_runtime_config-127"><span class="linenos">127</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-128"><a href="#resolve_runtime_config-128"><span class="linenos">128</span></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-129"><a href="#resolve_runtime_config-129"><span class="linenos">129</span></a>    <span class="n">parse_pages_spec</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-130"><a href="#resolve_runtime_config-130"><span class="linenos">130</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FullTextScreeningRuntime</span><span class="p">:</span>
-</span><span id="resolve_runtime_config-131"><a href="#resolve_runtime_config-131"><span class="linenos">131</span></a>    <span class="n">default_cfg</span> <span class="o">=</span> <span class="n">read_env_config</span><span class="p">()</span>
-</span><span id="resolve_runtime_config-132"><a href="#resolve_runtime_config-132"><span class="linenos">132</span></a>    <span class="n">endpoint_override</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="resolve_runtime_config-133"><a href="#resolve_runtime_config-133"><span class="linenos">133</span></a>
-</span><span id="resolve_runtime_config-134"><a href="#resolve_runtime_config-134"><span class="linenos">134</span></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="resolve_runtime_config-135"><a href="#resolve_runtime_config-135"><span class="linenos">135</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-136"><a href="#resolve_runtime_config-136"><span class="linenos">136</span></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">FullTextScreeningConfig</span><span class="p">):</span>
-</span><span id="resolve_runtime_config-137"><a href="#resolve_runtime_config-137"><span class="linenos">137</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-138"><a href="#resolve_runtime_config-138"><span class="linenos">138</span></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span id="resolve_runtime_config-139"><a href="#resolve_runtime_config-139"><span class="linenos">139</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">),</span> <span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">config</span><span class="p">)}</span>
-</span><span id="resolve_runtime_config-140"><a href="#resolve_runtime_config-140"><span class="linenos">140</span></a>        <span class="n">endpoint_value</span> <span class="o">=</span> <span class="n">merged</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;endpoint&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-141"><a href="#resolve_runtime_config-141"><span class="linenos">141</span></a>        <span class="k">if</span> <span class="n">endpoint_value</span><span class="p">:</span>
-</span><span id="resolve_runtime_config-142"><a href="#resolve_runtime_config-142"><span class="linenos">142</span></a>            <span class="n">endpoint_override</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">endpoint_value</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-143"><a href="#resolve_runtime_config-143"><span class="linenos">143</span></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="resolve_runtime_config-144"><a href="#resolve_runtime_config-144"><span class="linenos">144</span></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported config input: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-145"><a href="#resolve_runtime_config-145"><span class="linenos">145</span></a>
-</span><span id="resolve_runtime_config-146"><a href="#resolve_runtime_config-146"><span class="linenos">146</span></a>    <span class="n">resolved</span> <span class="o">=</span> <span class="n">FullTextScreeningConfig</span><span class="p">(</span><span class="o">**</span><span class="n">merged</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-147"><a href="#resolve_runtime_config-147"><span class="linenos">147</span></a>    <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">api_key_env</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-148"><a href="#resolve_runtime_config-148"><span class="linenos">148</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
-</span><span id="resolve_runtime_config-149"><a href="#resolve_runtime_config-149"><span class="linenos">149</span></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing env var in Screening/.env: </span><span class="si">{</span><span class="n">resolved</span><span class="o">.</span><span class="n">api_key_env</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-150"><a href="#resolve_runtime_config-150"><span class="linenos">150</span></a>
-</span><span id="resolve_runtime_config-151"><a href="#resolve_runtime_config-151"><span class="linenos">151</span></a>    <span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint_override</span> <span class="ow">or</span> <span class="n">resolved</span><span class="o">.</span><span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/responses&quot;</span>
-</span><span id="resolve_runtime_config-152"><a href="#resolve_runtime_config-152"><span class="linenos">152</span></a>    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">pdf_pages</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
-</span><span id="resolve_runtime_config-153"><a href="#resolve_runtime_config-153"><span class="linenos">153</span></a>    <span class="k">return</span> <span class="n">FullTextScreeningRuntime</span><span class="p">(</span>
-</span><span id="resolve_runtime_config-154"><a href="#resolve_runtime_config-154"><span class="linenos">154</span></a>        <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-155"><a href="#resolve_runtime_config-155"><span class="linenos">155</span></a>        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-156"><a href="#resolve_runtime_config-156"><span class="linenos">156</span></a>        <span class="n">model</span><span class="o">=</span><span class="n">resolved</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-157"><a href="#resolve_runtime_config-157"><span class="linenos">157</span></a>        <span class="n">timeout</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">timeout</span><span class="p">)),</span>
-</span><span id="resolve_runtime_config-158"><a href="#resolve_runtime_config-158"><span class="linenos">158</span></a>        <span class="n">retries</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">retries</span><span class="p">)),</span>
-</span><span id="resolve_runtime_config-159"><a href="#resolve_runtime_config-159"><span class="linenos">159</span></a>        <span class="n">retry_delay</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">retry_delay</span><span class="p">)),</span>
-</span><span id="resolve_runtime_config-160"><a href="#resolve_runtime_config-160"><span class="linenos">160</span></a>        <span class="n">max_concurrency</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">max_concurrency</span><span class="p">)),</span>
-</span><span id="resolve_runtime_config-161"><a href="#resolve_runtime_config-161"><span class="linenos">161</span></a>        <span class="n">pdf_pages</span><span class="o">=</span><span class="n">pdf_pages</span><span class="p">,</span>
-</span><span id="resolve_runtime_config-162"><a href="#resolve_runtime_config-162"><span class="linenos">162</span></a>        <span class="n">selected_pages</span><span class="o">=</span><span class="n">parse_pages_spec</span><span class="p">(</span><span class="n">pdf_pages</span><span class="p">),</span>
-</span><span id="resolve_runtime_config-163"><a href="#resolve_runtime_config-163"><span class="linenos">163</span></a>        <span class="n">enable_highlight</span><span class="o">=</span><span class="n">_coerce_bool</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">enable_highlight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-</span><span id="resolve_runtime_config-164"><a href="#resolve_runtime_config-164"><span class="linenos">164</span></a>    <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="resolve_runtime_config-271"><a href="#resolve_runtime_config-271"><span class="linenos">271</span></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_runtime_config</span><span class="p">(</span>
+</span><span id="resolve_runtime_config-272"><a href="#resolve_runtime_config-272"><span class="linenos">272</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-273"><a href="#resolve_runtime_config-273"><span class="linenos">273</span></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-274"><a href="#resolve_runtime_config-274"><span class="linenos">274</span></a>    <span class="n">parse_pages_spec</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-275"><a href="#resolve_runtime_config-275"><span class="linenos">275</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FullTextScreeningRuntime</span><span class="p">:</span>
+</span><span id="resolve_runtime_config-276"><a href="#resolve_runtime_config-276"><span class="linenos">276</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="resolve_runtime_config-277"><a href="#resolve_runtime_config-277"><span class="linenos">277</span></a><span class="sd">    Merge user config with environment config and resolve runtime settings.</span>
+</span><span id="resolve_runtime_config-278"><a href="#resolve_runtime_config-278"><span class="linenos">278</span></a>
+</span><span id="resolve_runtime_config-279"><a href="#resolve_runtime_config-279"><span class="linenos">279</span></a><span class="sd">    Args:</span>
+</span><span id="resolve_runtime_config-280"><a href="#resolve_runtime_config-280"><span class="linenos">280</span></a><span class="sd">        config: User-provided config.</span>
+</span><span id="resolve_runtime_config-281"><a href="#resolve_runtime_config-281"><span class="linenos">281</span></a><span class="sd">        parse_pages_spec: Function to parse page selection.</span>
+</span><span id="resolve_runtime_config-282"><a href="#resolve_runtime_config-282"><span class="linenos">282</span></a>
+</span><span id="resolve_runtime_config-283"><a href="#resolve_runtime_config-283"><span class="linenos">283</span></a><span class="sd">    Returns:</span>
+</span><span id="resolve_runtime_config-284"><a href="#resolve_runtime_config-284"><span class="linenos">284</span></a><span class="sd">        FullTextScreeningRuntime</span>
+</span><span id="resolve_runtime_config-285"><a href="#resolve_runtime_config-285"><span class="linenos">285</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="resolve_runtime_config-286"><a href="#resolve_runtime_config-286"><span class="linenos">286</span></a>    <span class="n">default_cfg</span> <span class="o">=</span> <span class="n">read_env_config</span><span class="p">()</span>
+</span><span id="resolve_runtime_config-287"><a href="#resolve_runtime_config-287"><span class="linenos">287</span></a>    <span class="n">endpoint_override</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="resolve_runtime_config-288"><a href="#resolve_runtime_config-288"><span class="linenos">288</span></a>
+</span><span id="resolve_runtime_config-289"><a href="#resolve_runtime_config-289"><span class="linenos">289</span></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="resolve_runtime_config-290"><a href="#resolve_runtime_config-290"><span class="linenos">290</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-291"><a href="#resolve_runtime_config-291"><span class="linenos">291</span></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">FullTextScreeningConfig</span><span class="p">):</span>
+</span><span id="resolve_runtime_config-292"><a href="#resolve_runtime_config-292"><span class="linenos">292</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-293"><a href="#resolve_runtime_config-293"><span class="linenos">293</span></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span id="resolve_runtime_config-294"><a href="#resolve_runtime_config-294"><span class="linenos">294</span></a>        <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">default_cfg</span><span class="p">),</span> <span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">config</span><span class="p">)}</span>
+</span><span id="resolve_runtime_config-295"><a href="#resolve_runtime_config-295"><span class="linenos">295</span></a>        <span class="n">endpoint_override</span> <span class="o">=</span> <span class="n">merged</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;endpoint&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-296"><a href="#resolve_runtime_config-296"><span class="linenos">296</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="resolve_runtime_config-297"><a href="#resolve_runtime_config-297"><span class="linenos">297</span></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported config input: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-298"><a href="#resolve_runtime_config-298"><span class="linenos">298</span></a>
+</span><span id="resolve_runtime_config-299"><a href="#resolve_runtime_config-299"><span class="linenos">299</span></a>    <span class="n">resolved</span> <span class="o">=</span> <span class="n">FullTextScreeningConfig</span><span class="p">(</span><span class="o">**</span><span class="n">merged</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-300"><a href="#resolve_runtime_config-300"><span class="linenos">300</span></a>
+</span><span id="resolve_runtime_config-301"><a href="#resolve_runtime_config-301"><span class="linenos">301</span></a>    <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">api_key_env</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-302"><a href="#resolve_runtime_config-302"><span class="linenos">302</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
+</span><span id="resolve_runtime_config-303"><a href="#resolve_runtime_config-303"><span class="linenos">303</span></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing env var: </span><span class="si">{</span><span class="n">resolved</span><span class="o">.</span><span class="n">api_key_env</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="resolve_runtime_config-304"><a href="#resolve_runtime_config-304"><span class="linenos">304</span></a>
+</span><span id="resolve_runtime_config-305"><a href="#resolve_runtime_config-305"><span class="linenos">305</span></a>    <span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint_override</span> <span class="ow">or</span> <span class="n">resolved</span><span class="o">.</span><span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/responses&quot;</span>
+</span><span id="resolve_runtime_config-306"><a href="#resolve_runtime_config-306"><span class="linenos">306</span></a>
+</span><span id="resolve_runtime_config-307"><a href="#resolve_runtime_config-307"><span class="linenos">307</span></a>    <span class="k">return</span> <span class="n">FullTextScreeningRuntime</span><span class="p">(</span>
+</span><span id="resolve_runtime_config-308"><a href="#resolve_runtime_config-308"><span class="linenos">308</span></a>        <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-309"><a href="#resolve_runtime_config-309"><span class="linenos">309</span></a>        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-310"><a href="#resolve_runtime_config-310"><span class="linenos">310</span></a>        <span class="n">model</span><span class="o">=</span><span class="n">resolved</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+</span><span id="resolve_runtime_config-311"><a href="#resolve_runtime_config-311"><span class="linenos">311</span></a>        <span class="n">timeout</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">timeout</span><span class="p">)),</span>
+</span><span id="resolve_runtime_config-312"><a href="#resolve_runtime_config-312"><span class="linenos">312</span></a>        <span class="n">retries</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">retries</span><span class="p">)),</span>
+</span><span id="resolve_runtime_config-313"><a href="#resolve_runtime_config-313"><span class="linenos">313</span></a>        <span class="n">retry_delay</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">retry_delay</span><span class="p">)),</span>
+</span><span id="resolve_runtime_config-314"><a href="#resolve_runtime_config-314"><span class="linenos">314</span></a>        <span class="n">max_concurrency</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">max_concurrency</span><span class="p">)),</span>
+</span><span id="resolve_runtime_config-315"><a href="#resolve_runtime_config-315"><span class="linenos">315</span></a>        <span class="n">pdf_pages</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">pdf_pages</span><span class="p">),</span>
+</span><span id="resolve_runtime_config-316"><a href="#resolve_runtime_config-316"><span class="linenos">316</span></a>        <span class="n">selected_pages</span><span class="o">=</span><span class="n">parse_pages_spec</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">pdf_pages</span><span class="p">),</span>
+</span><span id="resolve_runtime_config-317"><a href="#resolve_runtime_config-317"><span class="linenos">317</span></a>        <span class="n">enable_highlight</span><span class="o">=</span><span class="n">_coerce_bool</span><span class="p">(</span><span class="n">resolved</span><span class="o">.</span><span class="n">enable_highlight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span id="resolve_runtime_config-318"><a href="#resolve_runtime_config-318"><span class="linenos">318</span></a>    <span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Merge user config with environment config and resolve runtime settings.</p>
+
+<p>Args:
+    config: User-provided config.
+    parse_pages_spec: Function to parse page selection.</p>
+
+<p>Returns:
+    FullTextScreeningRuntime</p>
+</div>
+
 
                 </section>
                 <section id="run_fulltext">
@@ -1575,38 +1715,75 @@
 
     </div>
     <a class="headerlink" href="#run_fulltext"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="run_fulltext-121"><a href="#run_fulltext-121"><span class="linenos">121</span></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_fulltext</span><span class="p">(</span>
-</span><span id="run_fulltext-122"><a href="#run_fulltext-122"><span class="linenos">122</span></a>    <span class="n">papers</span><span class="p">,</span>
-</span><span id="run_fulltext-123"><a href="#run_fulltext-123"><span class="linenos">123</span></a>    <span class="n">pico_dict</span><span class="p">,</span>
-</span><span id="run_fulltext-124"><a href="#run_fulltext-124"><span class="linenos">124</span></a>    <span class="n">project_type</span><span class="p">,</span>
-</span><span id="run_fulltext-125"><a href="#run_fulltext-125"><span class="linenos">125</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="run_fulltext-126"><a href="#run_fulltext-126"><span class="linenos">126</span></a><span class="p">):</span>
-</span><span id="run_fulltext-127"><a href="#run_fulltext-127"><span class="linenos">127</span></a>    <span class="n">runtime</span> <span class="o">=</span> <span class="n">resolve_runtime_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">parse_pages_spec</span><span class="o">=</span><span class="n">parse_pages_spec</span><span class="p">)</span>
-</span><span id="run_fulltext-128"><a href="#run_fulltext-128"><span class="linenos">128</span></a>    <span class="n">normalized_project_type</span> <span class="o">=</span> <span class="n">normalize_project_type</span><span class="p">(</span><span class="n">project_type</span><span class="p">)</span>
-</span><span id="run_fulltext-129"><a href="#run_fulltext-129"><span class="linenos">129</span></a>    <span class="n">raw_pico</span> <span class="o">=</span> <span class="n">coerce_pico_payload</span><span class="p">(</span><span class="n">pico_dict</span><span class="p">)</span>
-</span><span id="run_fulltext-130"><a href="#run_fulltext-130"><span class="linenos">130</span></a>    <span class="n">normalized_pico</span> <span class="o">=</span> <span class="n">normalize_pico_input</span><span class="p">(</span><span class="n">raw_pico</span><span class="p">)</span>
-</span><span id="run_fulltext-131"><a href="#run_fulltext-131"><span class="linenos">131</span></a>    <span class="n">requests</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="run_fulltext-132"><a href="#run_fulltext-132"><span class="linenos">132</span></a>        <span class="n">FullTextRequest</span><span class="p">(</span>
-</span><span id="run_fulltext-133"><a href="#run_fulltext-133"><span class="linenos">133</span></a>            <span class="n">paper</span><span class="o">=</span><span class="n">coerce_paper</span><span class="p">(</span><span class="n">paper</span><span class="p">),</span>
-</span><span id="run_fulltext-134"><a href="#run_fulltext-134"><span class="linenos">134</span></a>            <span class="n">pico_dict</span><span class="o">=</span><span class="n">raw_pico</span><span class="p">,</span>
-</span><span id="run_fulltext-135"><a href="#run_fulltext-135"><span class="linenos">135</span></a>            <span class="n">project_type</span><span class="o">=</span><span class="n">normalized_project_type</span><span class="p">,</span>
-</span><span id="run_fulltext-136"><a href="#run_fulltext-136"><span class="linenos">136</span></a>            <span class="n">normalized_pico</span><span class="o">=</span><span class="n">normalized_pico</span><span class="p">,</span>
-</span><span id="run_fulltext-137"><a href="#run_fulltext-137"><span class="linenos">137</span></a>        <span class="p">)</span>
-</span><span id="run_fulltext-138"><a href="#run_fulltext-138"><span class="linenos">138</span></a>        <span class="k">for</span> <span class="n">paper</span> <span class="ow">in</span> <span class="n">papers</span>
-</span><span id="run_fulltext-139"><a href="#run_fulltext-139"><span class="linenos">139</span></a>    <span class="p">]</span>
-</span><span id="run_fulltext-140"><a href="#run_fulltext-140"><span class="linenos">140</span></a>
-</span><span id="run_fulltext-141"><a href="#run_fulltext-141"><span class="linenos">141</span></a>    <span class="n">sem</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">max_concurrency</span><span class="p">)</span>
-</span><span id="run_fulltext-142"><a href="#run_fulltext-142"><span class="linenos">142</span></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-</span><span id="run_fulltext-143"><a href="#run_fulltext-143"><span class="linenos">143</span></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">bounded_process</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">FullTextRequest</span><span class="p">):</span>
-</span><span id="run_fulltext-144"><a href="#run_fulltext-144"><span class="linenos">144</span></a>            <span class="k">async</span> <span class="k">with</span> <span class="n">sem</span><span class="p">:</span>
-</span><span id="run_fulltext-145"><a href="#run_fulltext-145"><span class="linenos">145</span></a>                <span class="k">return</span> <span class="k">await</span> <span class="n">process_single_paper</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">runtime</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
-</span><span id="run_fulltext-146"><a href="#run_fulltext-146"><span class="linenos">146</span></a>
-</span><span id="run_fulltext-147"><a href="#run_fulltext-147"><span class="linenos">147</span></a>        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">bounded_process</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">]</span>
-</span><span id="run_fulltext-148"><a href="#run_fulltext-148"><span class="linenos">148</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="run_fulltext-203"><a href="#run_fulltext-203"><span class="linenos">203</span></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_fulltext</span><span class="p">(</span>
+</span><span id="run_fulltext-204"><a href="#run_fulltext-204"><span class="linenos">204</span></a>    <span class="n">papers</span><span class="p">,</span>
+</span><span id="run_fulltext-205"><a href="#run_fulltext-205"><span class="linenos">205</span></a>    <span class="n">pico_dict</span><span class="p">,</span>
+</span><span id="run_fulltext-206"><a href="#run_fulltext-206"><span class="linenos">206</span></a>    <span class="n">project_type</span><span class="p">,</span>
+</span><span id="run_fulltext-207"><a href="#run_fulltext-207"><span class="linenos">207</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="run_fulltext-208"><a href="#run_fulltext-208"><span class="linenos">208</span></a><span class="p">):</span>
+</span><span id="run_fulltext-209"><a href="#run_fulltext-209"><span class="linenos">209</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="run_fulltext-210"><a href="#run_fulltext-210"><span class="linenos">210</span></a><span class="sd">    Run full-text screening for multiple papers asynchronously.</span>
+</span><span id="run_fulltext-211"><a href="#run_fulltext-211"><span class="linenos">211</span></a>
+</span><span id="run_fulltext-212"><a href="#run_fulltext-212"><span class="linenos">212</span></a><span class="sd">    Features:</span>
+</span><span id="run_fulltext-213"><a href="#run_fulltext-213"><span class="linenos">213</span></a><span class="sd">        - Batch processing</span>
+</span><span id="run_fulltext-214"><a href="#run_fulltext-214"><span class="linenos">214</span></a><span class="sd">        - Concurrency control via semaphore</span>
+</span><span id="run_fulltext-215"><a href="#run_fulltext-215"><span class="linenos">215</span></a><span class="sd">        - Shared HTTP client</span>
+</span><span id="run_fulltext-216"><a href="#run_fulltext-216"><span class="linenos">216</span></a>
+</span><span id="run_fulltext-217"><a href="#run_fulltext-217"><span class="linenos">217</span></a><span class="sd">    Args:</span>
+</span><span id="run_fulltext-218"><a href="#run_fulltext-218"><span class="linenos">218</span></a><span class="sd">        papers (list): Input paper objects.</span>
+</span><span id="run_fulltext-219"><a href="#run_fulltext-219"><span class="linenos">219</span></a><span class="sd">        pico_dict (dict): PICO criteria.</span>
+</span><span id="run_fulltext-220"><a href="#run_fulltext-220"><span class="linenos">220</span></a><span class="sd">        project_type (str): Screening type (e.g., &quot;PICOS&quot;).</span>
+</span><span id="run_fulltext-221"><a href="#run_fulltext-221"><span class="linenos">221</span></a><span class="sd">        config (dict | FullTextScreeningConfig, optional): Runtime config.</span>
+</span><span id="run_fulltext-222"><a href="#run_fulltext-222"><span class="linenos">222</span></a>
+</span><span id="run_fulltext-223"><a href="#run_fulltext-223"><span class="linenos">223</span></a><span class="sd">    Returns:</span>
+</span><span id="run_fulltext-224"><a href="#run_fulltext-224"><span class="linenos">224</span></a><span class="sd">        list[dict]: Screening results for all papers.</span>
+</span><span id="run_fulltext-225"><a href="#run_fulltext-225"><span class="linenos">225</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="run_fulltext-226"><a href="#run_fulltext-226"><span class="linenos">226</span></a>    <span class="n">runtime</span> <span class="o">=</span> <span class="n">resolve_runtime_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">parse_pages_spec</span><span class="o">=</span><span class="n">parse_pages_spec</span><span class="p">)</span>
+</span><span id="run_fulltext-227"><a href="#run_fulltext-227"><span class="linenos">227</span></a>
+</span><span id="run_fulltext-228"><a href="#run_fulltext-228"><span class="linenos">228</span></a>    <span class="n">normalized_project_type</span> <span class="o">=</span> <span class="n">normalize_project_type</span><span class="p">(</span><span class="n">project_type</span><span class="p">)</span>
+</span><span id="run_fulltext-229"><a href="#run_fulltext-229"><span class="linenos">229</span></a>    <span class="n">raw_pico</span> <span class="o">=</span> <span class="n">coerce_pico_payload</span><span class="p">(</span><span class="n">pico_dict</span><span class="p">)</span>
+</span><span id="run_fulltext-230"><a href="#run_fulltext-230"><span class="linenos">230</span></a>    <span class="n">normalized_pico</span> <span class="o">=</span> <span class="n">normalize_pico_input</span><span class="p">(</span><span class="n">raw_pico</span><span class="p">)</span>
+</span><span id="run_fulltext-231"><a href="#run_fulltext-231"><span class="linenos">231</span></a>
+</span><span id="run_fulltext-232"><a href="#run_fulltext-232"><span class="linenos">232</span></a>    <span class="n">requests</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="run_fulltext-233"><a href="#run_fulltext-233"><span class="linenos">233</span></a>        <span class="n">FullTextRequest</span><span class="p">(</span>
+</span><span id="run_fulltext-234"><a href="#run_fulltext-234"><span class="linenos">234</span></a>            <span class="n">paper</span><span class="o">=</span><span class="n">coerce_paper</span><span class="p">(</span><span class="n">paper</span><span class="p">),</span>
+</span><span id="run_fulltext-235"><a href="#run_fulltext-235"><span class="linenos">235</span></a>            <span class="n">pico_dict</span><span class="o">=</span><span class="n">raw_pico</span><span class="p">,</span>
+</span><span id="run_fulltext-236"><a href="#run_fulltext-236"><span class="linenos">236</span></a>            <span class="n">project_type</span><span class="o">=</span><span class="n">normalized_project_type</span><span class="p">,</span>
+</span><span id="run_fulltext-237"><a href="#run_fulltext-237"><span class="linenos">237</span></a>            <span class="n">normalized_pico</span><span class="o">=</span><span class="n">normalized_pico</span><span class="p">,</span>
+</span><span id="run_fulltext-238"><a href="#run_fulltext-238"><span class="linenos">238</span></a>        <span class="p">)</span>
+</span><span id="run_fulltext-239"><a href="#run_fulltext-239"><span class="linenos">239</span></a>        <span class="k">for</span> <span class="n">paper</span> <span class="ow">in</span> <span class="n">papers</span>
+</span><span id="run_fulltext-240"><a href="#run_fulltext-240"><span class="linenos">240</span></a>    <span class="p">]</span>
+</span><span id="run_fulltext-241"><a href="#run_fulltext-241"><span class="linenos">241</span></a>
+</span><span id="run_fulltext-242"><a href="#run_fulltext-242"><span class="linenos">242</span></a>    <span class="n">sem</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">max_concurrency</span><span class="p">)</span>
+</span><span id="run_fulltext-243"><a href="#run_fulltext-243"><span class="linenos">243</span></a>
+</span><span id="run_fulltext-244"><a href="#run_fulltext-244"><span class="linenos">244</span></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">runtime</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+</span><span id="run_fulltext-245"><a href="#run_fulltext-245"><span class="linenos">245</span></a>
+</span><span id="run_fulltext-246"><a href="#run_fulltext-246"><span class="linenos">246</span></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">bounded_process</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">FullTextRequest</span><span class="p">):</span>
+</span><span id="run_fulltext-247"><a href="#run_fulltext-247"><span class="linenos">247</span></a>            <span class="k">async</span> <span class="k">with</span> <span class="n">sem</span><span class="p">:</span>
+</span><span id="run_fulltext-248"><a href="#run_fulltext-248"><span class="linenos">248</span></a>                <span class="k">return</span> <span class="k">await</span> <span class="n">process_single_paper</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">runtime</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span id="run_fulltext-249"><a href="#run_fulltext-249"><span class="linenos">249</span></a>
+</span><span id="run_fulltext-250"><a href="#run_fulltext-250"><span class="linenos">250</span></a>        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">bounded_process</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">]</span>
+</span><span id="run_fulltext-251"><a href="#run_fulltext-251"><span class="linenos">251</span></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Run full-text screening for multiple papers asynchronously.</p>
+
+<p>Features:
+    - Batch processing
+    - Concurrency control via semaphore
+    - Shared HTTP client</p>
+
+<p>Args:
+    papers (list): Input paper objects.
+    pico_dict (dict): PICO criteria.
+    project_type (str): Screening type (e.g., "PICOS").
+    config (dict | FullTextScreeningConfig, optional): Runtime config.</p>
+
+<p>Returns:
+    list[dict]: Screening results for all papers.</p>
+</div>
+
 
                 </section>
                 <section id="run_fulltext_ai_sync">
@@ -1620,22 +1797,54 @@
 
     </div>
     <a class="headerlink" href="#run_fulltext_ai_sync"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="run_fulltext_ai_sync-151"><a href="#run_fulltext_ai_sync-151"><span class="linenos">151</span></a><span class="k">def</span><span class="w"> </span><span class="nf">run_fulltext_ai_sync</span><span class="p">(</span>
-</span><span id="run_fulltext_ai_sync-152"><a href="#run_fulltext_ai_sync-152"><span class="linenos">152</span></a>    <span class="n">papers</span><span class="p">,</span>
-</span><span id="run_fulltext_ai_sync-153"><a href="#run_fulltext_ai_sync-153"><span class="linenos">153</span></a>    <span class="n">pico_dict</span><span class="p">,</span>
-</span><span id="run_fulltext_ai_sync-154"><a href="#run_fulltext_ai_sync-154"><span class="linenos">154</span></a>    <span class="n">project_type</span><span class="o">=</span><span class="s2">&quot;PICOS&quot;</span><span class="p">,</span>
-</span><span id="run_fulltext_ai_sync-155"><a href="#run_fulltext_ai_sync-155"><span class="linenos">155</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="run_fulltext_ai_sync-156"><a href="#run_fulltext_ai_sync-156"><span class="linenos">156</span></a><span class="p">):</span>
-</span><span id="run_fulltext_ai_sync-157"><a href="#run_fulltext_ai_sync-157"><span class="linenos">157</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
-</span><span id="run_fulltext_ai_sync-158"><a href="#run_fulltext_ai_sync-158"><span class="linenos">158</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
-</span><span id="run_fulltext_ai_sync-159"><a href="#run_fulltext_ai_sync-159"><span class="linenos">159</span></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="run_fulltext_ai_sync-160"><a href="#run_fulltext_ai_sync-160"><span class="linenos">160</span></a>        <span class="k">return</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">run_fulltext</span><span class="p">(</span><span class="n">papers</span><span class="p">,</span> <span class="n">pico_dict</span><span class="p">,</span> <span class="n">project_type</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
-</span><span id="run_fulltext_ai_sync-161"><a href="#run_fulltext_ai_sync-161"><span class="linenos">161</span></a>    <span class="k">finally</span><span class="p">:</span>
-</span><span id="run_fulltext_ai_sync-162"><a href="#run_fulltext_ai_sync-162"><span class="linenos">162</span></a>        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="run_fulltext_ai_sync-254"><a href="#run_fulltext_ai_sync-254"><span class="linenos">254</span></a><span class="k">def</span><span class="w"> </span><span class="nf">run_fulltext_ai_sync</span><span class="p">(</span>
+</span><span id="run_fulltext_ai_sync-255"><a href="#run_fulltext_ai_sync-255"><span class="linenos">255</span></a>    <span class="n">papers</span><span class="p">,</span>
+</span><span id="run_fulltext_ai_sync-256"><a href="#run_fulltext_ai_sync-256"><span class="linenos">256</span></a>    <span class="n">pico_dict</span><span class="p">,</span>
+</span><span id="run_fulltext_ai_sync-257"><a href="#run_fulltext_ai_sync-257"><span class="linenos">257</span></a>    <span class="n">project_type</span><span class="o">=</span><span class="s2">&quot;PICOS&quot;</span><span class="p">,</span>
+</span><span id="run_fulltext_ai_sync-258"><a href="#run_fulltext_ai_sync-258"><span class="linenos">258</span></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FullTextScreeningConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="run_fulltext_ai_sync-259"><a href="#run_fulltext_ai_sync-259"><span class="linenos">259</span></a><span class="p">):</span>
+</span><span id="run_fulltext_ai_sync-260"><a href="#run_fulltext_ai_sync-260"><span class="linenos">260</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="run_fulltext_ai_sync-261"><a href="#run_fulltext_ai_sync-261"><span class="linenos">261</span></a><span class="sd">    Synchronous wrapper for full-text screening.</span>
+</span><span id="run_fulltext_ai_sync-262"><a href="#run_fulltext_ai_sync-262"><span class="linenos">262</span></a>
+</span><span id="run_fulltext_ai_sync-263"><a href="#run_fulltext_ai_sync-263"><span class="linenos">263</span></a><span class="sd">    This function creates and manages an event loop internally,</span>
+</span><span id="run_fulltext_ai_sync-264"><a href="#run_fulltext_ai_sync-264"><span class="linenos">264</span></a><span class="sd">    allowing the async pipeline to be used in non-async environments.</span>
+</span><span id="run_fulltext_ai_sync-265"><a href="#run_fulltext_ai_sync-265"><span class="linenos">265</span></a>
+</span><span id="run_fulltext_ai_sync-266"><a href="#run_fulltext_ai_sync-266"><span class="linenos">266</span></a><span class="sd">    Args:</span>
+</span><span id="run_fulltext_ai_sync-267"><a href="#run_fulltext_ai_sync-267"><span class="linenos">267</span></a><span class="sd">        papers (list): Input papers.</span>
+</span><span id="run_fulltext_ai_sync-268"><a href="#run_fulltext_ai_sync-268"><span class="linenos">268</span></a><span class="sd">        pico_dict (dict): PICO criteria.</span>
+</span><span id="run_fulltext_ai_sync-269"><a href="#run_fulltext_ai_sync-269"><span class="linenos">269</span></a><span class="sd">        project_type (str, optional): Defaults to &quot;PICOS&quot;.</span>
+</span><span id="run_fulltext_ai_sync-270"><a href="#run_fulltext_ai_sync-270"><span class="linenos">270</span></a><span class="sd">        config (dict | FullTextScreeningConfig, optional): Runtime config.</span>
+</span><span id="run_fulltext_ai_sync-271"><a href="#run_fulltext_ai_sync-271"><span class="linenos">271</span></a>
+</span><span id="run_fulltext_ai_sync-272"><a href="#run_fulltext_ai_sync-272"><span class="linenos">272</span></a><span class="sd">    Returns:</span>
+</span><span id="run_fulltext_ai_sync-273"><a href="#run_fulltext_ai_sync-273"><span class="linenos">273</span></a><span class="sd">        list[dict]: Screening results.</span>
+</span><span id="run_fulltext_ai_sync-274"><a href="#run_fulltext_ai_sync-274"><span class="linenos">274</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="run_fulltext_ai_sync-275"><a href="#run_fulltext_ai_sync-275"><span class="linenos">275</span></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+</span><span id="run_fulltext_ai_sync-276"><a href="#run_fulltext_ai_sync-276"><span class="linenos">276</span></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+</span><span id="run_fulltext_ai_sync-277"><a href="#run_fulltext_ai_sync-277"><span class="linenos">277</span></a>
+</span><span id="run_fulltext_ai_sync-278"><a href="#run_fulltext_ai_sync-278"><span class="linenos">278</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="run_fulltext_ai_sync-279"><a href="#run_fulltext_ai_sync-279"><span class="linenos">279</span></a>        <span class="k">return</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+</span><span id="run_fulltext_ai_sync-280"><a href="#run_fulltext_ai_sync-280"><span class="linenos">280</span></a>            <span class="n">run_fulltext</span><span class="p">(</span><span class="n">papers</span><span class="p">,</span> <span class="n">pico_dict</span><span class="p">,</span> <span class="n">project_type</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span id="run_fulltext_ai_sync-281"><a href="#run_fulltext_ai_sync-281"><span class="linenos">281</span></a>        <span class="p">)</span>
+</span><span id="run_fulltext_ai_sync-282"><a href="#run_fulltext_ai_sync-282"><span class="linenos">282</span></a>    <span class="k">finally</span><span class="p">:</span>
+</span><span id="run_fulltext_ai_sync-283"><a href="#run_fulltext_ai_sync-283"><span class="linenos">283</span></a>        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Synchronous wrapper for full-text screening.</p>
+
+<p>This function creates and manages an event loop internally,
+allowing the async pipeline to be used in non-async environments.</p>
+
+<p>Args:
+    papers (list): Input papers.
+    pico_dict (dict): PICO criteria.
+    project_type (str, optional): Defaults to "PICOS".
+    config (dict | FullTextScreeningConfig, optional): Runtime config.</p>
+
+<p>Returns:
+    list[dict]: Screening results.</p>
+</div>
+
 
                 </section>
     </main>

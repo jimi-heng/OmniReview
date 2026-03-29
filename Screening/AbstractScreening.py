@@ -6,6 +6,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 import asyncio
 
+
+__all__ = ["run_ai_screening_sync"]
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 load_dotenv(SCRIPT_DIR / ".env", override=True)
 
