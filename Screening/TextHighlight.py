@@ -1,3 +1,6 @@
+# Author: Team 04
+# This file is developed by our team
+
 import fitz
 import unicodedata
 from rapidfuzz import fuzz

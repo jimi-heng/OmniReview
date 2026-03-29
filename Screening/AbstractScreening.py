@@ -1,3 +1,6 @@
+# Author: Team 04
+# This file is developed by our team
+
 import pandas as pd
 import os
 from Screening.abstract_screening import ThreeAgents

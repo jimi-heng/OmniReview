@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+# Author: Team 04
+# This file is developed by our team
+
 """
 Enhanced Data Extraction (CLI facade).
 

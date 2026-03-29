@@ -1,3 +1,6 @@
+# Author: Team 04
+# This file is developed by our team
+
 """
 Full-text screening pipeline using LLM inference.
 

@@ -1,3 +1,6 @@
+# Author: Team 04
+# This file is developed by our team
+
 from .models import FullTextRequest
 from .pico_normalizer import normalize_pico_input
 
