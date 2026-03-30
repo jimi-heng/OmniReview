@@ -4,6 +4,8 @@
 **Course:** COMP2043 Software Engineering Group Project  
 **Group:** 04  
 
+**Live Deployment:** The complete system is currently live and deployed in a production environment. You can try out the fully functional web application directly at [http://omnireview.cn](http://omnireview.cn).
+
 ### Team Members
 
 | Name | Student ID | 
