@@ -17,7 +17,14 @@ if str(SCREENING_DIR) not in sys.path:
     sys.path.insert(0, str(SCREENING_DIR))
 
 from Screening.abstract_screening import ThreeAgents
-from Screening.abstract_screening.literature_search import has_valid_abstract, literature_search_all, reconstruct_abstract
+from Screening.abstract_screening.literature_search import (
+    has_valid_abstract,
+    iter_batch_sizes,
+    literature_search_all,
+    reconstruct_abstract,
+    search_openalex,
+    search_pubmed,
+)
 from Screening.AbstractScreening import _run_ai_screening_async
 
 
@@ -320,6 +327,11 @@ class AbstractScreeningAPITests(unittest.IsolatedAsyncioTestCase):
 
 
 class LiteratureSearchHelperTests(unittest.TestCase):
+    def test_iter_batch_sizes_caps_requests_at_100(self) -> None:
+        self.assertEqual(list(iter_batch_sizes(0)), [])
+        self.assertEqual(list(iter_batch_sizes(50)), [50])
+        self.assertEqual(list(iter_batch_sizes(250)), [100, 100, 50])
+
     def test_reconstruct_abstract_ordered(self) -> None:
         self.assertEqual(reconstruct_abstract({"hello": [0], "world": [1]}), "hello world")
 
@@ -352,6 +364,85 @@ class LiteratureSearchHelperTests(unittest.TestCase):
         dois = [p.get("doi") for p in out]
         normalized = [str(d or "").lower().replace("https://doi.org/", "").strip() for d in dois]
         self.assertEqual(len(set(normalized)), len(normalized))
+
+    def test_literature_search_all_still_requests_two_n_candidates(self) -> None:
+        with (
+            patch("Screening.abstract_screening.literature_search.search_pubmed", return_value=[]) as pubmed,
+            patch("Screening.abstract_screening.literature_search.search_openalex", return_value=[]) as openalex,
+            patch("Screening.abstract_screening.literature_search.search_wos", return_value=[]) as wos,
+        ):
+            literature_search_all("q", 200, databases=["pubmed", "openalex", "wos"])
+
+        pubmed.assert_called_once_with("q", 400)
+        openalex.assert_called_once_with("q", 400)
+        wos.assert_called_once_with("q", 400)
+
+    def test_openalex_search_splits_large_requests_into_pages(self) -> None:
+        calls = []
+
+        class Response:
+            status_code = 200
+
+            def __init__(self, count):
+                self._count = count
+
+            def json(self):
+                return {
+                    "results": [
+                        {
+                            "title": f"T{i}",
+                            "abstract_inverted_index": {"abstract": [0]},
+                            "authorships": [],
+                            "primary_location": {},
+                            "publication_year": 2024,
+                            "doi": f"10.1/{i}",
+                        }
+                        for i in range(self._count)
+                    ]
+                }
+
+        def fake_safe_get(url, params=None, headers=None):
+            calls.append(params)
+            return Response(params["per-page"])
+
+        with patch("Screening.abstract_screening.literature_search.safe_get", side_effect=fake_safe_get):
+            out = search_openalex("q", 250)
+
+        self.assertEqual(len(out), 250)
+        self.assertEqual([c["per-page"] for c in calls], [100, 100, 50])
+        self.assertEqual([c["page"] for c in calls], [1, 2, 3])
+
+    def test_pubmed_search_splits_large_requests_into_retstart_pages(self) -> None:
+        calls = []
+
+        class SearchResponse:
+            status_code = 200
+
+            def __init__(self, pmids):
+                self._pmids = pmids
+
+            def json(self):
+                return {"esearchresult": {"idlist": self._pmids}}
+
+        class FetchResponse:
+            status_code = 200
+            text = "<PubmedArticleSet />"
+
+        def fake_safe_get(url, params=None, headers=None):
+            calls.append((url, params))
+            if "esearch.fcgi" in url:
+                retstart = params["retstart"]
+                retmax = params["retmax"]
+                return SearchResponse([str(i) for i in range(retstart, retstart + retmax)])
+            return FetchResponse()
+
+        with patch("Screening.abstract_screening.literature_search.safe_get", side_effect=fake_safe_get):
+            out = search_pubmed("q", 250)
+
+        self.assertEqual(out, [])
+        search_params = [params for url, params in calls if "esearch.fcgi" in url]
+        self.assertEqual([p["retmax"] for p in search_params], [100, 100, 50])
+        self.assertEqual([p["retstart"] for p in search_params], [0, 100, 200])
 
     def test_one_source_raises_others_still_returned(self) -> None:
         with (

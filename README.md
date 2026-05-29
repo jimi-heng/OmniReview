@@ -21,34 +21,16 @@
 
 ## 1. Introduction and Architectural Overview
 
-We built this platform specifically for clinical researchers to automate the heaviest parts of a systematic review. The goal is simple: speed up the research without losing the accuracy you'd expect from a human expert.
+This software is specifically for clinical researchers to automate the the systematic review process. The goal is to speed up the systematic review process but also maintain the accuracy and quality of the work done using this software.
 
-It's not just a basic search engine. Instead, it acts as a focused workflow that carefully sorts through massive amounts of medical data, step by step.
+### 1.1 Technology Stack
 
-### 1.1 How the System Works
+We separated the frontend and backend so the software as follows:
 
-To meet strict clinical standards, we use a "funnel" approach:
-
-- **Data Collection:** Instead of doing manual searches, the system directly fetches papers from major databases (PubMed, OpenAlex, Web of Science) and quietly removes duplicates in the background. This deep initial sweep ensures we don't miss any key evidence.
-- **Noise Filtering:** After that, a multi-stage screening process—moving from the abstract down to the full text—drops irrelevant papers. This saves our computing power for the most valuable articles.
-- **PICOS Logic:** Every decision the AI makes is grounded in the **PICOS** framework (**P**opulation, **I**ntervention, **C**omparison, **O**utcome, **S**tudy Design). Breaking queries into these five parts helps the model think like a doctor. (It also dynamically supports PECO and PIRO for different study types).
-
-### 1.2 AI Teamwork and Reliability
-
-To stop the AI from making things up and to keep data safe, a single prompt isn't enough. We set up a team of agents and an automatic backup plan:
-
-- **Three-Agent Check:** We never rely on one model for abstract screening. Two separate agents review each paper at the same time. If they disagree, a third "judge" agent steps in to make the final call. This "2+1" rule stops us from accidentally deleting important papers.
-- **5-Step Data Extraction:** We don't force the AI to read a 30-page PDF all at once. Instead, we break the extraction into five smaller steps: profiling the paper, finding study groups, making empty rows, extracting values, and checking rules. This step-by-step method makes the final data much more accurate.
-- **Auto Error Recovery:** Besides a custom JSON parser that fixes broken outputs, the system watches for missing data during extraction. If it finds a blank spot, it triggers a "recovery loop" to read specific sections (like Methods or Results) again and fill in the blanks. You don't have to restart it yourself.
-
-### 1.3 Technology Stack
-
-We separated the frontend and backend so the system runs fast and stays stable on a local machine:
-
-- **Frontend (Fast SPA):** We built a Single Page Application using plain JavaScript, HTML5, and CSS3. We purposely skipped heavy web frameworks to keep it incredibly responsive. It has a clean, glass-like UI, and the login page features a 3D DNA animation made with **Three.js** to match the medical theme.
-- **Backend (Modular):** The server runs on Python's **Flask**. We split the code into separate Blueprints, meaning the search, screening, and extraction tasks run on their own without messing with each other.
-- **Simple Storage:** We use **SQLite3**. Because it needs zero setup, the system automatically prepares and checks its own database tables when it starts. You don't have to install anything extra.
-- **AI & PDF Engine:** **LangChain** manages the AI agents, and **PyMuPDF** handles the documents. For long papers, a math algorithm scores each page based on your PICOS keywords to extract only the best text slices. Best of all, it draws highlight boxes right on the PDF, so you can easily see exactly where the evidence came from.
+- **Frontend (Fast SPA):** We built a Single Page Application (SPA) using plain JavaScript, HTML5, and CSS3. We purposely skipped the use of heavy web frameworks to ensure maintainability and for the ease of development. 
+- **Backend (Modular):** We used Python's lightweight web application framework **Flask** to develop the backend of our software. We split the system into separate modules and developed them one by one to ease the maintainability in the future. This means that the literature search or upload, screening and data extraction tasks can be treated and maintained as individual modules with low coupling.
+- **Database Storage:** We used **SQLite3** for our database. This is becuase it is a lightweight database which lets the system automatically prepares and checks its own database tables during start. You don't have to install anything extra.
+- **AI and PDF Libraries:** **LangChain** is used to develop the AI agents and **PyMuPDF** handles the documents. 
 
 ---
 
@@ -92,19 +74,17 @@ We separated the frontend and backend so the system runs fast and stays stable o
 
 ## 3. Local Setup Guide
 
-To guarantee deterministic builds and eliminate environment conflicts during grading, our toolchain mandates **`uv`** (a Rust-based package manager) instead of `pip`.
+Our project uses uv (a Rust-based package manager) instead of pip to guarantee deterministic builds and eliminate environment conflicts.
 
-Furthermore, our PDF generation engine (`WeasyPrint`) relies on native C-libraries (GTK3/Pango). You must install these system-level dependencies before launching the backend.
+### 3.1 Install System Dependencies for PDF Generation
 
-### 3.1 Install Native C-Libraries (Crucial for PDF Engine)
-
-Based on your operating system, please install the required native rendering engines:
+`WeasyPrint` (our PDF engine) requires native graphics libraries to render fonts and layouts. Install these **before** running the backend:
 
 **Windows:**
 
 1. Download and run the latest [GTK3 Runtime Environment Installer (.exe)](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
 2. **Crucial:** During installation, ensure the checkbox **"Set up PATH environment variable to include GTK+"** is selected.
-3. **Restart:** You MUST restart your terminal (CMD/PowerShell) or IDE (VS Code) after installation for the environment variables to take effect.
+3. **Restart:** You MUST restart your terminal (e.g. CMD/PowerShell) or IDE (e.g. VS Code) after installation for the environment variables to take effect.
 
 **macOS:**
 
@@ -178,58 +158,71 @@ The required `.env` file with LLM API keys is pre-packaged. Navigate to **`http:
 
 ## 4. Core Functional Modules
 
-We engineered the OmniReview codebase to follow the chronological data pipeline of a systematic review. The system is designed to ensure high cohesion, low coupling, and resilience against LLM hallucinations. The following sections detail the specific classes, methods, and databases driving each phase.
+The following sections explains the code for each core functional module in our system, including literature search, abstract screening, full-text screening and data extraction.
 
-### 4.1 Literature Search & Multi-Source Aggregation
+### 4.1 Literature Search
 
-_(File: `abstract_screening/literature_search.py`)_
+File: `abstract_screening/literature_search.py`
 
-To build a comprehensive knowledge base, the system fetches metadata directly from standard academic databases.
+Our system fetches metadata directly from standard academic databases during literature search.
 
-- **Databases Utilized:** **PubMed** (via NCBI E-utilities), **OpenAlex** (via REST API), and **Web of Science** (via Clarivate API).
+- **Database Access API:** **PubMed** (via NCBI E-utilities), **OpenAlex** (via REST API) and **Web of Science** (via Clarivate API).
+
 - **Concurrent Fetching:** The `literature_search_all()` function dispatches asynchronous requests to the selected databases. It utilizes a `requests.Session()` mounted with a custom `urllib3` HTTPAdapter (`Retry(total=3)`) to handle network instability.
-- **Algorithmic Deduplication:** To maintain dataset integrity, the module normalizes DOIs (`doi.replace("https://doi.org/", "").strip().lower()`). It uses a dictionary hash-map to automatically drop duplicate records retrieved across different databases.
 
-### 4.2 Triangulated Abstract Screening
+- **Deduplication Algorithm:** The module normalizes DOIs (`doi.replace("https://doi.org/", "").strip().lower()`) and uses a dictionary hash-map to automatically drop duplicate records retrieved across different databases.
 
-_(File: `ThreeAgents.py`)_
+### 4.2 Abstract Screening
 
-Relying on a single LLM introduces a risk of false exclusions. We mitigated this by implementing a Multi-Agent Triangulation workflow.
+File: `ThreeAgents.py`
 
-- **Concurrent Evaluation:** The `use_agent_all()` orchestrator batches pending abstracts and dispatches them to two independent LangChain agents simultaneously using `asyncio.gather()`.
-- **Structured Output Coercion:** We bind LLM outputs using `Pydantic` schemas (`Judge_Base` and `Judge_List`). This forces the models to return binary decisions alongside explicit reasoning (`Reason`), ensuring structured responses.
-- **Algorithmic Adjudication:** The engine calculates a pandas Boolean array (`same_mask = batch_df["Flag1"] == batch_df["Flag2"]`) to cross-reference decisions. For conflicts, it dynamically invokes `use_agent_after()` to spin up a third adjudicator agent to establish a deterministic consensus.
+We mitigated this by implementing a multi-agent workflow involving three AI agents for abstract screening.
 
-### 4.3 Full-Text Slicing & Multimodal Screening
+- **Concurrent Evaluation:** The `use_agent_all()` function orchestrates parallel processing by batching pending abstracts and dispatching them to two independent agents simultaneously via `asyncio.gather()`.
 
-_(Files: `full_text_screening/orchestrator.py` & `pdf.py` & `TextHighlight.py`)_
+- **Structured Output:** We bind LLM outputs using `Pydantic` schemas (`Judge_Base` and `Judge_List`). This forces the models to return binary decisions along with explicit reasoning (`Reason`) ensuring structured responses.
 
-Processing 30-page PDFs frequently exceeds standard LLM context windows. We built a pipeline to slice and evaluate documents systematically.
+- **Adjudication Algorithm:** Our software calculates a **Python pandas** Boolean array (`same_mask = batch_df["Flag1"] == batch_df["Flag2"]`) to cross check the decisions from the first two LLM reviewers. If conflicts happen, it dynamically invokes `use_agent_after()` to use third adjudicator agent for making a final decision.
 
-- **Page Scoring:** The `_score_page_text()` algorithm uses `PyMuPDF (fitz)` to extract text and mathematically scores each page based on structural anchors (e.g., "methods", "results") and user-defined PICO keywords.
+### 4.3 Full-Text Screening (Slicing & Multimodal Screening)
+
+_Files: `full_text_screening/orchestrator.py` & `pdf.py` & `TextHighlight.py`_
+
+We built a pipeline to slice and evaluate only relevant sections of documents systematically. This is because processing an average of 30 pages per PDF in one call frequently exceeds the standard LLM context windows. 
+
+- **Page Scoring:** The `_score_page_text()` algorithm uses `PyMuPDF (fitz)` to extract text and scores each page based on specific headers or keywords (e.g., "methods", "results") and user-defined PICO keywords.
+
 - **Byte Stream Assembly:** The `build_targeted_pdf_bytes()` function crops the document down to its highest-scoring subset, generating a compressed in-memory PDF byte stream to reduce API payload size and latency.
-- **Visual Tracing:** Post-screening, the `highlight_pdf()` function leverages the PyMuPDF engine to draw bounding boxes directly on the PDF where the `evidence_span` was found, ensuring data traceability and facilitating manual verification.
 
-### 4.4 The 5-Stage Data Extraction State Machine
+- **PDF Highlight Feature:** This is a  post-screening feature where the `highlight_pdf()` function leverages the **PyMuPDF** engine to draw bounding boxes directly on specific sections on the PDF where the `evidence_span` was found.
 
-_(Files: `data_extraction/service.py` & `parsing.py`)_
+### 4.4 Data Extraction
 
-Transforming unstructured full-text PDFs into tabular data is orchestrated by the `PipelineOrchestrator` via a 5-stage asynchronous pipeline (`run()` method):
+_Files: `data_extraction/service.py` & `parsing.py`_
 
-1. **Paper Profiling (`_run_stage1`):** Analyzes global context, returning a `PaperProfile` containing Study Design, Country, and Sample Size.
+The data extraction feature that transforms unstructured full-text PDFs into tabular data is orchestrated by the `PipelineOrchestrator` through a **5-stage** asynchronous pipeline (`run()` method):
+
+1. **Paper Profiling (`_run_stage1`):** Analyzes the global context and returns a `PaperProfile` containing the study design, country and sample size.
+
 2. **Study-Unit Discovery (`_run_stage2`):** Isolates clinical trial arms into `StudyUnit` objects.
-3. **Row Inventory (`_run_stage3`):** Cross-references study units with PICO targets to construct a blueprint of empty `RowCandidate` objects.
-4. **Cell Extraction (`_run_stage4`):** Iterates over the blueprint. The LLM maps outputs to `ExtractedCell` objects containing both `value` and verbatim `evidence`.
-5. **Validation & Recovery (`_run_stage5_with_recovery`):** Evaluates extraction against predefined rules. If critical fields are missing, it triggers a recovery loop (`stage5:recovery`) to re-prompt the LLM for specific data gaps.
 
-- **Fault-Tolerant JSON Parsing:** If the LLM returns truncated JSON, the `RobustJSONParser._repair_truncated()` algorithm counts unclosed braces `{` and brackets `[` to automatically inject the exact closing sequence required to parse the payload successfully.
+3. **Row Inventory (`_run_stage3`):** Cross check study units with PICO targets to construct a blueprint of empty `RowCandidate` objects.
+
+4. **Cell Extraction (`_run_stage4`):** The LLM iterates over the blueprint and maps outputs to `ExtractedCell` objects containing both `value` and verbatim `evidence`.
+
+5. **Validation & Recovery (`_run_stage5_with_recovery`):** Evaluates the extraction outcome against predefined rules. If critical fields are missing, it triggers a recovery loop (`stage5:recovery`) to prompt the LLM again for specific data gaps.
+
+- **Fault Tolerance in JSON Parsing:** If the LLM returns a truncated JSON object, the `RobustJSONParser._repair_truncated()` algorithm counts the number of unclosed braces `{` and brackets `[` to automatically inject the exact closing sequence required to parse the payload successfully.
 
 ### 4.5 SPA Frontend & Embedded Persistence
 
-_(Files: `js/2-router.js`, `js/9-app.js`, & `grpfh/database.py`)_
+_Files: `js/2-router.js`, `js/9-app.js` and `grpfh/database.py`_
 
 We utilized a lightweight tech stack without heavy web frameworks to prioritize client-side performance.
 
-- **DOM Routing:** The application relies on Vanilla JavaScript (`showPage()` core logic) with CSS animations for Single Page Application (SPA) transitions.
+- **DOM Routing:** The application relies on vanilla JavaScript (`showPage()` core logic) with CSS animations for Single Page Application (SPA) transitions.
+
 - **WebGL Canvas:** The authentication layer integrates a Three.js engine (`initNeuralDNA()`) to render an interactive 3D particle helix.
-- **Embedded Database:** We utilized a zero-configuration **SQLite3** database. The `ensure_schema()` function executes `CREATE TABLE IF NOT EXISTS` and PRAGMA foreign-key validations. This idempotent design ensures the backend database auto-provisions safely during local execution without overwriting existing data.
+
+- **Embedded Database:** We use **SQLite3** that requires no additional setup. The `ensure_schema()` function automatically creates the required tables (using `CREATE TABLE IF NOT EXISTS`) and enables foreign key constraints. This allows the database to initialize itself safely on first run without overwriting existing data.
+
