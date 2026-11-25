@@ -12,7 +12,7 @@
 | :------------------------- | :--------- |
 | **Pius Jueng Lau**         | 20677174   |
 | **Ray Mackenzie**          | 20620394   |
-| **Bai Xinru**              | 20616079   |
+| **Xinru BAI**              | 20616079   |
 | **Liwei Zheng**            | 20617372   |
 | **Tianle Chen**            | 20616276   |
 | **Awdrian Howell Sukardi** | 20616915   |
